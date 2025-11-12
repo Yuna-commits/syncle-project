@@ -8,6 +8,9 @@ function App() {
 
   return (
     <>
+      <div className="size-[100px] border-2 border-blue-700/90 bg-red-500/50 text-pink-50">
+        Colors
+      </div>
       <div>
         <a href="https://vite.dev" target="_blank">
           <img src={viteLogo} className="logo" alt="Vite logo" />
