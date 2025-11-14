@@ -1,4 +1,5 @@
 import React, { useEffect, useRef } from 'react'
+import { Link } from 'react-router-dom'
 
 function ProfileMenu({ onClose }) {
   const menuRef = useRef(null)
@@ -40,9 +41,12 @@ function ProfileMenu({ onClose }) {
       {/* --- 2. 메뉴 섹션 --- */}
       <div className="px-3 pt-2 pb-3">
         <div className="space-y-1">
-          <button className="flex w-full items-center rounded-md px-3 py-2 text-sm text-gray-700 hover:bg-gray-50">
+          <Link
+            to={'profile'}
+            className="flex w-full items-center rounded-md px-3 py-2 text-sm text-gray-700 hover:bg-gray-50"
+          >
             내 프로필
-          </button>
+          </Link>
           <button className="flex w-full items-center rounded-md px-3 py-2 text-sm text-gray-700 hover:bg-gray-50">
             내 활동
           </button>
