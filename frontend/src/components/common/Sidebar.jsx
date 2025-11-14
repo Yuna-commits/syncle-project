@@ -71,7 +71,7 @@ function Sidebar() {
               </div>
 
               <Link
-                to="/team-members"
+                to="dashboard/team-members"
                 className="flex items-center justify-between gap-2 text-gray-700 hover:underline"
               >
                 <div className="flex items-center gap-2">
