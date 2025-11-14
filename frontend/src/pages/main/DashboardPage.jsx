@@ -1,9 +1,9 @@
 import React from 'react'
 import BoardCard from '../../components/common/BoardCard'
 
-function Dashboard() {
+function DashboardPage() {
   return (
-    <main className="flex-1 overflow-y-auto p-8">
+    <main className="flex-1 overflow-y-auto bg-white p-8">
       {/* ---------------- 최근 본 보드 ---------------- */}
       <div className="mx-auto max-w-5xl">
         <section className="mb-10">
@@ -96,4 +96,4 @@ function Dashboard() {
   )
 }
 
-export default Dashboard
+export default DashboardPage

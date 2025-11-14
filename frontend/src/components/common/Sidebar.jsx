@@ -1,19 +1,29 @@
 import React from 'react'
+import { Link } from 'react-router-dom'
 
 function Sidebar() {
   return (
     <aside className="w-64 border-r border-gray-200 bg-white p-4">
       {/* 상단 메뉴 */}
       <nav className="mt-2 space-y-1">
-        <a className="block rounded-md bg-blue-50 px-3 py-2 font-semibold text-blue-700">
+        <Link
+          to="dashboard"
+          className="block rounded-md bg-blue-50 px-3 py-2 font-semibold text-blue-700"
+        >
           대시보드
-        </a>
-        <a className="block rounded-md px-3 py-2 font-semibold hover:bg-gray-200">
+        </Link>
+        <Link
+          to="Calender"
+          className="block rounded-md px-3 py-2 font-semibold hover:bg-gray-200"
+        >
           캘린더
-        </a>
-        <a className="block rounded-md px-3 py-2 font-semibold hover:bg-gray-200">
+        </Link>
+        <Link
+          to="notifications"
+          className="block rounded-md px-3 py-2 font-semibold hover:bg-gray-200"
+        >
           알림
-        </a>
+        </Link>
       </nav>
 
       {/* Team 목록 */}

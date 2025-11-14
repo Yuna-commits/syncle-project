@@ -1,9 +1,15 @@
 import React from 'react'
 
-function TeamCreateModal() {
+function TeamCreateModal({ onClose }) {
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40">
-      <div className="w-[520px] rounded-xl bg-white p-7 shadow-2xl">
+    <div
+      className="fixed inset-0 z-50 flex items-center justify-center bg-black/40"
+      onClick={onClose}
+    >
+      <div
+        className="w-[520px] rounded-xl bg-white p-7 shadow-2xl"
+        onClick={(e) => e.stopPropagation()}
+      >
         {/* 제목 */}
         <h2 className="mb-6 text-xl font-semibold text-gray-800">팀 생성</h2>
 
@@ -65,7 +71,10 @@ function TeamCreateModal() {
 
         {/* 버튼 */}
         <div className="flex justify-end gap-2">
-          <button className="rounded-lg bg-gray-200 px-10 py-2 text-sm transition hover:bg-gray-300">
+          <button
+            className="rounded-lg bg-gray-200 px-10 py-2 text-sm transition hover:bg-gray-300"
+            onClick={onClose}
+          >
             취소
           </button>
           <button className="rounded-lg bg-blue-600 px-10 py-2 text-sm text-white transition hover:bg-blue-700">
