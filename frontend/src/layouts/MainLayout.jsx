@@ -4,6 +4,7 @@ import Sidebar from '../components/common/Sidebar'
 import { Outlet } from 'react-router-dom'
 import TeamCreateModal from '../components/modals/TeamCreateModal'
 import NotificationMenu from '../components/modals/NotificationMenu'
+import ProfileMenu from '../components/modals/ProfileMenu'
 
 function MainLayout() {
   const [openTeamModal, setOpenTeamModal] = useState(false)
@@ -13,7 +14,8 @@ function MainLayout() {
     <>
       <Header
         onOpenTeamModal={() => setOpenTeamModal(true)}
-        onOpenNotiMenu={() => setopenNotiMenu(!openNotiMenu)}
+        onOpenNotiMenu={() => setopenNotiMenu(true)}
+        onOpenProfileMenu={() => setOpenProfileMenu(true)}
       />
 
       <div className="flex min-h-screen">
@@ -26,21 +28,16 @@ function MainLayout() {
         <TeamCreateModal onClose={() => setOpenTeamModal(false)} />
       )}
 
-      {/* 알림 모달 */}
+      {/* 알림 메뉴 */}
       {openNotiMenu && (
         <NotificationMenu onClose={() => setopenNotiMenu(false)} />
       )}
 
       {/* 프로필 메뉴 */}
-      <div className="relative">
-        <div
-          className="h-8 w-8 cursor-pointer rounded-full bg-blue-600"
-          onClick={() => setOpenProfileMenu((prev) => !prev)}
-        />
-        {openProfileMenu && (
-          <ProfileMenu onClose={() => setOpenProfileMenu(false)} />
-        )}
-      </div>
+
+      {openProfileMenu && (
+        <ProfileMenu onClose={() => setOpenProfileMenu(false)} />
+      )}
     </>
   )
 }

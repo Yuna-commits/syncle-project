@@ -1,15 +1,16 @@
 import React from 'react'
+import { Link } from 'react-router-dom'
 
-function Header({ onOpenTeamModal, onOpenNotiModal }) {
+function Header({ onOpenTeamModal, onOpenNotiMenu, onOpenProfileMenu }) {
   const notificationCount = 1
   return (
     <nav className="flex h-14 w-full items-center justify-between border-b border-gray-200 bg-white px-7">
       {/* ---------------- 좌측: 로고 ---------------- */}
-      <div className="flex items-center gap-3">
+      <Link to="dashboard" className="flex items-center gap-3">
         {/* 서비스 로고 */}
         <div className="h-8 w-8 rounded-md bg-blue-600"></div>
         <span className="text-xl font-semibold">Syncle</span>
-      </div>
+      </Link>
 
       {/* ---------------- 가운데: 검색 + 버튼 ---------------- */}
       <div className="flex w-full max-w-2xl items-center gap-3 px-6">
@@ -49,7 +50,10 @@ function Header({ onOpenTeamModal, onOpenNotiModal }) {
         {/* 벨 아이콘 + 알림 */}
         <div
           className="relative flex h-8 w-8 cursor-pointer items-center justify-center rounded-md transition hover:bg-gray-100"
-          onClick={onOpenNotiModal}
+          onClick={(e) => {
+            e.stopPropagation()
+            onOpenNotiMenu()
+          }}
         >
           <svg
             className="h-5 w-5 text-gray-600"
@@ -70,7 +74,13 @@ function Header({ onOpenTeamModal, onOpenNotiModal }) {
         </div>
 
         {/* 프로필 아이콘 */}
-        <div className="h-8 w-8 rounded-full bg-blue-600"></div>
+        <div
+          className="h-8 w-8 cursor-pointer rounded-full bg-blue-600 hover:opacity-80"
+          onClick={(e) => {
+            e.stopPropagation()
+            onOpenProfileMenu()
+          }}
+        ></div>
       </div>
     </nav>
   )
