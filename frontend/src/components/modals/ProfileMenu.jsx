@@ -7,7 +7,7 @@ function ProfileMenu({ onClose }) {
   useEffect(() => {
     function handleClickOutside(e) {
       if (menuRef.current && !menuRef.current.contains(e.target)) {
-        onClose?.()
+        onClose?.() // onClose가 있으면 실행
       }
     }
     document.addEventListener('mousedown', handleClickOutside)
@@ -17,44 +17,67 @@ function ProfileMenu({ onClose }) {
   return (
     <div
       ref={menuRef}
-      className="absolute top-11 right-0 w-60 rounded-xl border border-gray-200 bg-white py-2 shadow-lg"
+      // 드롭다운 메뉴 컨테이너
+      className="absolute top-14 right-4 z-50 w-72 rounded-xl border border-gray-200 bg-white p-2 shadow-xl"
     >
-      {/* 상단 사용자 정보 */}
-      <div className="flex items-center gap-3 px-4 pb-3">
-        <div className="h-9 w-9 rounded-full bg-blue-500" />
-        <div className="flex flex-col">
-          <span className="text-sm font-semibold text-gray-900">박성철</span>
-          <span className="text-xs text-gray-500">sungcheol@example.com</span>
+      {/* --- 1. ACCOUNT 섹션 --- */}
+      <div className="px-3 pt-2 pb-3">
+        <span className="text-xs font-semibold text-gray-500">ACCOUNT</span>
+        {/* 사용자 정보 */}
+        <div className="mt-3 flex items-center gap-3">
+          <div className="flex h-10 w-10 items-center justify-center rounded-full bg-blue-600 text-lg font-bold text-white">
+            박
+          </div>
+          <div>
+            <div className="text-sm font-semibold">박성철</div>
+            <div className="text-xs text-gray-500">sungcheol9920@gmail.com</div>
+          </div>
         </div>
       </div>
 
-      <div className="my-1 border-t" />
+      <hr className="my-1 border-gray-200" />
 
-      {/* 메뉴 아이템들 */}
-      <button className="flex w-full items-center px-4 py-2 text-sm text-gray-700 hover:bg-gray-50">
-        <span className="mr-2 text-lg">👤</span>내 프로필
-      </button>
+      {/* --- 2. 메뉴 섹션 --- */}
+      <div className="px-3 pt-2 pb-3">
+        <div className="space-y-1">
+          <button className="flex w-full items-center rounded-md px-3 py-2 text-sm text-gray-700 hover:bg-gray-50">
+            내 프로필
+          </button>
+          <button className="flex w-full items-center rounded-md px-3 py-2 text-sm text-gray-700 hover:bg-gray-50">
+            내 활동
+          </button>
+          <button className="flex w-full items-center rounded-md px-3 py-2 text-sm text-gray-700 hover:bg-gray-50">
+            내 카드
+          </button>
+          {/* '계정 설정' -> '설정'으로 이름 변경 */}
+          <button className="flex w-full items-center rounded-md px-3 py-2 text-sm text-gray-700 hover:bg-gray-50">
+            설정
+          </button>
+        </div>
+      </div>
 
-      <button className="flex w-full items-center px-4 py-2 text-sm text-gray-700 hover:bg-gray-50">
-        <span className="mr-2 text-lg">⚙️</span>
-        계정 설정
-      </button>
+      <hr className="my-1 border-gray-200" />
 
-      <button className="flex w-full items-center px-4 py-2 text-sm text-gray-700 hover:bg-gray-50">
-        <span className="mr-2 text-lg">🔔</span>
-        알림 설정
-      </button>
+      {/* --- 3. 추가 기능 섹션 --- */}
+      <div className="px-3 pt-2 pb-3">
+        <div className="space-y-1">
+          <button className="flex w-full items-center rounded-md px-3 py-2 text-sm text-gray-700 hover:bg-gray-50">
+            테마 변경
+          </button>
+          <button className="flex w-full items-center rounded-md px-3 py-2 text-sm text-gray-700 hover:bg-gray-50">
+            고객센터
+          </button>
+        </div>
+      </div>
 
-      <button className="flex w-full items-center px-4 py-2 text-sm text-gray-700 hover:bg-gray-50">
-        <span className="mr-2 text-lg">👥</span>팀 전환
-      </button>
+      <hr className="my-1 border-gray-200" />
 
-      <div className="my-1 border-t" />
-
-      <button className="flex w-full items-center px-4 py-2 text-sm text-red-600 hover:bg-red-50">
-        <span className="mr-2 text-lg">🚪</span>
-        로그아웃
-      </button>
+      {/* --- 4. 로그아웃 --- */}
+      <div className="px-3 pt-2 pb-2">
+        <button className="flex w-full items-center rounded-md px-3 py-2 text-sm text-red-600 hover:bg-red-50">
+          로그아웃
+        </button>
+      </div>
     </div>
   )
 }
