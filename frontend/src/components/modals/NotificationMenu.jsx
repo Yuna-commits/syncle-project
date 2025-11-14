@@ -12,13 +12,13 @@ function NotificationMenu({ onClose }) {
     }
 
     document.addEventListener('mousedown', handleClickOutside)
-    return () => document.removeEventListener('click', handleClickOutside)
+    return () => document.removeEventListener('mousedown', handleClickOutside)
   }, [onClose])
 
   return (
     <div
       ref={modalRef}
-      className="absolute top-13 right-2 z-50 w-96 rounded-xl border border-gray-200 bg-white shadow-lg"
+      className="absolute top-14 right-4 z-50 w-96 rounded-xl border border-gray-200 bg-white shadow-lg"
     >
       {/* 상단 영역 */}
       <div className="flex items-center justify-between border-b border-gray-200 px-4 py-3">
