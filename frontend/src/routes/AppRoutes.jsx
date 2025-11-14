@@ -5,7 +5,6 @@ import ProfileRoutes from './ProfileRoutes'
 import DashboardPage from '../pages/main/DashboardPage'
 import NotificationPage from '../pages/main/NotificationPage'
 import MainLayout from '../layouts/MainLayout'
-import TeamMembersPage from '../pages/main/TeamMembersPage'
 
 export default function AppRoutes() {
   return (
@@ -14,7 +13,6 @@ export default function AppRoutes() {
       <Route element={<MainLayout />}>
         <Route path="dashboard" element={<DashboardPage />} />
         <Route path="notifications" element={<NotificationPage />} />
-        <Route path="team-members" element={<TeamMembersPage />} />
       </Route>
       {/* 인증 */}
       <Route path="/auth/*" element={<AuthRoutes />} />
