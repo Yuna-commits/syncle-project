@@ -70,7 +70,10 @@ function Sidebar() {
                 보드
               </div>
 
-              <div className="flex cursor-pointer items-center justify-between gap-2 text-gray-700 hover:underline">
+              <Link
+                to="/team-members"
+                className="flex items-center justify-between gap-2 text-gray-700 hover:underline"
+              >
                 <div className="flex items-center gap-2">
                   <svg
                     className="h-4 w-4"
@@ -84,7 +87,7 @@ function Sidebar() {
                       d="M16 11c1.657 0 3-1.343 3-3s-1.343-3-3-3-3 1.343-3 3 1.343 3 3 3zM6 11c1.657 0 3-1.343 3-3S7.657 5 6 5 3 6.343 3 8s1.343 3 3 3zm10 2c-2.21 0-4 1.79-4 4v1h8v-1c0-2.21-1.79-4-4-4zm-10 0c-2.21 0-4 1.79-4 4v1h8v-1c0-2.21-1.79-4-4-4z"
                     />
                   </svg>
-                  보드 멤버
+                  팀 멤버
                 </div>
 
                 {/* + 아이콘 */}
@@ -100,7 +103,7 @@ function Sidebar() {
                     d="M12 5v14m7-7H5"
                   />
                 </svg>
-              </div>
+              </Link>
 
               <div className="flex cursor-pointer items-center gap-2 text-gray-700 hover:underline">
                 <svg
