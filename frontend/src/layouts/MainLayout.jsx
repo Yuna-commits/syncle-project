@@ -14,8 +14,8 @@ function MainLayout() {
     <>
       <Header
         onOpenTeamModal={() => setOpenTeamModal(true)}
-        onOpenNotiMenu={() => setopenNotiMenu(true)}
-        onOpenProfileMenu={() => setOpenProfileMenu(true)}
+        onOpenNotiMenu={() => setopenNotiMenu((prev) => !prev)}
+        onOpenProfileMenu={() => setOpenProfileMenu((prev) => !prev)}
       />
 
       <div className="flex min-h-screen">
