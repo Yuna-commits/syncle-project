@@ -49,7 +49,7 @@ function Header({ onOpenTeamModal, onOpenNotiMenu, onOpenProfileMenu }) {
       <div className="flex items-center gap-6 pr-4">
         {/* 벨 아이콘 + 알림 */}
         <div
-          className="relative flex h-8 w-8 cursor-pointer items-center justify-center rounded-md transition hover:bg-gray-100"
+          className="relative flex h-6 w-8 cursor-pointer items-center justify-center rounded-md transition hover:bg-gray-100"
           onMouseDown={(e) => {
             e.stopPropagation()
           }}
