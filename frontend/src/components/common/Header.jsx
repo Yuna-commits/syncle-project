@@ -49,11 +49,11 @@ function Header({ onOpenTeamModal, onOpenNotiMenu, onOpenProfileMenu }) {
       <div className="flex items-center gap-6 pr-4">
         {/* 벨 아이콘 + 알림 */}
         <div
-          className="relative flex h-8 w-8 cursor-pointer items-center justify-center rounded-md transition hover:bg-gray-100"
-          onClick={(e) => {
+          className="relative flex h-6 w-8 cursor-pointer items-center justify-center rounded-md transition hover:bg-gray-100"
+          onMouseDown={(e) => {
             e.stopPropagation()
-            onOpenNotiMenu()
           }}
+          onClick={onOpenNotiMenu}
         >
           <svg
             className="h-5 w-5 text-gray-600"
@@ -76,10 +76,10 @@ function Header({ onOpenTeamModal, onOpenNotiMenu, onOpenProfileMenu }) {
         {/* 프로필 아이콘 */}
         <div
           className="h-8 w-8 cursor-pointer rounded-full bg-blue-600 hover:opacity-80"
-          onClick={(e) => {
+          onMouseDown={(e) => {
             e.stopPropagation()
-            onOpenProfileMenu()
           }}
+          onClick={onOpenProfileMenu}
         ></div>
       </div>
     </nav>
