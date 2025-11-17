@@ -139,7 +139,7 @@ function ActivityItem({ update }) {
     <div className="flex gap-3 border-t border-gray-200 p-4">
       {/* 사용자 아바타 */}
       <img
-        className="h-10 w-10 flex-shrink-0 rounded-full"
+        className="h-10 w-10 shrink-0 rounded-full"
         src={update.user.avatar}
         alt={update.user.name}
       />
