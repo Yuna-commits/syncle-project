@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import EditModal from '../../components/profile/EditModal'
+import FormModal from '../../components/profile/FormModal'
 
 export default function SecurityPage() {
   // 임시 데이터
@@ -176,7 +176,7 @@ export default function SecurityPage() {
 
       {/* 비밀번호 변경 모달 */}
       {openChangePassword && (
-        <EditModal
+        <FormModal
           title="비밀번호 변경"
           fields={[
             { label: '현재 비밀번호', name: 'current', type: 'password' },
@@ -187,6 +187,10 @@ export default function SecurityPage() {
               type: 'password',
             },
           ]}
+          onSubmit={(values) => {
+            console.log(values)
+            setOpenChangePassword(false)
+          }}
           onClose={() => setOpenChangePassword(false)}
         />
       )}

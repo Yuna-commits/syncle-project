@@ -1,7 +1,7 @@
 import InfoItem from '../../components/profile/InfoItem'
 import defaultProfile from '../../assets/images/default.png'
 import { useState } from 'react'
-import EditModal from '../../components/profile/EditModal'
+import FormModal from '../../components/profile/FormModal'
 
 export default function ProfilePage() {
   // 임시 데이터
@@ -121,7 +121,7 @@ export default function ProfilePage() {
 
       {/* 모달 조작 */}
       {isEditProfileOpen && (
-        <EditModal
+        <FormModal
           title="프로필 수정"
           fields={[
             {
@@ -137,11 +137,15 @@ export default function ProfilePage() {
               value: user.description,
             },
           ]}
+          onSubmit={(values) => {
+            console.log(values)
+            setEditProfileOpen(false)
+          }}
           onClose={() => setEditProfileOpen(false)}
         />
       )}
       {isEditPersonalOpen && (
-        <EditModal
+        <FormModal
           title="개인 정보 수정"
           fields={[
             {
@@ -157,6 +161,10 @@ export default function ProfilePage() {
               value: user.position,
             },
           ]}
+          onSubmit={(values) => {
+            console.log(values)
+            setEditProfileOpen(false)
+          }}
           onClose={() => setEditPersonalOpen(false)}
         />
       )}
