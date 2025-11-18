@@ -54,7 +54,10 @@ function Sidebar() {
 
             {/* --- 펼쳐진 메뉴 --- */}
             <div className="mt-2 ml-10 space-y-2 text-sm">
-              <div className="flex cursor-pointer items-center gap-2 text-gray-700 hover:underline">
+              <Link
+                to="dashboard/team-board"
+                className="flex cursor-pointer items-center gap-2 text-gray-700 hover:underline"
+              >
                 <svg
                   className="h-4 w-4"
                   stroke="currentColor"
@@ -68,7 +71,7 @@ function Sidebar() {
                   />
                 </svg>
                 보드
-              </div>
+              </Link>
 
               <Link
                 to="dashboard/team-members"
@@ -105,7 +108,10 @@ function Sidebar() {
                 </svg>
               </Link>
 
-              <div className="flex cursor-pointer items-center gap-2 text-gray-700 hover:underline">
+              <Link
+                to="dashboard/team-settings"
+                className="flex cursor-pointer items-center gap-2 text-gray-700 hover:underline"
+              >
                 <svg
                   className="h-4 w-4"
                   stroke="currentColor"
@@ -119,7 +125,7 @@ function Sidebar() {
                   />
                 </svg>
                 설정
-              </div>
+              </Link>
             </div>
           </div>
 
