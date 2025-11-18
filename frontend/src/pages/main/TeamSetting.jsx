@@ -17,38 +17,43 @@ export default function TeamSetting() {
 
         {/* 4. 하나의 메인 컨테이너 (divide-y로 섹션 구분) */}
         <div className="divide-y divide-gray-200 rounded-xl border border-gray-300 bg-white shadow-sm">
-          {/* ----- 1. 팀 프로필 아이템 (이름/설명) ----- */}
+          {/* ----- 1. 팀 프로필 아이템 (이름/설명/사진) ----- */}
           <section className="p-6">
-            <div className="space-y-4">
-              {/* 팀 이름 */}
-              <div>
-                <label
-                  htmlFor="teamName"
-                  className="mb-1 block text-sm font-medium text-gray-700"
-                >
-                  팀 이름
-                </label>
-                <input
-                  type="text"
-                  id="teamName"
-                  defaultValue="Syncle Team"
-                  className="w-full max-w-md rounded-md border border-gray-300 px-3 py-2 shadow-sm focus:ring-2 focus:ring-blue-500 focus:outline-none"
-                />
-              </div>
-              {/* 팀 설명 */}
-              <div>
-                <label
-                  htmlFor="teamDescription"
-                  className="mb-1 block text-sm font-medium text-gray-700"
-                >
-                  설명
-                </label>
-                <textarea
-                  id="teamDescription"
-                  rows={3}
-                  className="w-full max-w-md rounded-md border border-gray-300 px-3 py-2 shadow-sm focus:ring-2 focus:ring-blue-500 focus:outline-none"
-                  placeholder="팀에 대해 설명해주세요."
-                />
+            {/* [수정] 이름/설명과 프로필 사진을 옆으로 나열하기 위한 flex 컨테이너 */}
+            {/* 모바일에서는 세로(flex-col), sm 사이즈 이상에서는 가로(sm:flex-row) 배치 */}
+            <div className="flex flex-col gap-6 sm:flex-row sm:items-start">
+              {/* 1. 이름 / 설명 (Left) */}
+              <div className="flex-1 space-y-4">
+                {/* 팀 이름 */}
+                <div>
+                  <label
+                    htmlFor="teamName"
+                    className="mb-1 block text-sm font-medium text-gray-700"
+                  >
+                    팀 이름
+                  </label>
+                  <input
+                    type="text"
+                    id="teamName"
+                    defaultValue="Syncle Team"
+                    className="w-full max-w-md rounded-md border border-gray-300 px-3 py-2 shadow-sm focus:ring-2 focus:ring-blue-500 focus:outline-none"
+                  />
+                </div>
+                {/* 팀 설명 */}
+                <div>
+                  <label
+                    htmlFor="teamDescription"
+                    className="mb-1 block text-sm font-medium text-gray-700"
+                  >
+                    설명
+                  </label>
+                  <textarea
+                    id="teamDescription"
+                    rows={3}
+                    className="w-full max-w-md rounded-md border border-gray-300 px-3 py-2 shadow-sm focus:ring-2 focus:ring-blue-500 focus:outline-none"
+                    placeholder="팀에 대해 설명해주세요."
+                  />
+                </div>
               </div>
             </div>
           </section>
