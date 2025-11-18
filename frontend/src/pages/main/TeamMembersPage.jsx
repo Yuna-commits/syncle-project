@@ -80,8 +80,12 @@ export default function TeamMembersPage() {
   return (
     <main className="flex-1 overflow-y-auto bg-white p-8">
       <div className="mx-auto w-full max-w-5xl space-y-6">
-        <div className="mt-10 px-2">
+        <div className="mt-10 flex items-center justify-between px-2">
           <h3 className="text-xl font-semibold text-gray-800">팀 멤버 목록</h3>
+
+          <button className="rounded-lg bg-blue-600 px-4 py-2 text-sm font-medium text-white shadow hover:cursor-pointer hover:bg-blue-700">
+            멤버 추가
+          </button>
         </div>
 
         <div className="rounded-xl border border-gray-300">
