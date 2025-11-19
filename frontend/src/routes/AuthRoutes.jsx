@@ -1,15 +1,18 @@
 import React from 'react'
 import { Routes, Route } from 'react-router-dom'
-import SignIn from '../pages/auth/SignIn'
-import SignUp from '../pages/auth/SignUp'
-import ResetPassword from '../pages/auth/ResetPassword'
+import SignInPage from '../pages/auth/SignInPage'
+import SignUpPage from '../pages/auth/SignUpPage'
+import ResetPasswordPage from '../pages/auth/ResetPasswordPage'
+import AuthLayout from '../layouts/AuthLayout'
 
 export default function AuthRoutes() {
   return (
     <Routes>
-      <Route path="signin" element={<SignIn />} />
-      <Route path="signup" element={<SignUp />} />
-      <Route path="reset-password" element={<ResetPassword />} />
+      <Route element={<AuthLayout />}>
+        <Route path="signin" element={<SignInPage />} />
+        <Route path="signup" element={<SignUpPage />} />
+        <Route path="reset-password" element={<ResetPasswordPage />} />
+      </Route>
     </Routes>
   )
 }

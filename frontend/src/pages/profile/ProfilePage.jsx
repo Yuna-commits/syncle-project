@@ -1,7 +1,7 @@
 import InfoItem from '../../components/profile/InfoItem'
 import defaultProfile from '../../assets/images/default.png'
 import { useState } from 'react'
-import FormModal from '../../components/profile/FormModal'
+import FormModal from '../../components/modals/FormModal'
 
 export default function ProfilePage() {
   // 임시 데이터

@@ -2,7 +2,7 @@ import React, { useState } from 'react'
 import { format } from 'date-fns'
 import SummaryItem from '../../components/profile/SummaryItem'
 import BoardCard from '../../components/profile/BoardCard'
-import DateRangePickerModal from '../../components/modals/DateRangePickerModal'
+import DateRangePickerMenu from '../../components/modals/DateRangePickerMenu'
 
 export default function ActivityPage() {
   // 임시 활동 요약 데이터 (최근 7일)
@@ -199,7 +199,7 @@ export default function ActivityPage() {
                 </select>
 
                 {/* 달력 모달 */}
-                <DateRangePickerModal
+                <DateRangePickerMenu
                   isOpen={openCalendar}
                   onClose={() => setOpenCalendar(false)}
                   range={range}

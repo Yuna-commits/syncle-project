@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import FormModal from '../../components/profile/FormModal'
+import FormModal from '../../components/modals/FormModal'
 
 export default function SecurityPage() {
   // 임시 데이터
