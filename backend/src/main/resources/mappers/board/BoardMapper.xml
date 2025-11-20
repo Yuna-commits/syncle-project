@@ -1,0 +1,34 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.nullpointer.domain.board.mapper.BoardMapper">
+
+    <!-- 보드 생성 -->
+    <insert id="insertBoard" parameterType="BoardVo">
+        INSERT INTO board (title,
+                          team_id,
+                          description,
+                          visibility)
+        VALUES (#{title},
+                #{teamId},
+                #{description},
+                #{visibility})
+    </insert>
+
+    <!-- 내 보드 목록 조회-->
+    <select id="findBoardById" parameterType="Long" resultType="BoardVo">
+        SELECT a.id,
+               a.title,
+               a.description,
+               a.visibility,
+               b.name AS teamName
+        FROM board a,
+             team b,
+             team_member c
+        WHERE a.team_id = b.id
+          AND a.team_id = c.team_id
+          AND c.user_id = #{id}
+          AND a.deleted_at IS NULL
+    </select>
+</mapper>
