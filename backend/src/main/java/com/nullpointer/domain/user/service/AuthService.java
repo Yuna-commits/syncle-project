@@ -1,6 +1,6 @@
-package com.nullpointer.domain.auth.service;
+package com.nullpointer.domain.user.service;
 
-import com.nullpointer.domain.auth.dto.SignupRequest;
+import com.nullpointer.domain.user.dto.SignupRequest;
 
 public interface AuthService {
 

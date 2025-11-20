@@ -20,17 +20,17 @@ public class UserVo {
     private String password;
     private String nickname;
 
-    private String description = "";
-    private String position = "";
-    private String profileImg = "";
+    private String description;
+    private String position;
+    private String profileImg;
 
     @Builder.Default
     private Provider provider = Provider.LOCAL;
 
-    private String providerId = ""; // 구글 로그인 식별자
+    private String providerId; // 구글 로그인 식별자
 
     @Builder.Default
-    private VerifyStatus verifyStatus = VerifyStatus.PENDING;
+    private VerifyStatus verifiedStatus = VerifyStatus.PENDING;
 
     @Builder.Default
     private UserStatus userStatus = UserStatus.ACTIVATED;

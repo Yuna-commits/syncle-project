@@ -5,12 +5,12 @@ import lombok.Getter;
 @Getter
 public enum Provider {
 
-    LOCAL("이메일 로그인"), GOOGLE("구글 로그인");
+    LOCAL("이메일"), GOOGLE("구글");
 
-    private final String type;
+    private final String label;
 
-    Provider(String type) {
-        this.type = type;
+    Provider(String label) {
+        this.label = label;
     }
 
 }

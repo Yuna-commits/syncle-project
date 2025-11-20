@@ -1,7 +1,7 @@
-package com.nullpointer.domain.auth.controller;
+package com.nullpointer.domain.user.controller;
 
-import com.nullpointer.domain.auth.dto.SignupRequest;
-import com.nullpointer.domain.auth.service.AuthService;
+import com.nullpointer.domain.user.dto.SignupRequest;
+import com.nullpointer.domain.user.service.AuthService;
 import com.nullpointer.global.common.ApiResponse;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
@@ -11,9 +11,9 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 @RestController
-@RequestMapping("/auth")
+@RequestMapping("/api/auth")
 @RequiredArgsConstructor
-public class AuthController {
+public class UserController {
 
     private final AuthService authService;
 

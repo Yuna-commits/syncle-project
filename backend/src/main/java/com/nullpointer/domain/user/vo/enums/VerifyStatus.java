@@ -7,10 +7,10 @@ public enum VerifyStatus {
 
     PENDING("보류"), VERIFIED("인증"), EXPIRED("만료"), REVOKED("취소");
 
-    private final String status;
+    private final String label;
 
-    VerifyStatus(String status) {
-        this.status = status;
+    VerifyStatus(String label) {
+        this.label = label;
     }
 
 }
