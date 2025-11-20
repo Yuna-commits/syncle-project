@@ -7,10 +7,10 @@ public enum UserStatus {
 
     ACTIVATED("활성화"), DEACTIVATED("비활성화"), DELETED("탈퇴");
 
-    private final String status;
+    private final String label;
 
-    UserStatus(String status) {
-        this.status = status;
+    UserStatus(String label) {
+        this.label = label;
     }
 
 }

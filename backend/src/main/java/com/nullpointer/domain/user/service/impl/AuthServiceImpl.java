@@ -1,7 +1,8 @@
-package com.nullpointer.domain.auth.service;
+package com.nullpointer.domain.user.service.impl;
 
-import com.nullpointer.domain.auth.dto.SignupRequest;
+import com.nullpointer.domain.user.dto.SignupRequest;
 import com.nullpointer.domain.user.mapper.UserMapper;
+import com.nullpointer.domain.user.service.AuthService;
 import com.nullpointer.domain.user.vo.UserVo;
 import com.nullpointer.global.exception.BusinessException;
 import com.nullpointer.global.exception.ErrorCode;
@@ -41,7 +42,7 @@ public class AuthServiceImpl implements AuthService {
         /*
           추가) 이메일 인증, 구글 회원가입, 팀+보드+리스트 생성 트랜잭션
          */
-        
+
         // DB 저장
         userMapper.insertUser(user);
     }

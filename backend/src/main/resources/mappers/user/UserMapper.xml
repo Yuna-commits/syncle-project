@@ -14,7 +14,7 @@
                           profile_img,
                           provider,
                           provider_id,
-                          verify_status,
+                          verified_status,
                           user_status)
         VALUES (#{email},
                 #{password},
@@ -24,7 +24,7 @@
                 #{profileImg},
                 #{provider},
                 #{providerId},
-                #{verifyStatus},
+                #{verifiedStatus},
                 #{userStatus})
     </insert>
 

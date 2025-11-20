@@ -1,4 +1,4 @@
-package com.nullpointer.domain.auth.dto;
+package com.nullpointer.domain.user.dto;
 
 import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotBlank;
