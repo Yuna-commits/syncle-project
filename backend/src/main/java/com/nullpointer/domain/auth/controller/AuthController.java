@@ -1,7 +1,7 @@
-package com.nullpointer.domain.user.controller;
+package com.nullpointer.domain.auth.controller;
 
+import com.nullpointer.domain.auth.service.AuthService;
 import com.nullpointer.domain.user.dto.SignupRequest;
-import com.nullpointer.domain.user.service.AuthService;
 import com.nullpointer.global.common.ApiResponse;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;

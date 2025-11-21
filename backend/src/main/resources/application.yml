@@ -40,8 +40,14 @@ spring:
       port: 6379
 
 app:
+  # JWT
+  jwt:
+    secret: 9e5e5b6c67264cb6cee8e18f8f35517aec75e14383934dd8554090be30a1facd
+    access-expiration: 300000 # 5분 -> 나중에 수정 필요!!!!!
+    refresh-expiration: 300000 # 5분 -> 나중에 수정 필요!!!!!
+
   email:
-    verification-expiration-millis: 300000 # 이메일 인증 코드 유효 시간 5분
+    verification-expiration-millis: 300000 # 5분 -> 나중에 수정 필요!!!!!
     verify-base-url: http://localhost:8080/api/auth/email-verify
 
 server:
