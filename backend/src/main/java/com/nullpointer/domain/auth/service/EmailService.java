@@ -1,4 +1,4 @@
-package com.nullpointer.domain.user.service;
+package com.nullpointer.domain.auth.service;
 
 public interface EmailService {
 

@@ -1,4 +1,4 @@
-package com.nullpointer.domain.user.service;
+package com.nullpointer.domain.auth.service;
 
 import java.time.LocalDateTime;
 
