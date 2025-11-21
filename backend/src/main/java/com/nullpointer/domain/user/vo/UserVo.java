@@ -30,7 +30,7 @@ public class UserVo {
     private String providerId; // 구글 로그인 식별자
 
     @Builder.Default
-    private VerifyStatus verifiedStatus = VerifyStatus.PENDING;
+    private VerifyStatus verifyStatus = VerifyStatus.PENDING;
 
     @Builder.Default
     private UserStatus userStatus = UserStatus.ACTIVATED;

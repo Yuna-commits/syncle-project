@@ -16,6 +16,34 @@ spring:
       write-dates-as-timestamps: false
     time-zone: Asia/Seoul
 
+  # SMTP
+  mail:
+    host: smtp.gmail.com # Gmail의 SMTP 서버 호스트
+    port: 587 # Gmail STMP 서버는 587번 포트 사용
+    username: ksm13563661@gmail.com
+    password: suoc hvpg zduz cyac
+    properties:
+      mail:
+        smtp:
+          auth: true # 메일 전송 시 SMTP 계정 인증 (Gmail은 반드시 필요)
+          starttls:
+            enable: true # SMTP 서버와 클라이언트 사이 통신을 TLS(암호화)로 보호
+            required: true # TLS 연결 실패 시 이메일 전송 x
+          connectiontimeout: 5000 # 클라이언트가 SMTP 서버와의 연결을 설정하는데 대기해야 하는 시간
+          timeout: 5000 # 클라이언트가 SMTP 서버로부터 응답을 대기해야 하는 시간
+          writetimeout: 5000 # 클라이언트가 작업을 완료하는데 대기해야 하는 시간
+
+  # Redis
+  data:
+    redis:
+      host: 192.168.0.181
+      port: 6379
+
+app:
+  email:
+    verification-expiration-millis: 300000 # 이메일 인증 코드 유효 시간 5분
+    verify-base-url: http://localhost:8080/api/auth/email-verify
+
 server:
   port: 8080
 
