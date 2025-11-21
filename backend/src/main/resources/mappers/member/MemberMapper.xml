@@ -9,7 +9,7 @@
         VALUES (#{teamId}, #{userId}, #{role}) </insert>
 
     <!-- 팀 멤버 조회 -->
-    <select id="findMembersByTeamId" parameterType="Long" resultType="MemberVo">
+    <select id="findMembersByTeamId" parameterType="Long" resultType="MemberResponse">
         SELECT a.team_id,
                a.user_id,
                a.role,

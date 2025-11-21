@@ -17,7 +17,7 @@
     </insert>
 
     <!-- 내 보드 목록 조회-->
-    <select id="findBoardById" parameterType="Long" resultType="MemberResponse">
+    <select id="findBoardById" parameterType="Long" resultType="BoardVo">
         SELECT a.id,
                a.title,
                a.description,

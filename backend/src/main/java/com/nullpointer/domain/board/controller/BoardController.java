@@ -4,7 +4,9 @@ import com.nullpointer.domain.board.dto.BoardResponse;
 import com.nullpointer.domain.board.dto.CreateBoardRequest;
 import com.nullpointer.domain.board.service.BoardService;
 import com.nullpointer.global.common.ApiResponse;
+import com.nullpointer.global.security.jwt.CustomUserDetails;
 import lombok.RequiredArgsConstructor;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -26,8 +28,9 @@ public class BoardController {
     }
 
     // 내 보드 조회
-    @GetMapping("/boards/{userId}")
-    public ApiResponse<List<BoardResponse>> getAllBoards(@PathVariable Long userId) {
+    @GetMapping("/boards")
+    public ApiResponse<List<BoardResponse>> getAllBoards(@AuthenticationPrincipal CustomUserDetails user) {
+        Long userId = user.getUserId();
         return ApiResponse.success(boardService.getMyBoards(userId));
     }
 }
