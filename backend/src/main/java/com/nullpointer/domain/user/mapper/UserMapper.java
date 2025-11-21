@@ -21,6 +21,9 @@ public interface UserMapper {
     // email로 사용자 조회 (로그인)
     UserVo findByEmail(String email);
 
+    // 사용자 인증 상태 조건부 업데이트
+    int updateVerifyStatusIfCurrent(Long id, VerifyStatus currentStatus, VerifyStatus newStatus);
+
     // 사용자 이메일 인증 상태 업데이트
     void updateVerifyStatus(@Param("id") Long id, @Param("verifyStatus") VerifyStatus verifyStatus);
 

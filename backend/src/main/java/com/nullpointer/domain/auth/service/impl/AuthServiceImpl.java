@@ -74,10 +74,10 @@ public class AuthServiceImpl implements AuthService {
         Long userId = emailVerificationService.getUserIdByToken(token);
         LocalDateTime expireTime = emailVerificationService.getExpireTimeByToken(token);
 
-        // -- 만료 여부 확인 --
-        if (expireTime == null) {
+        // 2) 토큰 존재, 만료 여부 확인
+        if (userId == null || expireTime == null) {
             // TTL 종료 -> 완전히 만료된 토큰
-            throw new BusinessException(ErrorCode.EXPIRED_VERIFICATION_TOKEN);
+            throw new BusinessException(ErrorCode.INVALID_VERIFICATION_TOKEN);
         }
 
         /**
@@ -86,32 +86,35 @@ public class AuthServiceImpl implements AuthService {
          * -> 만료된 토큰인데도 정상 인증이 가능해지는 경우를 방지
          */
         if (LocalDateTime.now().isAfter(expireTime)) {
+            emailVerificationService.deleteToken(token); // 토큰 정리
             throw new BusinessException(ErrorCode.EXPIRED_VERIFICATION_TOKEN);
         }
 
-        // -- 잘못된 토큰 --
-        if (userId == null) {
-            throw new BusinessException(ErrorCode.INVALID_VERIFICATION_TOKEN);
-        }
-
-        // 2) 사용자 조회
+        // 3) 사용자 조회
         UserVo user = userMapper.findById(userId);
 
+        // 존재하지 않는 사용자인 경우
         if (user == null) {
-            // 존재하지 않는 사용자인 경우
             throw new BusinessException(ErrorCode.USER_NOT_FOUND);
         }
 
+        // 이미 인증된 사용자인 경우
         if (user.getVerifyStatus() == VerifyStatus.VERIFIED) {
-            // 이미 인증된 사용자인 경우
+            emailVerificationService.deleteToken(token); // 토큰 정리
             throw new BusinessException(ErrorCode.ALREADY_VERIFIED);
         }
 
         // -- 인증 성공 --
-        // 3) user.verifyStatus 업데이트 (PENDING -> VERIFIED)
-        userMapper.updateVerifyStatus(userId, VerifyStatus.VERIFIED);
+        // 4) user.verifyStatus 조건부 업데이트 (PENDING -> VERIFIED)
+        // 현재 상태가 PENDING이면 VERIFIED 변경 후 1 반환
+        int updated = userMapper.updateVerifyStatusIfCurrent(userId, VerifyStatus.PENDING, VerifyStatus.VERIFIED);
 
-        // 4) Redis에서 토큰 삭제
+        // 이미 다른 요청에서 상태가 바뀐 경우
+        if (updated == 0) {
+            throw new BusinessException(ErrorCode.ALREADY_VERIFIED);
+        }
+
+        // 5) 인증 성공 후 Redis에서 토큰 삭제
         emailVerificationService.deleteToken(token);
     }
 

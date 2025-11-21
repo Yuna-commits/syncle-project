@@ -58,6 +58,6 @@ public class RegistrationServiceImpl implements RegistrationService {
         // 6) Redis에 token -> (userId, expireTime) 저장
         emailVerificationService.saveToken(token, user.getId());
 
-        return null;
+        return new RegistrationResult(user, token);
     }
 }

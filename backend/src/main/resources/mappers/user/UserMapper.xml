@@ -59,6 +59,15 @@
           AND deleted_at IS NULL
     </select>
 
+    <!-- 사용자 이메일 인증 상태 조건부 업데이트 -->
+    <update id="updateVerifyStatusIfCurrent">
+        UPDATE user
+        SET verify_status = #{newStatus}
+        WHERE id = #{id}
+          AND verify_status = #{currentStatus}
+          AND deleted_at IS NULL
+    </update>
+
     <!-- 사용자 이메일 인증 상태 업데이트 -->
     <update id="updateVerifyStatus">
         UPDATE user
