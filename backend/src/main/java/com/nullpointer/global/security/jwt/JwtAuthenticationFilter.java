@@ -50,11 +50,13 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
         Long userId = jwtTokenProvider.getUserId(token);
         String email = jwtTokenProvider.getEmail(token);
 
+        CustomUserDetails userDetails = new CustomUserDetails(userId, email);
+
         // 6) 인증 객체 생성
         // UserDetails(세션 기반 인증) 사용 x, Authentication 직접 생성
         UsernamePasswordAuthenticationToken authentication =
                 new UsernamePasswordAuthenticationToken(
-                        email,
+                        userDetails,
                         null,
                         Collections.emptyList()
                 );

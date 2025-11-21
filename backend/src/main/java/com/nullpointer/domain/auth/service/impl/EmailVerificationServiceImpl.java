@@ -6,6 +6,7 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.stereotype.Service;
 
+import java.time.Duration;
 import java.time.LocalDateTime;
 import java.util.concurrent.TimeUnit;
 
@@ -28,7 +29,7 @@ public class EmailVerificationServiceImpl implements EmailVerificationService {
      */
     @Override
     public void saveToken(String token, Long userId) {
-        LocalDateTime expiresAt = LocalDateTime.now().plusNanos(verificationExpirationMillis * 1_000_000); //토큰의 만료 시간 저장
+        LocalDateTime expiresAt = LocalDateTime.now().plus(Duration.ofMillis(verificationExpirationMillis)); //토큰의 만료 시간 저장
 
         String keyUser = PREFIX + token + ":uid";
         String keyExp = PREFIX + token + ":exp";
