@@ -4,7 +4,7 @@ import com.nullpointer.domain.user.dto.LoginRequest;
 import com.nullpointer.domain.user.dto.LoginResponse;
 import com.nullpointer.domain.user.dto.SignupRequest;
 
-public interface AuthService {
+public interface    AuthService {
 
     // 회원가입
     void signup(SignupRequest req);

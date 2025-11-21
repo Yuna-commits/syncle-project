@@ -12,4 +12,5 @@ public interface BoardMapper {
 
     // 내 보드 목록 조회
     List<BoardVo> findBoardById(Long user_id);
+
 }
