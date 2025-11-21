@@ -1,10 +1,10 @@
-package com.nullpointer.domain.user.service.impl;
+package com.nullpointer.domain.auth.service.impl;
 
+import com.nullpointer.domain.auth.service.AuthService;
+import com.nullpointer.domain.auth.service.EmailService;
+import com.nullpointer.domain.auth.service.EmailVerificationService;
 import com.nullpointer.domain.user.dto.SignupRequest;
 import com.nullpointer.domain.user.mapper.UserMapper;
-import com.nullpointer.domain.user.service.AuthService;
-import com.nullpointer.domain.user.service.EmailService;
-import com.nullpointer.domain.user.service.EmailVerificationService;
 import com.nullpointer.domain.user.vo.UserVo;
 import com.nullpointer.domain.user.vo.enums.VerifyStatus;
 import com.nullpointer.global.exception.BusinessException;

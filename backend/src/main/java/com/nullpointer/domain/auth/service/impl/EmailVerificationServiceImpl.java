@@ -1,6 +1,6 @@
-package com.nullpointer.domain.user.service.impl;
+package com.nullpointer.domain.auth.service.impl;
 
-import com.nullpointer.domain.user.service.EmailVerificationService;
+import com.nullpointer.domain.auth.service.EmailVerificationService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.redis.core.StringRedisTemplate;
