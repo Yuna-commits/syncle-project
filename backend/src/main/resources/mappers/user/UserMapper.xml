@@ -48,14 +48,23 @@
     <select id="findById" parameterType="long" resultType="UserVo">
         SELECT *
         FROM user
-        WHERE id = #{userId}
+        WHERE id = #{id}
+          AND deleted_at IS NULL
+    </select>
+
+    <select id="findByEmail" parameterType="string" resultType="UserVo">
+        SELECT *
+        FROM user
+        WHERE email = #{email}
+          AND deleted_at IS NULL
     </select>
 
     <!-- 사용자 이메일 인증 상태 업데이트 -->
     <update id="updateVerifyStatus">
         UPDATE user
         SET verify_status = #{verifyStatus}
-        WHERE id = #{userId}
+        WHERE id = #{id}
+          AND deleted_at IS NULL
     </update>
 
 </mapper>

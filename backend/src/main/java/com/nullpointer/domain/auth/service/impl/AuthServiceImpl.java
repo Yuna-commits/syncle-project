@@ -3,12 +3,18 @@ package com.nullpointer.domain.auth.service.impl;
 import com.nullpointer.domain.auth.service.AuthService;
 import com.nullpointer.domain.auth.service.EmailService;
 import com.nullpointer.domain.auth.service.EmailVerificationService;
+import com.nullpointer.domain.auth.service.RefreshTokenService;
+import com.nullpointer.domain.user.dto.LoginRequest;
+import com.nullpointer.domain.user.dto.LoginResponse;
 import com.nullpointer.domain.user.dto.SignupRequest;
 import com.nullpointer.domain.user.mapper.UserMapper;
 import com.nullpointer.domain.user.vo.UserVo;
+import com.nullpointer.domain.user.vo.enums.Provider;
+import com.nullpointer.domain.user.vo.enums.UserStatus;
 import com.nullpointer.domain.user.vo.enums.VerifyStatus;
 import com.nullpointer.global.exception.BusinessException;
 import com.nullpointer.global.exception.ErrorCode;
+import com.nullpointer.global.security.jwt.JwtTokenProvider;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
@@ -25,6 +31,8 @@ public class AuthServiceImpl implements AuthService {
     private final UserMapper userMapper;
     private final EmailVerificationService emailVerificationService; // Redis 서비스
     private final EmailService emailService; // 이메일 전송
+    private final JwtTokenProvider jwtTokenProvider;
+    private final RefreshTokenService refreshTokenService;
 
     /**
      * 이메일 로그인으로 가정
@@ -118,6 +126,61 @@ public class AuthServiceImpl implements AuthService {
 
         // 4) Redis에서 토큰 삭제
         emailVerificationService.deleteToken(token);
+    }
+
+    /**
+     * 이메일 로그인
+     */
+    @Override
+    public LoginResponse login(LoginRequest req) {
+
+        // 1) 이메일로 사용자 조회
+        UserVo user = userMapper.findByEmail(req.getEmail());
+
+        // -- 검증 --
+        // 존재하지 않는 사용자인 경우
+        if (user == null) {
+            throw new BusinessException(ErrorCode.USER_NOT_FOUND);
+        }
+
+        // 2) LOCAL(이메일 로그인)인지 확인
+        if (user.getProvider() != Provider.LOCAL) {
+            // 소셜 가입 계정과 이메일 가입 계정 구분
+            throw new BusinessException(ErrorCode.LOGIN_PROVIDER_MISMATCH);
+        }
+
+        // 3) 비밀번호 검증
+        if (!passwordEncoder.matches(req.getPassword(), user.getPassword())) {
+            throw new BusinessException(ErrorCode.INVALID_PASSWORD);
+        }
+
+        // 4) 이메일 인증 여부 확인 -> !VERIFIED이면 로그인 불가
+        if (user.getVerifyStatus() != VerifyStatus.VERIFIED) {
+            throw new BusinessException(ErrorCode.EMAIL_NOT_VERIFIED);
+        }
+
+        // 5) 계정 상태 확인 -> !ACTIVATED이면 로그인 불가
+        if (user.getUserStatus() != UserStatus.ACTIVATED) {
+            throw new BusinessException(ErrorCode.USER_STATUS_NOT_ACTIVE);
+        }
+
+        // -- 로그인 성공 --
+        // 6) AccessToken, RefreshToken 생성
+        String accessToken = jwtTokenProvider.createAccessToken(user.getId(), user.getEmail());
+        String refreshToken = jwtTokenProvider.createRefreshToken(user.getId());
+
+        // 7) RefreshToken Redis에 저장
+        refreshTokenService.saveRefreshToken(user.getId(), refreshToken);
+
+        // 8) ResponseDTO 반환
+        return LoginResponse
+                .builder()
+                .id(user.getId())
+                .email(user.getEmail())
+                .nickname(user.getNickname())
+                .accessToken(accessToken)
+                .refreshToken(refreshToken)
+                .build();
     }
 
 }
