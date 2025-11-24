@@ -6,12 +6,14 @@ import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
+import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.stereotype.Component;
+import org.springframework.util.StringUtils;
 import org.springframework.web.filter.OncePerRequestFilter;
 
 import java.io.IOException;
-import java.util.Collections;
 
 // 토큰 정보 검사, SecurityContextHolder에 정보 기록
 @Component
@@ -24,47 +26,41 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
     @Override
     protected void doFilterInternal(HttpServletRequest request,
                                     HttpServletResponse response,
-                                    FilterChain filterChain)
-            throws ServletException, IOException {
+                                    FilterChain filterChain) throws ServletException, IOException {
 
         // 1) Authorization 헤더에서 JWT 추출
-        String authHeader = request.getHeader("Authorization");
+        String token = resolveToken(request);
 
-        // 2) 토큰이 없거나 "Bearer"로 시작하지 않으면 다음 필터로 넘김
-        if (authHeader == null || !authHeader.startsWith("Bearer ")) {
-            filterChain.doFilter(request, response);
-            return;
+        // 2) 토큰 유효성 검사
+        if (token != null && jwtTokenProvider.validateToken(token)) {
+            // 3) 토큰에서 userId, email 추출
+            Long userId = jwtTokenProvider.getUserId(token);
+            String email = jwtTokenProvider.getEmail(token);
+
+            // 4) UserDetails 생성
+            UserDetails userDetails = new CustomUserDetails(userId, email);
+
+            // 5) SecurityContext 인증 객체 저장
+            Authentication authentication =
+                    new UsernamePasswordAuthenticationToken(
+                            userDetails, null, userDetails.getAuthorities());
+
+            SecurityContextHolder.getContext().setAuthentication(authentication);
         }
 
-        // 3) "Bearer" 이후의 토큰만 추출
-        String token = authHeader.substring(7);
-
-        // 4) 토큰 유효성 검사
-        if (!jwtTokenProvider.validateToken(token)) {
-            filterChain.doFilter(request, response);
-            return;
-        }
-
-        // -- 유효한 토큰 --
-        // 5) 토큰에서 userId, email 추출
-        Long userId = jwtTokenProvider.getUserId(token);
-        String email = jwtTokenProvider.getEmail(token);
-
-        CustomUserDetails userDetails = new CustomUserDetails(userId, email);
-
-        // 6) 인증 객체 생성
-        // UserDetails(세션 기반 인증) 사용 x, Authentication 직접 생성
-        UsernamePasswordAuthenticationToken authentication =
-                new UsernamePasswordAuthenticationToken(
-                        userDetails,
-                        null,
-                        Collections.emptyList()
-                );
-
-        // 7) SecurityContextHolder에 인증 정보 저장
-        SecurityContextHolder.getContext().setAuthentication(authentication);
-
-        // 8) 다음 필터로 요청 전달
+        // 6) 다음 필터로 요청 전달
         filterChain.doFilter(request, response);
+    }
+
+    // 요청에서 토큰 추출
+    private String resolveToken(HttpServletRequest request) {
+        String bearerToken = request.getHeader(JwtConstants.AUTHORIZATION_HEADER.getValue());
+
+        if (StringUtils.hasText(bearerToken)
+                && bearerToken.startsWith(JwtConstants.HEADER_PREFIX.getValue())) {
+            return bearerToken.substring(7);
+        }
+
+        return null;
     }
 }

@@ -1,4 +1,4 @@
-package com.nullpointer.domain.user.dto;
+package com.nullpointer.domain.auth.dto.response;
 
 import lombok.Builder;
 import lombok.Getter;

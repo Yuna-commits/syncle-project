@@ -1,8 +1,6 @@
 package com.nullpointer.global.security.jwt;
 
-import io.jsonwebtoken.Claims;
-import io.jsonwebtoken.Jwts;
-import io.jsonwebtoken.SignatureAlgorithm;
+import io.jsonwebtoken.*;
 import io.jsonwebtoken.security.Keys;
 import jakarta.annotation.PostConstruct;
 import lombok.extern.slf4j.Slf4j;
@@ -40,9 +38,10 @@ public class JwtTokenProvider {
         // payload(claims)에 사용자 정보를 담아 API 인증에 사용
         return Jwts
                 .builder()
-                .setSubject("ACCESS")
-                .claim("userId", userId)
-                .claim("email", email)
+                .setSubject(email)
+                .claim(JwtConstants.CLAIM_USER_ID.getValue(), userId)
+                .claim(JwtConstants.CLAIM_TYPE.getValue(), JwtConstants.TYPE_ACCESS)
+                .setIssuedAt(new Date())
                 .setExpiration(new Date(System.currentTimeMillis() + accessTokenExpiration))
                 .signWith(key, SignatureAlgorithm.HS256)
                 .compact();
@@ -53,42 +52,59 @@ public class JwtTokenProvider {
         // AccessToken 갱신을 위해 사용
         return Jwts
                 .builder()
-                .setSubject("REFRESH")
-                .claim("userId", userId)
+                .setSubject(String.valueOf(userId))
+                .claim(JwtConstants.CLAIM_TYPE.getValue(), JwtConstants.TYPE_REFRESH)
+                .setIssuedAt(new Date())
                 .setExpiration(new Date(System.currentTimeMillis() + refreshTokenExpiration))
                 .signWith(key, SignatureAlgorithm.HS256)
                 .compact();
     }
 
-    // 토큰에서 Claims 추출 -> 유효하지 않은 토큰이면 예외 발생
-    public Claims parseToken(String token) {
-        return Jwts
-                .parserBuilder()
-                .setSigningKey(key) // 서명 검증 키 지정
-                .build()
-                .parseClaimsJws(token) // 토큰 파싱 + 서명 검증
-                .getBody();
-    }
-
     // JWT 유효성 검증
     public boolean validateToken(String token) { // token : 클라이언트가 보낸 JWT
         try {
-            parseToken(token);
+            Jwts
+                    .parserBuilder()
+                    .setSigningKey(key)
+                    .build()
+                    .parseClaimsJws(token);
             return true;
-        } catch (Exception e) {
-            return false; // 검증 실패 -> {서명 불일치 / 만료된 토큰 / 변조된 토큰 / ...}
+        } catch (SecurityException | MalformedJwtException e) {
+            log.warn("잘못된 JWT 서명입니다.");
+        } catch (ExpiredJwtException e) {
+            log.warn("만료된 JWT 토큰입니다.");
+        } catch (UnsupportedJwtException e) {
+            log.warn("지원되지 않는 JWT 토큰입니다.");
+        } catch (IllegalArgumentException e) {
+            log.warn("JWT 토큰이 잘못되었습니다.");
+        }
+        return false;
+    }
+
+    // 토큰에서 Claims 추출 -> 유효하지 않은 토큰이면 예외 발생
+    public Claims parseClaims(String token) {
+        try {
+            return Jwts
+                    .parserBuilder()
+                    .setSigningKey(key) // 서명 검증 키 지정
+                    .build()
+                    .parseClaimsJws(token) // 토큰 파싱 + 서명 검증
+                    .getBody();
+        } catch (ExpiredJwtException e) {
+            // 만료된 토큰이어도 정보가 필요할 때 사용 가능
+            return e.getClaims();
         }
     }
 
     // JWT에서 userId 추출
     public Long getUserId(String token) {
         // API 인증 시 SecurityContextHolder에 담을 사용자 정보로 사용
-        return parseToken(token).get("userId", Long.class);
+        return parseClaims(token).get(JwtConstants.CLAIM_USER_ID.getValue(), Long.class);
     }
 
     // JWT에서 email 추출
     public String getEmail(String token) {
-        return parseToken(token).get("email", String.class);
+        return parseClaims(token).getSubject();
     }
 
 }
