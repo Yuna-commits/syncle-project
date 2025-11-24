@@ -1,5 +1,6 @@
 package com.nullpointer.domain.auth.controller;
 
+import com.nullpointer.domain.auth.dto.request.GoogleLoginRequest;
 import com.nullpointer.domain.auth.dto.request.LoginRequest;
 import com.nullpointer.domain.auth.dto.request.SignupRequest;
 import com.nullpointer.domain.auth.dto.response.LoginResponse;
@@ -30,11 +31,18 @@ public class AuthController {
         return ApiResponse.success("이메일 인증 성공");
     }
 
-    // 로그인
+    // 이메일 로그인
     @PostMapping("/login")
     public ApiResponse<LoginResponse> login(@Valid @RequestBody LoginRequest req) {
-        LoginResponse loginResponse = authService.login(req);
-        return ApiResponse.success(loginResponse);
+        LoginResponse response = authService.login(req);
+        return ApiResponse.success(response);
+    }
+
+    // 구글 로그인
+    @PostMapping("/login/google")
+    public ApiResponse<LoginResponse> googleLogin(@RequestBody GoogleLoginRequest req) {
+        LoginResponse response = authService.googleLogin(req.getIdToken());
+        return ApiResponse.success(response);
     }
 
 }

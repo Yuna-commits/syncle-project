@@ -14,11 +14,11 @@ import com.nullpointer.domain.user.vo.enums.VerifyStatus;
 import com.nullpointer.global.exception.BusinessException;
 import com.nullpointer.global.exception.ErrorCode;
 import com.nullpointer.global.security.jwt.JwtTokenProvider;
+import com.nullpointer.global.util.GoogleTokenVerifier;
 import com.nullpointer.global.util.RedisUtil;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.mail.MailException;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -32,12 +32,13 @@ public class AuthServiceImpl implements AuthService {
 
     private final RegistrationService registrationService;
     private final EmailService emailService; // 이메일 전송
+    private final UserMapper userMapper;
 
     private final JwtTokenProvider jwtTokenProvider;
     private final PasswordEncoder passwordEncoder;
-    private final UserMapper userMapper;
 
     private final RedisUtil redisUtil;
+    private final GoogleTokenVerifier googleTokenVerifier;
 
     @Value("${app.email.verification-expiration-millis}")
     private long verificationExpirationMillis; // 인증 메일 유효 시간
@@ -46,6 +47,7 @@ public class AuthServiceImpl implements AuthService {
     private Long refreshTokenExpiration; // Redis 저장용 만료 시간
 
     private static final String EMAIL_KEY_PREFIX = "np:auth:email:";
+    private static final String LOGIN_KEY_PREFIX = "np:auth:refresh:";
 
     /**
      * 이메일 회원가입 요청
@@ -71,7 +73,7 @@ public class AuthServiceImpl implements AuthService {
         // 4) 인증 메일 발송 -> 실패 시 재발송 유도 (추가)
         try {
             emailService.sendVerificationEmail(newUser.getEmail(), token);
-        } catch (MailException ex) {
+        } catch (Exception ex) {
             /**
              * 추가) 재발송 기능
              */
@@ -128,6 +130,7 @@ public class AuthServiceImpl implements AuthService {
      * 이메일 로그인
      */
     @Override
+    @Transactional(readOnly = true) // 단순 조회, 토큰 발급용
     public LoginResponse login(LoginRequest req) {
 
         // 1) 이메일로 사용자 조회
@@ -141,15 +144,61 @@ public class AuthServiceImpl implements AuthService {
         // 2) 비즈니스 검증
         validateUserStatus(user, req.getPassword());
 
-        // 3) 토큰 생성
+        return createLoginResponse(user);
+    }
+
+    /**
+     * 구글 로그인
+     */
+    @Override
+    @Transactional // 상황에 따라 DB 상태 변경이 일어나기 때문에 트랜잭션으로 관리
+    public LoginResponse googleLogin(String idToken) {
+        // 1) 구글 ID Token 검증, 정보 추출
+        GoogleTokenVerifier.GoogleUserInfo googleUser = googleTokenVerifier.verify(idToken);
+
+        // 2) 이메일로 사용자 조회
+        UserVo user = userMapper.findByEmail(googleUser.email());
+
+        // 3-1) 신규 회원인 경우 -> 회원가입 진행
+        // email + Provider("LOCAL", "GOOGLE")로 구분
+        if (user == null) {
+            user = UserVo
+                    .builder()
+                    .email(googleUser.email())
+                    .password(passwordEncoder.encode(UUID.randomUUID().toString())) // 랜덤 비밀번호
+                    .nickname(googleUser.name())
+                    .profileImg(googleUser.pictureUrl())
+                    .provider(Provider.GOOGLE)
+                    .providerId(googleUser.providerId()) // sub 값 저장
+                    .verifyStatus(VerifyStatus.VERIFIED)
+                    .build();
+
+            // DB 저장
+            userMapper.insertUser(user);
+
+            /**
+             * 추가) 기본 팀, 보드 생성
+             */
+        }
+        // 3-2) 기존 회원인 경우 -> Provider 확인
+        else {
+            if (user.getProvider() != Provider.GOOGLE) {
+                throw new BusinessException(ErrorCode.LOGIN_PROVIDER_MISMATCH);
+            }
+        }
+
+        return createLoginResponse(user);
+    }
+
+    /**
+     * 로그인 토큰 발급, 응답 생성 메서드
+     */
+    private LoginResponse createLoginResponse(UserVo user) {
         String accessToken = jwtTokenProvider.createAccessToken(user.getId(), user.getEmail());
         String refreshToken = jwtTokenProvider.createRefreshToken(user.getId());
 
-        // 4) RefreshToken Redis에 저장
-        String key = "np:auth:refresh:" + user.getId();
-        redisUtil.setDataExpire(key, refreshToken, refreshTokenExpiration);
+        redisUtil.setDataExpire(LOGIN_KEY_PREFIX + user.getId(), refreshToken, refreshTokenExpiration);
 
-        // 8) ResponseDTO 반환
         return LoginResponse
                 .builder()
                 .id(user.getId())
