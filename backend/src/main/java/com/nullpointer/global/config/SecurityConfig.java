@@ -1,4 +1,4 @@
-package com.nullpointer.global.security;
+package com.nullpointer.global.config;
 
 import com.nullpointer.global.security.jwt.JwtAuthenticationFilter;
 import org.springframework.context.annotation.Bean;

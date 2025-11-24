@@ -1,9 +1,9 @@
 package com.nullpointer.domain.auth.controller;
 
+import com.nullpointer.domain.auth.dto.request.LoginRequest;
+import com.nullpointer.domain.auth.dto.request.SignupRequest;
+import com.nullpointer.domain.auth.dto.response.LoginResponse;
 import com.nullpointer.domain.auth.service.AuthService;
-import com.nullpointer.domain.user.dto.LoginRequest;
-import com.nullpointer.domain.user.dto.LoginResponse;
-import com.nullpointer.domain.user.dto.SignupRequest;
 import com.nullpointer.global.common.ApiResponse;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
