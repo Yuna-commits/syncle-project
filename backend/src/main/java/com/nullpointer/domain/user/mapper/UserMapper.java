@@ -1,8 +1,10 @@
 package com.nullpointer.domain.user.mapper;
 
+import com.nullpointer.domain.user.dto.UserProfileResponse;
 import com.nullpointer.domain.user.vo.UserVo;
 import com.nullpointer.domain.user.vo.enums.VerifyStatus;
-import org.apache.ibatis.annotations.Param;
+
+import java.util.Optional;
 
 public interface UserMapper {
 
@@ -24,7 +26,8 @@ public interface UserMapper {
     // 사용자 인증 상태 조건부 업데이트
     int updateVerifyStatusIfCurrent(Long id, VerifyStatus currentStatus, VerifyStatus newStatus);
 
-    // 사용자 이메일 인증 상태 업데이트
-    void updateVerifyStatus(@Param("id") Long id, @Param("verifyStatus") VerifyStatus verifyStatus);
+    // 사용자 정보 조회
+    // count 쿼리 여러번 사용 x -> 스칼라 서브쿼리를 사용해 한 번의 쿼리로 모든 카운트 조회
+    Optional<UserProfileResponse> getUserProfile(Long id);
 
 }
