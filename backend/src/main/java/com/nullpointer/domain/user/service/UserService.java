@@ -1,5 +1,7 @@
 package com.nullpointer.domain.user.service;
 
+import com.nullpointer.domain.user.dto.UserProfileResponse;
+
 public interface UserService {
 
     // 이메일 중복 확인
@@ -7,5 +9,8 @@ public interface UserService {
 
     // 닉네임 중복 확인
     boolean existsByNickname(String nickname);
+
+    // 내 정보 조회
+    UserProfileResponse getUserProfile(Long id);
 
 }
