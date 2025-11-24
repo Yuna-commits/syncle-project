@@ -53,7 +53,6 @@ public class AuthServiceImpl implements AuthService {
      */
     @Override
     public void signup(SignupRequest req) {
-
         /**
          * 회원가입과 메일 발송을 같은 트랜잭션에 두면,
          * 메일 발송 실패 시 롤백되어 DB INSERT가 취소됨
@@ -85,7 +84,6 @@ public class AuthServiceImpl implements AuthService {
     @Override
     @Transactional
     public void verifyEmailToken(String accessToken) {
-
         String key = RedisKeyType.EMAIL_VERIFICATION.getKey(accessToken);
 
         // 1) Redis에서 token으로 userId 조회
@@ -93,7 +91,7 @@ public class AuthServiceImpl implements AuthService {
 
         // 만료되었거나 잘못된 토큰인 경우
         if (userIdStr == null) {
-            throw new BusinessException(ErrorCode.INVALID_VERIFICATION_TOKEN);
+            throw new BusinessException(ErrorCode.EXPIRED_VERIFICATION_TOKEN);
         }
 
         // 2) 사용자 조회
@@ -130,7 +128,6 @@ public class AuthServiceImpl implements AuthService {
     @Override
     @Transactional(readOnly = true) // 단순 조회, 토큰 발급용
     public LoginResponse login(LoginRequest req) {
-
         // 1) 이메일로 사용자 조회
         UserVo user = userMapper.findByEmail(req.getEmail());
 
@@ -195,7 +192,7 @@ public class AuthServiceImpl implements AuthService {
     public void logout(String accessToken) {
         // 1) Access Token 유효성 검증 (형식, 만료 여부)
         if (!jwtTokenProvider.validateToken(accessToken)) {
-            throw new BusinessException(ErrorCode.INVALID_VERIFICATION_TOKEN);
+            throw new BusinessException(ErrorCode.INVALID_TOKEN);
         }
 
         // 2) 토큰에서 userId와 만료 시간 추출
@@ -225,7 +222,7 @@ public class AuthServiceImpl implements AuthService {
     public LoginResponse reissue(String refreshToken) {
         // 1) Refresh Token 유효성 검사 (JWT 서명, 만료 여부 확인)
         if (!jwtTokenProvider.validateToken(refreshToken)) {
-            throw new BusinessException(ErrorCode.INVALID_VERIFICATION_TOKEN);
+            throw new BusinessException(ErrorCode.INVALID_REFRESH_TOKEN);
         }
 
         // 2) 토큰에서 userId 추출
@@ -236,12 +233,12 @@ public class AuthServiceImpl implements AuthService {
         String savedRefreshKey = redisUtil.getData(redisKey);
 
         if (savedRefreshKey == null || !savedRefreshKey.equals(refreshToken)) {
-            throw new BusinessException(ErrorCode.INVALID_VERIFICATION_TOKEN);
+            throw new BusinessException(ErrorCode.REFRESH_TOKEN_NOT_FOUND);
         }
 
         // 4) 사용자 존재 여부, 활성화 상태 확인
         UserVo user = userMapper.findById(userId);
-        
+
         if (user == null) {
             throw new BusinessException(ErrorCode.USER_NOT_FOUND);
         }
