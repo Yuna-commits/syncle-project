@@ -11,6 +11,7 @@ import com.nullpointer.domain.user.vo.UserVo;
 import com.nullpointer.domain.user.vo.enums.Provider;
 import com.nullpointer.domain.user.vo.enums.UserStatus;
 import com.nullpointer.domain.user.vo.enums.VerifyStatus;
+import com.nullpointer.global.common.enums.RedisKeyType;
 import com.nullpointer.global.exception.BusinessException;
 import com.nullpointer.global.exception.ErrorCode;
 import com.nullpointer.global.security.jwt.JwtTokenProvider;
@@ -46,9 +47,6 @@ public class AuthServiceImpl implements AuthService {
     @Value("${app.jwt.refresh-expiration}")
     private Long refreshTokenExpiration; // Redis 저장용 만료 시간
 
-    private static final String EMAIL_KEY_PREFIX = "np:auth:email:";
-    private static final String LOGIN_KEY_PREFIX = "np:auth:refresh:";
-
     /**
      * 이메일 회원가입 요청
      * 추가) 인증하지 않은 계정 정리, 메일 발송 실패 시 후처리
@@ -68,7 +66,7 @@ public class AuthServiceImpl implements AuthService {
         String token = UUID.randomUUID().toString();
 
         // 3) Redis 저장 (Key: "np:auth:email:{token}", Value: userId, TTL: 5분)
-        redisUtil.setDataExpire(EMAIL_KEY_PREFIX + token, String.valueOf(newUser.getId()), verificationExpirationMillis);
+        redisUtil.setDataExpire(RedisKeyType.EMAIL_VERIFICATION.getKey(token), String.valueOf(newUser.getId()), verificationExpirationMillis);
 
         // 4) 인증 메일 발송 -> 실패 시 재발송 유도 (추가)
         try {
@@ -88,7 +86,7 @@ public class AuthServiceImpl implements AuthService {
     @Transactional
     public void verifyEmailToken(String token) {
 
-        String key = EMAIL_KEY_PREFIX + token;
+        String key = RedisKeyType.EMAIL_VERIFICATION.getKey(token);
 
         // 1) Redis에서 token으로 userId 조회
         String userIdStr = redisUtil.getData(key);
@@ -190,6 +188,33 @@ public class AuthServiceImpl implements AuthService {
         return createLoginResponse(user);
     }
 
+    @Override
+    public void logout(String token) {
+        // 1) 토큰 유효성 검증 (형식, 만료 여부)
+        if (!jwtTokenProvider.validateToken(token)) {
+            throw new BusinessException(ErrorCode.INVALID_VERIFICATION_TOKEN);
+        }
+
+        // 2) 토큰에서 userId와 만료 시간 추출
+        Long userId = jwtTokenProvider.getUserId(token);
+        Long expiration = jwtTokenProvider.getExpiration(token);
+
+        // 3) Redis에서 해당 사용자의 Refresh Token 삭제 (재발급 차단 목적)
+        String refreshTokenKey = RedisKeyType.REFRESH_TOKEN.getKey(userId);
+
+        if (redisUtil.hasKey(refreshTokenKey)) {
+            redisUtil.deleteData(refreshTokenKey);
+        }
+
+        // 4) Access Token 블랙리스트 등록 -> 남은 시간동안 사용 차단
+        // 남은 시간 = 만료 시간 - 현재 시간
+        long remainingTime = expiration - System.currentTimeMillis();
+
+        if (remainingTime > 0) {
+            redisUtil.setDataExpire(RedisKeyType.BLACKLIST.getKey(token), "logout", remainingTime);
+        }
+    }
+
     /**
      * 로그인 토큰 발급, 응답 생성 메서드
      */
@@ -197,7 +222,8 @@ public class AuthServiceImpl implements AuthService {
         String accessToken = jwtTokenProvider.createAccessToken(user.getId(), user.getEmail());
         String refreshToken = jwtTokenProvider.createRefreshToken(user.getId());
 
-        redisUtil.setDataExpire(LOGIN_KEY_PREFIX + user.getId(), refreshToken, refreshTokenExpiration);
+        redisUtil.setDataExpire(
+                RedisKeyType.REFRESH_TOKEN.getKey(user.getId()), refreshToken, refreshTokenExpiration);
 
         return LoginResponse
                 .builder()

@@ -107,4 +107,9 @@ public class JwtTokenProvider {
         return parseClaims(token).getSubject();
     }
 
+    // 토큰 만료 시간 추출
+    public Long getExpiration(String token) {
+        return parseClaims(token).getExpiration().getTime();
+    }
+
 }

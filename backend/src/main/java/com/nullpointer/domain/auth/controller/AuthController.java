@@ -6,6 +6,7 @@ import com.nullpointer.domain.auth.dto.request.SignupRequest;
 import com.nullpointer.domain.auth.dto.response.LoginResponse;
 import com.nullpointer.domain.auth.service.AuthService;
 import com.nullpointer.global.common.ApiResponse;
+import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.web.bind.annotation.*;
@@ -43,6 +44,20 @@ public class AuthController {
     public ApiResponse<LoginResponse> googleLogin(@RequestBody GoogleLoginRequest req) {
         LoginResponse response = authService.googleLogin(req.getIdToken());
         return ApiResponse.success(response);
+    }
+
+    // 로그아웃
+    @PostMapping("/logout")
+    public ApiResponse<String> logout(HttpServletRequest request) {
+        String bearerToken = request.getHeader("Authorization");
+
+        // 헤더에서 Bearer 제거
+        if (bearerToken != null && bearerToken.startsWith("Bearer ")) {
+            String accessToken = bearerToken.substring(7);
+            authService.logout(accessToken);
+        }
+
+        return ApiResponse.success("로그아웃 성공");
     }
 
 }

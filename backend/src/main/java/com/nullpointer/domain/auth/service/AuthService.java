@@ -18,4 +18,7 @@ public interface AuthService {
     // 구글 로그인
     LoginResponse googleLogin(String idToken);
 
+    // 로그아웃
+    void logout(String token);
+
 }

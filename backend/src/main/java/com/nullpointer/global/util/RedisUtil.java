@@ -29,7 +29,7 @@ public class RedisUtil {
         stringRedisTemplate.delete(key);
     }
 
-    public boolean hashKey(String key) {
+    public boolean hasKey(String key) {
         return stringRedisTemplate.hasKey(key);
     }
 
