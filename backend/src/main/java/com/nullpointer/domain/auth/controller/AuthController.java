@@ -2,6 +2,7 @@ package com.nullpointer.domain.auth.controller;
 
 import com.nullpointer.domain.auth.dto.request.GoogleLoginRequest;
 import com.nullpointer.domain.auth.dto.request.LoginRequest;
+import com.nullpointer.domain.auth.dto.request.ReissueRequest;
 import com.nullpointer.domain.auth.dto.request.SignupRequest;
 import com.nullpointer.domain.auth.dto.response.LoginResponse;
 import com.nullpointer.domain.auth.service.AuthService;
@@ -58,6 +59,14 @@ public class AuthController {
         }
 
         return ApiResponse.success("로그아웃 성공");
+    }
+
+    // 토큰 재발급
+    // 클라이언트가 보낸 Refresh Token을 받아 서비스에 전달, 갱신된 토큰 세트를 응답
+    @PostMapping("/reissue")
+    public ApiResponse<LoginResponse> reissue(@RequestBody ReissueRequest req) {
+        LoginResponse response = authService.reissue(req.getRefreshToken());
+        return ApiResponse.success(response);
     }
 
 }

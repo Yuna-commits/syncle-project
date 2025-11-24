@@ -10,7 +10,7 @@ public interface AuthService {
     void signup(SignupRequest req);
 
     // 이메일 인증
-    void verifyEmailToken(String token);
+    void verifyEmailToken(String accessToken);
 
     // 이메일 로그인
     LoginResponse login(LoginRequest req);
@@ -19,6 +19,9 @@ public interface AuthService {
     LoginResponse googleLogin(String idToken);
 
     // 로그아웃
-    void logout(String token);
+    void logout(String accessToken);
+
+    // 토큰 재발급
+    LoginResponse reissue(String refreshToken);
 
 }

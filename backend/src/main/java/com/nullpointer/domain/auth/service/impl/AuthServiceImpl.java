@@ -84,9 +84,9 @@ public class AuthServiceImpl implements AuthService {
      */
     @Override
     @Transactional
-    public void verifyEmailToken(String token) {
+    public void verifyEmailToken(String accessToken) {
 
-        String key = RedisKeyType.EMAIL_VERIFICATION.getKey(token);
+        String key = RedisKeyType.EMAIL_VERIFICATION.getKey(accessToken);
 
         // 1) Redis에서 token으로 userId 조회
         String userIdStr = redisUtil.getData(key);
@@ -188,16 +188,19 @@ public class AuthServiceImpl implements AuthService {
         return createLoginResponse(user);
     }
 
+    /**
+     * 로그아웃
+     */
     @Override
-    public void logout(String token) {
-        // 1) 토큰 유효성 검증 (형식, 만료 여부)
-        if (!jwtTokenProvider.validateToken(token)) {
+    public void logout(String accessToken) {
+        // 1) Access Token 유효성 검증 (형식, 만료 여부)
+        if (!jwtTokenProvider.validateToken(accessToken)) {
             throw new BusinessException(ErrorCode.INVALID_VERIFICATION_TOKEN);
         }
 
         // 2) 토큰에서 userId와 만료 시간 추출
-        Long userId = jwtTokenProvider.getUserId(token);
-        Long expiration = jwtTokenProvider.getExpiration(token);
+        Long userId = jwtTokenProvider.getUserId(accessToken);
+        Long expiration = jwtTokenProvider.getExpiration(accessToken);
 
         // 3) Redis에서 해당 사용자의 Refresh Token 삭제 (재발급 차단 목적)
         String refreshTokenKey = RedisKeyType.REFRESH_TOKEN.getKey(userId);
@@ -211,8 +214,44 @@ public class AuthServiceImpl implements AuthService {
         long remainingTime = expiration - System.currentTimeMillis();
 
         if (remainingTime > 0) {
-            redisUtil.setDataExpire(RedisKeyType.BLACKLIST.getKey(token), "logout", remainingTime);
+            redisUtil.setDataExpire(RedisKeyType.BLACKLIST.getKey(accessToken), "logout", remainingTime);
         }
+    }
+
+    /**
+     * 토큰 재발급
+     */
+    @Override
+    public LoginResponse reissue(String refreshToken) {
+        // 1) Refresh Token 유효성 검사 (JWT 서명, 만료 여부 확인)
+        if (!jwtTokenProvider.validateToken(refreshToken)) {
+            throw new BusinessException(ErrorCode.INVALID_VERIFICATION_TOKEN);
+        }
+
+        // 2) 토큰에서 userId 추출
+        Long userId = jwtTokenProvider.getUserId(refreshToken);
+
+        // 3) Redis에 저장된 토큰과 비교
+        String redisKey = RedisKeyType.REFRESH_TOKEN.getKey(userId);
+        String savedRefreshKey = redisUtil.getData(redisKey);
+
+        if (savedRefreshKey == null || !savedRefreshKey.equals(refreshToken)) {
+            throw new BusinessException(ErrorCode.INVALID_VERIFICATION_TOKEN);
+        }
+
+        // 4) 사용자 존재 여부, 활성화 상태 확인
+        UserVo user = userMapper.findById(userId);
+        
+        if (user == null) {
+            throw new BusinessException(ErrorCode.USER_NOT_FOUND);
+        }
+
+        if (user.getUserStatus() != UserStatus.ACTIVATED) {
+            throw new BusinessException(ErrorCode.USER_STATUS_NOT_ACTIVE);
+        }
+
+        // 5) Access, Refresh Token 둘 다 재발급
+        return createLoginResponse(user);
     }
 
     /**
@@ -235,6 +274,9 @@ public class AuthServiceImpl implements AuthService {
                 .build();
     }
 
+    /**
+     * 상태 검증
+     */
     private void validateUserStatus(UserVo user, String inputPassword) {
         // A. LOCAL(이메일 로그인)인지 확인
         if (user.getProvider() != Provider.LOCAL) {

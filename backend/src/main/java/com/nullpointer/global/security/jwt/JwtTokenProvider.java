@@ -20,10 +20,10 @@ public class JwtTokenProvider {
     private String secretKey;
 
     @Value("${app.jwt.access-expiration}")
-    private Long accessTokenExpiration;
+    private Long accessTokenExpiration; // 30분
 
     @Value("${app.jwt.refresh-expiration}")
-    private Long refreshTokenExpiration; // 5분 -> 나중에 수정 필요!!!!!
+    private Long refreshTokenExpiration; // 2주
 
     private Key key;
 
@@ -53,6 +53,7 @@ public class JwtTokenProvider {
         return Jwts
                 .builder()
                 .setSubject(String.valueOf(userId))
+                .claim(JwtConstants.CLAIM_USER_ID.getValue(), userId)
                 .claim(JwtConstants.CLAIM_TYPE.getValue(), JwtConstants.TYPE_REFRESH)
                 .setIssuedAt(new Date())
                 .setExpiration(new Date(System.currentTimeMillis() + refreshTokenExpiration))
