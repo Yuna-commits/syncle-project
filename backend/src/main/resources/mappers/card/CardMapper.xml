@@ -1,0 +1,26 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.nullpointer.domain.card.mapper.CardMapper">
+
+    <!--
+      카드 1개 INSERT
+      card 테이블 컬럼:
+        id, list_id, title, description, priority, start_date,
+        due_date, order_index, progress, created_at, updated_at, deleted_at
+      여기서는:
+        - order_index : 0
+        - created_at / updated_at : NOW()
+        - 나머지(priority, start_date, due_date, progress, deleted_at) 는 NULL (DB 기본값)
+    -->
+    <insert id="insertCard"
+            parameterType="com.nullpointer.domain.card.vo.CardVo"
+            useGeneratedKeys="true"
+            keyProperty="id">
+        INSERT INTO card (list_id, title, description, order_index, created_at, updated_at, deleted_at)
+        VALUES (#{listId}, #{title}, #{description}, 0, NOW(), NOW(), NULL)
+    </insert>
+
+</mapper>
