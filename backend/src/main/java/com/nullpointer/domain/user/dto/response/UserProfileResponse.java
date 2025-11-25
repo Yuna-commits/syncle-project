@@ -1,4 +1,4 @@
-package com.nullpointer.domain.user.dto;
+package com.nullpointer.domain.user.dto.response;
 
 import com.nullpointer.domain.user.vo.enums.VerifyStatus;
 import lombok.*;

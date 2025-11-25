@@ -1,15 +1,13 @@
 package com.nullpointer.domain.user.controller;
 
-import com.nullpointer.domain.user.dto.UserProfileResponse;
+import com.nullpointer.domain.user.dto.request.UpdateProfileRequest;
+import com.nullpointer.domain.user.dto.response.UserProfileResponse;
 import com.nullpointer.domain.user.service.UserService;
 import com.nullpointer.global.common.ApiResponse;
 import com.nullpointer.global.security.jwt.CustomUserDetails;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestParam;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 @RestController
 @RequestMapping("/api/users")
@@ -37,6 +35,14 @@ public class UserController {
     public ApiResponse<UserProfileResponse> getMyProfile(@AuthenticationPrincipal CustomUserDetails userDetails) {
         UserProfileResponse response = userService.getUserProfile(userDetails.getUserId());
         return ApiResponse.success(response);
+    }
+
+    // 내 정보 수정
+    @PatchMapping("/me")
+    public ApiResponse<String> updateMyProfile(
+            @AuthenticationPrincipal CustomUserDetails userDetails, @RequestBody UpdateProfileRequest req) {
+        userService.updateProfile(userDetails.getUserId(), req);
+        return ApiResponse.success("내 정보 수정 성공");
     }
 
 }

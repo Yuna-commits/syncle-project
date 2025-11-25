@@ -39,6 +39,13 @@ spring:
       host: 192.168.0.181
       port: 6379
 
+  # File Upload
+  servlet:
+    multipart:
+      enabled: true
+      max-file-size: 10MB
+      max-request-size: 10MB
+
 app:
   jwt:
     secret: 9e5e5b6c67264cb6cee8e18f8f35517aec75e14383934dd8554090be30a1facd
@@ -51,6 +58,9 @@ app:
 
   google:
     client-id: 1077568018264-rrmqlanf1tbtmciv91eu91h5kg8pcvrj.apps.googleusercontent.com
+
+  file:
+    upload-dir: ./uploads
 
 server:
   port: 8080

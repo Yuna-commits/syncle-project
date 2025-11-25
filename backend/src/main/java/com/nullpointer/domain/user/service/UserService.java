@@ -1,6 +1,7 @@
 package com.nullpointer.domain.user.service;
 
-import com.nullpointer.domain.user.dto.UserProfileResponse;
+import com.nullpointer.domain.user.dto.request.UpdateProfileRequest;
+import com.nullpointer.domain.user.dto.response.UserProfileResponse;
 
 public interface UserService {
 
@@ -12,5 +13,8 @@ public interface UserService {
 
     // 내 정보 조회
     UserProfileResponse getUserProfile(Long id);
+
+    // 내 정보 수정
+    void updateProfile(Long id, UpdateProfileRequest req);
 
 }
