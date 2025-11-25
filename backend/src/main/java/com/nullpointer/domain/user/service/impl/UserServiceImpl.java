@@ -4,6 +4,7 @@ import com.nullpointer.domain.auth.dto.request.PasswordRequest;
 import com.nullpointer.domain.file.service.FileStorageService;
 import com.nullpointer.domain.user.dto.request.UpdateProfileRequest;
 import com.nullpointer.domain.user.dto.response.UserProfileResponse;
+import com.nullpointer.domain.user.dto.response.UserSummaryResponse;
 import com.nullpointer.domain.user.mapper.UserMapper;
 import com.nullpointer.domain.user.service.UserService;
 import com.nullpointer.domain.user.vo.UserVo;
@@ -123,6 +124,15 @@ public class UserServiceImpl implements UserService {
         // 5) 로그아웃 처리 -> Reids에 저장된 Refresh Token 삭제
         String redisKey = RedisKeyType.REFRESH_TOKEN.getKey(id);
         redisUtil.deleteData(redisKey);
+    }
+
+    /**
+     * 다른 사용자 정보 조회
+     */
+    @Override
+    public UserSummaryResponse getUserSummary(Long userId) {
+        return userMapper.getUserSummary(userId)
+                .orElseThrow(() -> new BusinessException(ErrorCode.USER_NOT_FOUND));
     }
 
 }

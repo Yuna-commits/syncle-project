@@ -3,6 +3,7 @@ package com.nullpointer.domain.user.controller;
 import com.nullpointer.domain.auth.dto.request.PasswordRequest;
 import com.nullpointer.domain.user.dto.request.UpdateProfileRequest;
 import com.nullpointer.domain.user.dto.response.UserProfileResponse;
+import com.nullpointer.domain.user.dto.response.UserSummaryResponse;
 import com.nullpointer.domain.user.service.UserService;
 import com.nullpointer.global.common.ApiResponse;
 import com.nullpointer.global.security.jwt.CustomUserDetails;
@@ -53,6 +54,13 @@ public class UserController {
                                               @Valid @RequestBody PasswordRequest.Change req) {
         userService.changePassword(userDetails.getUserId(), req);
         return ApiResponse.success("비밀번호 변경 성공");
+    }
+
+    // 다른 사용자 정보 조회
+    @GetMapping("/{userId}/summary")
+    public ApiResponse<UserSummaryResponse> getUserSummary(@PathVariable Long userId) {
+        UserSummaryResponse response = userService.getUserSummary(userId);
+        return ApiResponse.success(response);
     }
 
 }

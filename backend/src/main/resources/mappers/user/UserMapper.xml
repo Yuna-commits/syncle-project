@@ -129,4 +129,15 @@
           AND deleted_at IS NULL
     </update>
 
+    <!-- 다른 사용자 정보 조회 -->
+    <select id="getUserSummary" resultType="com.nullpointer.domain.user.dto.response.UserSummaryResponse">
+        SELECT id,
+               nickname,
+               position,
+               profile_img
+        FROM user
+        WHERE id = #{userId}
+          AND deleted_at IS NULL
+    </select>
+
 </mapper>

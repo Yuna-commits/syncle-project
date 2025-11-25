@@ -1,6 +1,7 @@
 package com.nullpointer.domain.user.mapper;
 
 import com.nullpointer.domain.user.dto.response.UserProfileResponse;
+import com.nullpointer.domain.user.dto.response.UserSummaryResponse;
 import com.nullpointer.domain.user.vo.UserVo;
 import com.nullpointer.domain.user.vo.enums.VerifyStatus;
 
@@ -34,6 +35,8 @@ public interface UserMapper {
     void updateUser(UserVo user);
 
     // 사용자 비밀번호 변경 (성공: 1, 실패: 0)
-    int updatePassword(Long id, String newPassword);
+    void updatePassword(Long id, String newPassword);
+
+    Optional<UserSummaryResponse> getUserSummary(Long userId);
 
 }
