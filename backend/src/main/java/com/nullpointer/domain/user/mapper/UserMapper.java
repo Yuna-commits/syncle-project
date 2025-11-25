@@ -1,6 +1,6 @@
 package com.nullpointer.domain.user.mapper;
 
-import com.nullpointer.domain.user.dto.UserProfileResponse;
+import com.nullpointer.domain.user.dto.response.UserProfileResponse;
 import com.nullpointer.domain.user.vo.UserVo;
 import com.nullpointer.domain.user.vo.enums.VerifyStatus;
 
@@ -29,5 +29,8 @@ public interface UserMapper {
     // 사용자 정보 조회
     // count 쿼리 여러번 사용 x -> 스칼라 서브쿼리를 사용해 한 번의 쿼리로 모든 카운트 조회
     Optional<UserProfileResponse> getUserProfile(Long id);
+
+    // 사용자 정보 수정
+    void updateUser(UserVo user);
 
 }
