@@ -1,7 +1,9 @@
 package com.nullpointer.domain.board.service.impl;
 
-import com.nullpointer.domain.board.dto.response.BoardResponse;
 import com.nullpointer.domain.board.dto.request.CreateBoardRequest;
+import com.nullpointer.domain.board.dto.request.UpdateBoardRequest;
+import com.nullpointer.domain.board.dto.response.BoardDetailResponse;
+import com.nullpointer.domain.board.dto.response.BoardResponse;
 import com.nullpointer.domain.board.mapper.BoardMapper;
 import com.nullpointer.domain.board.service.BoardService;
 import com.nullpointer.domain.board.vo.BoardVo;
@@ -21,7 +23,7 @@ public class BoardServiceImpl implements BoardService {
     private final BoardMemberMapper boardMemberMapper;
 
     @Override
-    public void createBoard(Long teamId, Long userId, CreateBoardRequest req) {
+    public void createBoard(Long teamId, CreateBoardRequest req, Long userId) {
         // 1. 보드 VO 생성 (DTO -> VO)
         BoardVo boardVo = BoardVo.builder()
                 .title(req.getTitle())
@@ -51,4 +53,26 @@ public class BoardServiceImpl implements BoardService {
         return boards.stream().map(BoardResponse::from).toList();
     }
 
+    @Override
+    public List<BoardResponse> getTeamBoards(Long teamId) {
+        List<BoardVo> boards = boardMapper.findBoardByTeamId(teamId);
+        return boards.stream().map(BoardResponse::from).toList();
+    }
+
+    @Override
+    public BoardDetailResponse getBoardDetail(Long boardId) {
+        BoardVo vo = boardMapper.findBoardByBoardId(boardId);
+        return BoardDetailResponse.from(vo);
+    }
+
+    @Override
+    public void updateBoard(Long boardId, UpdateBoardRequest req, Long userId) {
+        BoardVo vo = req.toVo(boardId);
+        boardMapper.updateBoard(vo);
+    }
+
+    @Override
+    public void deleteBoard(Long boardId, Long userId) {
+        boardMapper.deleteBoard(boardId);
+    }
 }

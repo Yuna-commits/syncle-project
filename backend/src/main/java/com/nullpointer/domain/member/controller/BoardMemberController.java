@@ -1,21 +1,25 @@
 package com.nullpointer.domain.member.controller;
 
 import com.nullpointer.domain.member.dto.board.BoardInviteRequest;
+import com.nullpointer.domain.member.dto.board.BoardMemberResponse;
+import com.nullpointer.domain.member.dto.board.BoardRoleUpdateRequest;
 import com.nullpointer.domain.member.service.BoardMemberService;
 import com.nullpointer.global.common.ApiResponse;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.List;
+
 @RestController
-@RequestMapping("/api/boards")
+@RequestMapping("/api/boards/{boardId}/members")
 @RequiredArgsConstructor
 public class BoardMemberController {
 
     private final BoardMemberService boardMemberService;
 
     // 보드 멤버 초대
-    @PostMapping("/{boardId}/members")
+    @PostMapping("")
     public ApiResponse<String> inviteBoardMember(@PathVariable Long boardId,
                                                 @Valid @RequestBody BoardInviteRequest req) {
 
@@ -26,8 +30,25 @@ public class BoardMemberController {
     }
 
     // 보드 멤버 조회
-    @GetMapping("/{boardId}/members")
-    public ApiResponse<?> getBoardMembers(@PathVariable Long boardId) {
+    @GetMapping("")
+    public ApiResponse<List<BoardMemberResponse>> getBoardMembers(@PathVariable Long boardId) {
         return ApiResponse.success(boardMemberService.getBoardMembers(boardId));
+    }
+
+    // 보드 역할 변경
+    @PatchMapping("/{memberId}")
+    public ApiResponse<String> changeBoardMember(@PathVariable Long boardId,
+                                                 @PathVariable Long memberId,
+                                                 @Valid @RequestBody BoardRoleUpdateRequest req) {
+        boardMemberService.changeBoardRole(boardId, memberId, req);
+        return ApiResponse.success("역할 변경 완료");
+    }
+
+    // 보드 탈퇴
+    @DeleteMapping("/{memberId}")
+    public ApiResponse<String> deleteBoardMember(@PathVariable Long boardId,
+                                                 @PathVariable Long memberId) {
+        boardMemberService.deleteBoardMember(boardId, memberId);
+        return ApiResponse.success("보드 탈퇴 완료");
     }
 }

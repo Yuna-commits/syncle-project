@@ -92,6 +92,6 @@ public class TeamServiceImpl implements TeamService {
     // 팀 삭제
     @Override
     public void deleteTeam(Long teamId, Long userId) {
-        teamMapper.DeleteTeam(teamId);
+        teamMapper.deleteTeam(teamId);
     }
 }

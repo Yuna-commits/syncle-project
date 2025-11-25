@@ -19,5 +19,5 @@ public interface TeamMapper {
     void updateTeam(TeamVo teamVo);
 
     // 팀 삭제
-    void DeleteTeam(Long teamId);
+    void deleteTeam(Long teamId);
 }

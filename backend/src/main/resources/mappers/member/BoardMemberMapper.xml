@@ -25,6 +25,23 @@
              user b
         WHERE a.board_id = #{boardId}
           AND a.user_id = b.id
-          AND a.deleted_at IS NULL </select>
+          AND a.deleted_at IS NULL
+    </select>
 
+
+    <!-- 보드 역할 변경 -->
+    <update id="updateBoardRole" parameterType="BoardVo">
+        UPDATE board_member
+        SET role = #{role}
+        WHERE board_id = #{boardId}
+          AND user_id = #{userId}
+    </update>
+
+    <!-- 보드 탈퇴 -->
+    <update id="deleteBoardMember">
+        UPDATE board_member
+        SET deleted_at = now()
+        WHERE board_id = #{boardId}
+          AND user_id = #{userId}
+    </update>
 </mapper>

@@ -53,4 +53,31 @@
         WHERE team_id = #{id}
           AND deleted_at IS NULL
     </select>
+
+    <!-- 보드 상세 조회 -->
+    <select id="findBoardByBoardId" parameterType="Long" resultType="BoardVo">
+        SELECT id,
+               title,
+               description,
+               visibility
+        FROM board
+        WHERE id = #{id}
+          AND deleted_at IS NULL
+    </select>
+
+    <!-- 보드 정보 수정 -->
+    <update id="updateBoard" parameterType="BoardVo">
+        UPDATE board
+        SET title = #{title},
+            description = #{description},
+            visibility = #{visibility}
+        WHERE id = #{id}
+    </update>
+
+    <!-- 보드 삭제 -->
+    <update id="deleteBoard">
+        UPDATE board
+        SET deleted_at = NOW()
+        WHERE id = #{id}
+    </update>
 </mapper>
