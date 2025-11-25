@@ -28,8 +28,9 @@ public enum ErrorCode {
     USER_EMAIL_DUPLICATE(HttpStatus.BAD_REQUEST, "U002", "이미 사용 중인 이메일입니다."),
     USER_NICKNAME_DUPLICATE(HttpStatus.BAD_REQUEST, "U003", "이미 사용 중인 닉네임입니다."),
     INVALID_PASSWORD(HttpStatus.UNAUTHORIZED, "U004", "올바르지 않은 비밀번호입니다."),
-    LOGIN_PROVIDER_MISMATCH(HttpStatus.UNAUTHORIZED, "U005", "올바르지 않은 로그인 방식입니다."),
-    USER_STATUS_NOT_ACTIVE(HttpStatus.FORBIDDEN, "U006", "현재 계정 상태에서는 로그인할 수 없습니다."),
+    SAME_AS_OLD_PASSWORD(HttpStatus.BAD_REQUEST, "U005", "기존 비밀번호와 동일한 비밀번호입니다."),
+    LOGIN_PROVIDER_MISMATCH(HttpStatus.UNAUTHORIZED, "U006", "올바르지 않은 로그인 방식입니다."),
+    USER_STATUS_NOT_ACTIVE(HttpStatus.FORBIDDEN, "U007", "현재 계정 상태에서는 로그인할 수 없습니다."),
 
     // 팀
     TEAM_NOT_FOUND(HttpStatus.NOT_FOUND, "T001", "존재하지 않는 팀입니다."),

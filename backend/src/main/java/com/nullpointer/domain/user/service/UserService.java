@@ -1,5 +1,6 @@
 package com.nullpointer.domain.user.service;
 
+import com.nullpointer.domain.user.dto.request.ChangePasswordRequest;
 import com.nullpointer.domain.user.dto.request.UpdateProfileRequest;
 import com.nullpointer.domain.user.dto.response.UserProfileResponse;
 
@@ -16,5 +17,8 @@ public interface UserService {
 
     // 내 정보 수정
     void updateProfile(Long id, UpdateProfileRequest req);
+
+    // 비밀번호 변경
+    void changePassword(Long id, ChangePasswordRequest req);
 
 }

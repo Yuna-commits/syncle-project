@@ -1,10 +1,12 @@
 package com.nullpointer.domain.user.controller;
 
+import com.nullpointer.domain.user.dto.request.ChangePasswordRequest;
 import com.nullpointer.domain.user.dto.request.UpdateProfileRequest;
 import com.nullpointer.domain.user.dto.response.UserProfileResponse;
 import com.nullpointer.domain.user.service.UserService;
 import com.nullpointer.global.common.ApiResponse;
 import com.nullpointer.global.security.jwt.CustomUserDetails;
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
@@ -43,6 +45,14 @@ public class UserController {
             @AuthenticationPrincipal CustomUserDetails userDetails, @RequestBody UpdateProfileRequest req) {
         userService.updateProfile(userDetails.getUserId(), req);
         return ApiResponse.success("내 정보 수정 성공");
+    }
+
+    // 내 비밀번호 변경
+    @PatchMapping("/password")
+    public ApiResponse<String> changePassword(@AuthenticationPrincipal CustomUserDetails userDetails,
+                                              @Valid @RequestBody ChangePasswordRequest req) {
+        userService.changePassword(userDetails.getUserId(), req);
+        return ApiResponse.success("비밀번호 변경 성공");
     }
 
 }

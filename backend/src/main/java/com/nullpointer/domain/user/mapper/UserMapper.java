@@ -33,4 +33,7 @@ public interface UserMapper {
     // 사용자 정보 수정
     void updateUser(UserVo user);
 
+    // 사용자 비밀번호 변경 (성공: 1, 실패: 0)
+    int updatePassword(Long id, String newPassword);
+
 }
