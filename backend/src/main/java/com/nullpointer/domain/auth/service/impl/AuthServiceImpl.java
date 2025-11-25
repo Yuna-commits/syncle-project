@@ -96,12 +96,8 @@ public class AuthServiceImpl implements AuthService {
 
         // 2) 사용자 조회
         Long userId = Long.valueOf(userIdStr);
-        UserVo user = userMapper.findById(userId);
-
-        // 존재하지 않는 사용자인 경우
-        if (user == null) {
-            throw new BusinessException(ErrorCode.USER_NOT_FOUND);
-        }
+        UserVo user = userMapper.findById(userId)
+                .orElseThrow(() -> new BusinessException(ErrorCode.USER_NOT_FOUND)); // 존재하지 않는 사용자인 경우
 
         // 이미 인증된 사용자인 경우
         if (user.getVerifyStatus() == VerifyStatus.VERIFIED) {
@@ -129,12 +125,8 @@ public class AuthServiceImpl implements AuthService {
     @Transactional(readOnly = true) // 단순 조회, 토큰 발급용
     public LoginResponse login(LoginRequest req) {
         // 1) 이메일로 사용자 조회
-        UserVo user = userMapper.findByEmail(req.getEmail());
-
-        // 존재하지 않는 사용자인 경우
-        if (user == null) {
-            throw new BusinessException(ErrorCode.USER_NOT_FOUND);
-        }
+        UserVo user = userMapper.findByEmail(req.getEmail())
+                .orElseThrow(() -> new BusinessException(ErrorCode.USER_NOT_FOUND));
 
         // 2) 비즈니스 검증
         validateUserStatus(user, req.getPassword());
@@ -152,36 +144,37 @@ public class AuthServiceImpl implements AuthService {
         GoogleTokenVerifier.GoogleUserInfo googleUser = googleTokenVerifier.verify(idToken);
 
         // 2) 이메일로 사용자 조회
-        UserVo user = userMapper.findByEmail(googleUser.email());
+        UserVo user = userMapper.findByEmail(googleUser.email())
+                .map(existingUser -> {
+                    // 3-1) 기존 회원인 경우 -> Provider 확인
+                    if (existingUser.getProvider() != Provider.GOOGLE) {
+                        throw new BusinessException(ErrorCode.LOGIN_PROVIDER_MISMATCH);
+                    }
+                    return existingUser; // 검증에 통과하면 기존 유저 반환
+                }).orElseGet(() -> {
+                    // 3-2) 신규 회원인 경우 -> 회원가입 진행
+                    UserVo newUser = UserVo
+                            .builder()
+                            .email(googleUser.email())
+                            .password(passwordEncoder.encode(UUID.randomUUID().toString())) // 랜덤 비밀번호
+                            .nickname(googleUser.name())
+                            .profileImg(googleUser.pictureUrl())
+                            .provider(Provider.GOOGLE)
+                            .providerId(googleUser.providerId()) // sub 값 저장
+                            .verifyStatus(VerifyStatus.VERIFIED)
+                            .build();
 
-        // 3-1) 신규 회원인 경우 -> 회원가입 진행
-        // email + Provider("LOCAL", "GOOGLE")로 구분
-        if (user == null) {
-            user = UserVo
-                    .builder()
-                    .email(googleUser.email())
-                    .password(passwordEncoder.encode(UUID.randomUUID().toString())) // 랜덤 비밀번호
-                    .nickname(googleUser.name())
-                    .profileImg(googleUser.pictureUrl())
-                    .provider(Provider.GOOGLE)
-                    .providerId(googleUser.providerId()) // sub 값 저장
-                    .verifyStatus(VerifyStatus.VERIFIED)
-                    .build();
+                    // DB 저장
+                    userMapper.insertUser(newUser);
 
-            // DB 저장
-            userMapper.insertUser(user);
+                    /**
+                     * 추가) 기본 팀, 보드 생성
+                     */
 
-            /**
-             * 추가) 기본 팀, 보드 생성
-             */
-        }
-        // 3-2) 기존 회원인 경우 -> Provider 확인
-        else {
-            if (user.getProvider() != Provider.GOOGLE) {
-                throw new BusinessException(ErrorCode.LOGIN_PROVIDER_MISMATCH);
-            }
-        }
+                    return newUser;
+                });
 
+        // 4) 토큰 발급
         return createLoginResponse(user);
     }
 
@@ -237,11 +230,8 @@ public class AuthServiceImpl implements AuthService {
         }
 
         // 4) 사용자 존재 여부, 활성화 상태 확인
-        UserVo user = userMapper.findById(userId);
-
-        if (user == null) {
-            throw new BusinessException(ErrorCode.USER_NOT_FOUND);
-        }
+        UserVo user = userMapper.findById(userId)
+                .orElseThrow(() -> new BusinessException(ErrorCode.USER_NOT_FOUND));
 
         if (user.getUserStatus() != UserStatus.ACTIVATED) {
             throw new BusinessException(ErrorCode.USER_STATUS_NOT_ACTIVE);
