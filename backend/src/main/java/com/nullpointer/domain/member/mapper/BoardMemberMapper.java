@@ -19,4 +19,10 @@ public interface BoardMemberMapper {
 
     // 보드 탈퇴
     void deleteBoardMember(@Param("boardId") Long boardId, @Param("userId") Long memberId);
+
+    // 중복 검사 및 존재 확인
+    boolean existsByBoardIdAndUserId(@Param("boardId") Long boardId, @Param("userId") Long userId);
+
+    // 권한 확인용 조회
+    BoardMemberVo findMember(@Param("boardId") Long boardId, @Param("userId") Long userId);
 }
