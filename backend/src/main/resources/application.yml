@@ -42,7 +42,9 @@ spring:
 app:
   jwt:
     secret: 9e5e5b6c67264cb6cee8e18f8f35517aec75e14383934dd8554090be30a1facd
-    access-expiration: 1800000 # 30분
+#    access-expiration: 1800000 # 30분
+    access-expiration: 36000000 # 30분
+
     refresh-expiration: 1209600000 # 2주
 
   email:

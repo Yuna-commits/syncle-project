@@ -1,7 +1,9 @@
 package com.nullpointer.domain.member.service.impl;
 
 import com.nullpointer.domain.member.dto.team.TeamInviteRequest;
+import com.nullpointer.domain.member.dto.team.TeamInviteUpdateRequest;
 import com.nullpointer.domain.member.dto.team.TeamMemberResponse;
+import com.nullpointer.domain.member.dto.team.TeamRoleUpdateRequest;
 import com.nullpointer.domain.member.mapper.TeamMemberMapper;
 import com.nullpointer.domain.member.service.TeamMemberService;
 import com.nullpointer.domain.member.vo.TeamMemberVo;
@@ -33,5 +35,24 @@ public class TeamMemberServiceImpl implements TeamMemberService {
     @Override
     public List<TeamMemberResponse> getTeamMembers(Long teamId) {
         return teamMemberMapper.findMembersByTeamId(teamId);
+    }
+
+    @Override
+    public void changeTeamRole(Long teamId, Long memberId, TeamRoleUpdateRequest req) {
+        TeamMemberVo vo = req.toVo(teamId, memberId);
+
+        teamMemberMapper.updateTeamRole(vo);
+    }
+
+    @Override
+    public void changeTeamInvite(Long teamId, Long memberId, TeamInviteUpdateRequest req) {
+        TeamMemberVo vo = req.toVo(teamId, memberId);
+
+        teamMemberMapper.updateTeamInvite(vo);
+    }
+
+    @Override
+    public void deleteTeamMember(Long teamId, Long memberId, Long userId) {
+        teamMemberMapper.deleteTeamMember(teamId, userId);
     }
 }

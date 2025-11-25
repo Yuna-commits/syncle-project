@@ -42,7 +42,7 @@
     </update>
 
     <!-- 팀 삭제 -->
-    <update id="softDeleteTeam">
+    <update id="DeleteTeam">
         UPDATE team
         SET deleted_at = NOW()
         WHERE id = #{id}

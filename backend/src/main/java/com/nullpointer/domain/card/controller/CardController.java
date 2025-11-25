@@ -12,6 +12,7 @@ import org.springframework.web.bind.annotation.*;
  *
  * POST /api/lists/{listId}/cards
  */
+
 @RestController
 @RequestMapping("/api/lists/{listId}/cards")
 public class CardController {

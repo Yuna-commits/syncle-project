@@ -23,7 +23,7 @@ public class TeamController {
     private final TeamService teamService;
 
     // 팀 생성
-    @PostMapping("/")
+    @PostMapping("")
     public ApiResponse<String> createTeam(@Valid @RequestBody CreateTeamRequest req,
                                           @AuthenticationPrincipal CustomUserDetails user) {
         Long userId = user.getUserId();
@@ -55,7 +55,7 @@ public class TeamController {
     }
 
     // 팀 삭제
-    @PatchMapping("/{teamId}")
+    @DeleteMapping("/{teamId}")
     public ApiResponse<String> deleteTeam(@PathVariable Long teamId,
                                           @AuthenticationPrincipal CustomUserDetails user) {
         Long userId =  user.getUserId();
