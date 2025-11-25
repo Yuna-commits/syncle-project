@@ -3,6 +3,7 @@ package com.nullpointer.domain.user.service;
 import com.nullpointer.domain.auth.dto.request.PasswordRequest;
 import com.nullpointer.domain.user.dto.request.UpdateProfileRequest;
 import com.nullpointer.domain.user.dto.response.UserProfileResponse;
+import com.nullpointer.domain.user.dto.response.UserSummaryResponse;
 
 public interface UserService {
 
@@ -20,5 +21,8 @@ public interface UserService {
 
     // 비밀번호 변경
     void changePassword(Long id, PasswordRequest.Change req);
+
+    // 다른 사용자 정보 조회
+    UserSummaryResponse getUserSummary(Long userId);
 
 }
