@@ -1,4 +1,4 @@
-package com.nullpointer.global.exception;
+package com.nullpointer.global.common.enums;
 
 import lombok.Getter;
 import org.springframework.http.HttpStatus;

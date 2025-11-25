@@ -1,6 +1,6 @@
 package com.nullpointer.global.common;
 
-import com.nullpointer.global.exception.ErrorCode;
+import com.nullpointer.global.common.enums.ErrorCode;
 import lombok.AccessLevel;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
@@ -8,7 +8,7 @@ import lombok.Getter;
 @Getter
 @AllArgsConstructor(access = AccessLevel.PRIVATE)
 public class ApiResponse<T> {
-    
+
     private final String result;
     private final String message;
     private final T data;

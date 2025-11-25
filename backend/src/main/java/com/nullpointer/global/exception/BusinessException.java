@@ -1,5 +1,6 @@
 package com.nullpointer.global.exception;
 
+import com.nullpointer.global.common.enums.ErrorCode;
 import lombok.Getter;
 
 /**

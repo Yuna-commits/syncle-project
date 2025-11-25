@@ -1,6 +1,7 @@
 package com.nullpointer.global.exception;
 
 import com.nullpointer.global.common.ApiResponse;
+import com.nullpointer.global.common.enums.ErrorCode;
 import jakarta.validation.ConstraintViolationException;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.ResponseEntity;

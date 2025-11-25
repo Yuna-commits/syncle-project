@@ -1,7 +1,7 @@
 package com.nullpointer.global.exception.test;
 
+import com.nullpointer.global.common.enums.ErrorCode;
 import com.nullpointer.global.exception.BusinessException;
-import com.nullpointer.global.exception.ErrorCode;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.Min;
 import jakarta.validation.constraints.NotBlank;

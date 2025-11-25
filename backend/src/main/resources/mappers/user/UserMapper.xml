@@ -15,7 +15,9 @@
                           provider,
                           provider_id,
                           verify_status,
-                          user_status)
+                          user_status,
+                          created_at,
+                          updated_at)
         VALUES (#{email},
                 #{password},
                 #{nickname},
@@ -25,7 +27,9 @@
                 #{provider},
                 #{providerId},
                 #{verifyStatus},
-                #{userStatus})
+                #{userStatus},
+                NOW(),
+                NOW())
     </insert>
 
     <!-- 이메일 중복 확인 -->
@@ -62,14 +66,15 @@
     <!-- 사용자 이메일 인증 상태 조건부 업데이트 -->
     <update id="updateVerifyStatusIfCurrent">
         UPDATE user
-        SET verify_status = #{newStatus}
+        SET verify_status = #{newStatus},
+            updated_at    = NOW()
         WHERE id = #{id}
           AND verify_status = #{currentStatus}
           AND deleted_at IS NULL
     </update>
 
     <!-- 사용자 정보 조회 -->
-    <select id="getUserProfile" resultType="com.nullpointer.domain.user.dto.UserProfileResponse">
+    <select id="getUserProfile" resultType="com.nullpointer.domain.user.dto.response.UserProfileResponse">
         SELECT u.id,
                u.email,
                u.nickname,
@@ -98,6 +103,21 @@
         -- 안 읽은 알림 개수 쿼리 추가 필요
         FROM user u
         WHERE u.id = #{id}
+          AND u.deleted_at IS NULL
     </select>
+
+    <!-- 사용자 정보 수정 -->
+    <update id="updateUser">
+        UPDATE user
+        <set>
+            <if test="nickname != null">nickname = #{nickname},</if>
+            <if test="description != null">description = #{description},</if>
+            <if test="position != null">position = #{position},</if>
+            <if test="profileImg != null">profile_img = #{profileImg},</if>
+            updated_at = NOW()
+        </set>
+        WHERE id = #{id}
+        AND deleted_at IS NULL
+    </update>
 
 </mapper>
