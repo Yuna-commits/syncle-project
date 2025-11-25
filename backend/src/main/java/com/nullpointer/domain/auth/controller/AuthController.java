@@ -1,10 +1,10 @@
 package com.nullpointer.domain.auth.controller;
 
-import com.nullpointer.domain.auth.dto.request.GoogleLoginRequest;
-import com.nullpointer.domain.auth.dto.request.LoginRequest;
-import com.nullpointer.domain.auth.dto.request.ReissueRequest;
-import com.nullpointer.domain.auth.dto.request.SignupRequest;
+import com.nullpointer.domain.auth.dto.request.AuthRequest;
+import com.nullpointer.domain.auth.dto.request.PasswordRequest;
+import com.nullpointer.domain.auth.dto.request.VerificationRequest;
 import com.nullpointer.domain.auth.dto.response.LoginResponse;
+import com.nullpointer.domain.auth.dto.response.PasswordVerifyResponse;
 import com.nullpointer.domain.auth.service.AuthService;
 import com.nullpointer.global.common.ApiResponse;
 import jakarta.servlet.http.HttpServletRequest;
@@ -19,31 +19,37 @@ public class AuthController {
 
     private final AuthService authService;
 
-    // 회원가입
-    @PostMapping("/signup")
-    public ApiResponse<String> signup(@Valid @RequestBody SignupRequest req) {
-        authService.signup(req);
-        return ApiResponse.success("회원가입 성공");
+    /**
+     * 회원가입
+     */
+    // 인증코드 발송
+    @PostMapping("/signup/code")
+    public ApiResponse<String> sendSignupCode(@Valid @RequestBody AuthRequest.Signup req) {
+        authService.sendSignupCode(req);
+        return ApiResponse.success("이메일 인증 코드 발송 성공");
     }
 
-    // 이메일 인증
-    @GetMapping("/email/verification")
-    public ApiResponse<String> verifyEmail(@RequestParam String token) {
-        authService.verifyEmailToken(token);
-        return ApiResponse.success("이메일 인증 성공");
+    // 인증코드 검증 & 자동 로그인
+    @PostMapping("/signup/verify")
+    public ApiResponse<LoginResponse> verifySignup(@Valid @RequestBody VerificationRequest.Code req) {
+        LoginResponse response = authService.verifySignup(req);
+        return ApiResponse.success(response);
     }
 
+    /**
+     * 로그인
+     */
     // 이메일 로그인
     @PostMapping("/login")
-    public ApiResponse<LoginResponse> login(@Valid @RequestBody LoginRequest req) {
+    public ApiResponse<LoginResponse> login(@Valid @RequestBody AuthRequest.Login req) {
         LoginResponse response = authService.login(req);
         return ApiResponse.success(response);
     }
 
     // 구글 로그인
     @PostMapping("/login/google")
-    public ApiResponse<LoginResponse> googleLogin(@RequestBody GoogleLoginRequest req) {
-        LoginResponse response = authService.googleLogin(req.getIdToken());
+    public ApiResponse<LoginResponse> googleLogin(@RequestBody VerificationRequest.Token req) {
+        LoginResponse response = authService.googleLogin(req.getToken());
         return ApiResponse.success(response);
     }
 
@@ -64,9 +70,33 @@ public class AuthController {
     // 토큰 재발급
     // 클라이언트가 보낸 Refresh Token을 받아 서비스에 전달, 갱신된 토큰 세트를 응답
     @PostMapping("/token/refresh")
-    public ApiResponse<LoginResponse> reissue(@RequestBody ReissueRequest req) {
-        LoginResponse response = authService.reissue(req.getRefreshToken());
+    public ApiResponse<LoginResponse> reissue(@RequestBody VerificationRequest.Token req) {
+        LoginResponse response = authService.reissue(req.getToken());
         return ApiResponse.success(response);
+    }
+
+    /**
+     * 비밀번호 재설정
+     */
+    // 인증코드 발송
+    @PostMapping("/password/code")
+    public ApiResponse<String> sendPwCode(@Valid @RequestBody VerificationRequest.EmailOnly req) {
+        authService.sendPasswordResetCode(req);
+        return ApiResponse.success("비밀번호 재설정 인증 코드 발송 성공");
+    }
+
+    // 인증코드 검증 & 임시 토큰 발급
+    @PostMapping("/password/verify")
+    public ApiResponse<PasswordVerifyResponse> verifyPwCode(@Valid @RequestBody VerificationRequest.Code req) {
+        PasswordVerifyResponse response = authService.verifyPasswordResetCode(req);
+        return ApiResponse.success(response);
+    }
+
+    // 비밀번호 재설정
+    @PatchMapping("/password/reset")
+    public ApiResponse<String> resetPw(@Valid @RequestBody PasswordRequest.Reset req) {
+        authService.resetPassword(req);
+        return ApiResponse.success("비밀번호 재설정 성공");
     }
 
 }

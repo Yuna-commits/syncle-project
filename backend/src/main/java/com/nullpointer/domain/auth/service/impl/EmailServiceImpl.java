@@ -1,6 +1,7 @@
 package com.nullpointer.domain.auth.service.impl;
 
 import com.nullpointer.domain.auth.service.EmailService;
+import com.nullpointer.global.common.enums.VerificationType;
 import jakarta.mail.MessagingException;
 import jakarta.mail.internet.MimeMessage;
 import lombok.RequiredArgsConstructor;
@@ -23,15 +24,19 @@ public class EmailServiceImpl implements EmailService {
 
     /**
      * HTML 형식을 지원하는 MimeMessage 전송
+     * 인증링크 -> 인증번호 전송으로 변경
+     * 비밀번호 재설정에도 재사용 가능
      */
     @Async // 메일 전송 때문에 회원가입 응답이 느려지는 것을 방지하기 위해 비동기 처리
     @Override
-    public void sendVerificationEmail(String toEmail, String token) {
-        // /api/auth/email-verify?token=xxx
-        String url = verifyBaseUrl + "?token=" + token;
+    public void sendVerificationEmail(String toEmail, String code, VerificationType type) {
+        String subject = (type == VerificationType.SIGNUP)
+                ? "[SYNCLE] 회원가입 인증코드"
+                : "[SYNCLE] 비밀번호 재설정 인증코드";
 
-        String htmlContent = getVerificationHtml(url);
+        String htmlContent = getVerificationHtml(subject, code);
 
+        // MimeMessage 전송
         try {
             MimeMessage mimeMessage = mailSender.createMimeMessage();
 
@@ -39,7 +44,7 @@ public class EmailServiceImpl implements EmailService {
             MimeMessageHelper helper = new MimeMessageHelper(mimeMessage, true, "UTF-8");
 
             helper.setTo(toEmail);
-            helper.setSubject("[SYNCLE] 회원가입 인증을 완료해주세요");
+            helper.setSubject(subject);
 
             // HTML 설정 (true: html 모드 활성화)
             helper.setText(htmlContent, true);
@@ -53,14 +58,14 @@ public class EmailServiceImpl implements EmailService {
         }
     }
 
-    private String getVerificationHtml(String url) {
+    private String getVerificationHtml(String subject, String code) {
         return """
                  <!DOCTYPE html>
                  <html lang="ko">
                  <head>
                      <meta charset="UTF-8">
                      <meta name="viewport" content="width=device-width, initial-scale=1.0">
-                     <title>이메일 인증</title>
+                     <title>%s</title>
                  </head>
                  <body style="margin: 0; padding: 0; background-color: #f9fafb; font-family: 'Apple SD Gothic Neo', 'Malgun Gothic', sans-serif;">
                 \s
@@ -99,35 +104,35 @@ public class EmailServiceImpl implements EmailService {
                                  margin-bottom: 24px;
                              ">
                                  안녕하세요!<br>
-                                 <strong>SYNCLE</strong> 협업 플랫폼 가입을 환영합니다.<br>
-                                 아래 버튼을 클릭하여 이메일 인증을 완료하고 계정을 활성화해주세요.
+                                 <strong>SYNCLE</strong>입니다.<br>
+                                 요청하신 인증 코드를 확인해주세요.
                              </p>
                 \s
                              <div style="text-align: center; margin: 32px 0;">
-                                 <a href="%s" target="_blank" style="
+                                 <span style="
                                      display: inline-block;
-                                     background-color: #3b82f6;
-                                     color: #ffffff;
-                                     font-size: 14px;
-                                     font-weight: 500;
-                                     text-decoration: none;
-                                     padding: 12px 24px;
+                                     background-color: #eff6ff;
+                                     color: #3b82f6;
+                                     font-size: 32px;
+                                     font-weight: 700;
+                                     letter-spacing: 6px;
+                                     padding: 16px 24px;
                                      border-radius: 8px;
-                                     box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
+                                     border: 1px solid #dbeafe;
                                  ">
-                                     이메일 인증하기
-                                 </a>
+                                     %s
+                                 </span>
                              </div>
                 \s
                              <p style="
                                  color: #6b7280;
-                                 font-size: 13px;
+                                 font-size: 14px;
                                  line-height: 20px;
                                  margin-top: 32px;
-                                 word-break: break-all;
+                                 text-align: center;
                              ">
-                                 만약 버튼이 작동하지 않는다면 아래 링크를 복사하여 브라우저에 붙여넣어 주세요:<br>
-                                 <a href="%s" style="color: #3b82f6; text-decoration: underline;">%s</a>
+                                 인증 코드는 <strong>5분간</strong> 유효합니다.<br>
+                                 본인이 요청하지 않았다면 이 메일을 무시해주세요.
                              </p>
                          </div>
                 \s
@@ -138,7 +143,7 @@ public class EmailServiceImpl implements EmailService {
                      </div>
                  </body>
                  </html>
-                \s""".formatted(url, url, url);
+                \s""".formatted(subject, code);
     }
 
 }

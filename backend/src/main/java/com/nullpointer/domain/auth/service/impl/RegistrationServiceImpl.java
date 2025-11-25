@@ -1,6 +1,6 @@
 package com.nullpointer.domain.auth.service.impl;
 
-import com.nullpointer.domain.auth.dto.request.SignupRequest;
+import com.nullpointer.domain.auth.dto.request.AuthRequest;
 import com.nullpointer.domain.auth.service.RegistrationService;
 import com.nullpointer.domain.user.mapper.UserMapper;
 import com.nullpointer.domain.user.vo.UserVo;
@@ -20,7 +20,7 @@ public class RegistrationServiceImpl implements RegistrationService {
     private final UserMapper userMapper;
 
     @Override
-    public UserVo registerLocalUser(SignupRequest req) {
+    public UserVo registerLocalUser(AuthRequest.Signup req) {
 
         // 1) 이메일/닉네임 최종 중복 확인
         if (userMapper.existsByEmail(req.getEmail())) {

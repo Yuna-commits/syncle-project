@@ -1,7 +1,7 @@
 package com.nullpointer.domain.user.service.impl;
 
+import com.nullpointer.domain.auth.dto.request.PasswordRequest;
 import com.nullpointer.domain.file.service.FileStorageService;
-import com.nullpointer.domain.user.dto.request.ChangePasswordRequest;
 import com.nullpointer.domain.user.dto.request.UpdateProfileRequest;
 import com.nullpointer.domain.user.dto.response.UserProfileResponse;
 import com.nullpointer.domain.user.mapper.UserMapper;
@@ -101,7 +101,7 @@ public class UserServiceImpl implements UserService {
      */
     @Override
     @Transactional
-    public void changePassword(Long id, ChangePasswordRequest req) {
+    public void changePassword(Long id, PasswordRequest.Change req) {
         // 1) 사용자 조회
         UserVo user = userMapper.findById(id)
                 .orElseThrow(() -> new BusinessException(ErrorCode.USER_NOT_FOUND));

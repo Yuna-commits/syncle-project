@@ -5,14 +5,23 @@ import lombok.Getter;
 @Getter
 public enum RedisKeyType {
 
-    EMAIL_VERIFICATION("np:auth:email:%s"), // 5분 (밀리초)
-    REFRESH_TOKEN("np:auth:refresh:%s"), // 2주
-    BLACKLIST("np:auth:blacklist:%s");
+    // Auth
+    ACCESS_TOKEN("np:auth:access:%s", 3_600_000L), // 1시간
+    REFRESH_TOKEN("np:auth:refresh:%s", 1_209_600_000L), // 2주
+    BLACKLIST("np:auth:blacklist:%s", 0L),
+
+    // Verification - 5분
+    VERIFICATION_CODE("np:auth:code:%s:%s", 300_000L),
+
+    // Password Reset - 10분
+    PASSWORD_RESET_TOKEN("np:auth:pw-token:%s", 600_000L);
 
     private final String pattern;
+    private final long defaultTtl;
 
-    RedisKeyType(String pattern) {
+    RedisKeyType(String pattern, long defaultTtl) {
         this.pattern = pattern;
+        this.defaultTtl = defaultTtl;
     }
 
     /**

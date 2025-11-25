@@ -1,6 +1,6 @@
 package com.nullpointer.domain.user.controller;
 
-import com.nullpointer.domain.user.dto.request.ChangePasswordRequest;
+import com.nullpointer.domain.auth.dto.request.PasswordRequest;
 import com.nullpointer.domain.user.dto.request.UpdateProfileRequest;
 import com.nullpointer.domain.user.dto.response.UserProfileResponse;
 import com.nullpointer.domain.user.service.UserService;
@@ -50,7 +50,7 @@ public class UserController {
     // 내 비밀번호 변경
     @PatchMapping("/password")
     public ApiResponse<String> changePassword(@AuthenticationPrincipal CustomUserDetails userDetails,
-                                              @Valid @RequestBody ChangePasswordRequest req) {
+                                              @Valid @RequestBody PasswordRequest.Change req) {
         userService.changePassword(userDetails.getUserId(), req);
         return ApiResponse.success("비밀번호 변경 성공");
     }

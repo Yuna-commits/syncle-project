@@ -1,5 +1,6 @@
 package com.nullpointer.global.security.jwt;
 
+import com.nullpointer.global.common.enums.RedisKeyType;
 import io.jsonwebtoken.*;
 import io.jsonwebtoken.security.Keys;
 import jakarta.annotation.PostConstruct;
@@ -19,12 +20,6 @@ public class JwtTokenProvider {
     @Value("${app.jwt.secret}")
     private String secretKey;
 
-    @Value("${app.jwt.access-expiration}")
-    private Long accessTokenExpiration; // 30분
-
-    @Value("${app.jwt.refresh-expiration}")
-    private Long refreshTokenExpiration; // 2주
-
     private Key key;
 
     @PostConstruct // 빈 초기화 시점에 한 번만 실행
@@ -42,7 +37,7 @@ public class JwtTokenProvider {
                 .claim(JwtConstants.CLAIM_USER_ID.getValue(), userId)
                 .claim(JwtConstants.CLAIM_TYPE.getValue(), JwtConstants.TYPE_ACCESS)
                 .setIssuedAt(new Date())
-                .setExpiration(new Date(System.currentTimeMillis() + accessTokenExpiration))
+                .setExpiration(new Date(System.currentTimeMillis() + RedisKeyType.ACCESS_TOKEN.getDefaultTtl()))
                 .signWith(key, SignatureAlgorithm.HS256)
                 .compact();
     }
@@ -56,7 +51,7 @@ public class JwtTokenProvider {
                 .claim(JwtConstants.CLAIM_USER_ID.getValue(), userId)
                 .claim(JwtConstants.CLAIM_TYPE.getValue(), JwtConstants.TYPE_REFRESH)
                 .setIssuedAt(new Date())
-                .setExpiration(new Date(System.currentTimeMillis() + refreshTokenExpiration))
+                .setExpiration(new Date(System.currentTimeMillis() + RedisKeyType.REFRESH_TOKEN.getDefaultTtl()))
                 .signWith(key, SignatureAlgorithm.HS256)
                 .compact();
     }
