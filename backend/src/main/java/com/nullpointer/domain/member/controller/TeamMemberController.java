@@ -25,11 +25,10 @@ public class TeamMemberController {
     // 팀 멤버 초대
     @PostMapping("")
     public ApiResponse<String> inviteTeamMember(@PathVariable Long teamId,
-                                                @Valid @RequestBody TeamInviteRequest req) {
+                                                @Valid @RequestBody TeamInviteRequest req,
+                                                @AuthenticationPrincipal CustomUserDetails user) {
 
-        req.setTeamId(teamId);
-
-        teamMemberService.inviteTeamMember(req);
+        teamMemberService.inviteTeamMember(teamId, req, user.getUserId());
         return ApiResponse.success("팀 멤버 초대 성공");
     }
 
@@ -43,8 +42,9 @@ public class TeamMemberController {
     @PatchMapping("{memberId}/role")
     public ApiResponse<String> updateTeamRole(@PathVariable Long teamId,
                                               @PathVariable Long memberId,
-                                              @Valid @RequestBody TeamRoleUpdateRequest req) {
-        teamMemberService.changeTeamRole(teamId, memberId, req);
+                                              @Valid @RequestBody TeamRoleUpdateRequest req,
+                                              @AuthenticationPrincipal CustomUserDetails user) {
+        teamMemberService.changeTeamRole(teamId, memberId, req, user.getUserId());
         return ApiResponse.success("역할 변경 완료");
     }
 
@@ -52,8 +52,9 @@ public class TeamMemberController {
     @PatchMapping("{memberId}/invite")
     public ApiResponse<String> updateTeamInvite(@PathVariable Long teamId,
                                                 @PathVariable Long memberId,
-                                                @Valid @RequestBody TeamInviteUpdateRequest req) {
-        teamMemberService.changeTeamInvite(teamId, memberId, req);
+                                                @Valid @RequestBody TeamInviteUpdateRequest req,
+                                                @AuthenticationPrincipal CustomUserDetails user) {
+        teamMemberService.changeTeamInvite(teamId, memberId, req, user.getUserId());
         return ApiResponse.success("초대 상태 반영");
     }
 

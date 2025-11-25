@@ -46,7 +46,15 @@ public enum ErrorCode {
     BOARD_UPDATE_FORBIDDEN(HttpStatus.FORBIDDEN, "B004", "보드 수정 권한이 없습니다."),
     BOARD_DELETE_FORBIDDEN(HttpStatus.FORBIDDEN, "B005", "보드 삭제 권한이 없습니다."),
     BOARD_ACCESS_DENIED(HttpStatus.FORBIDDEN, "B006", "보드 접근 권한이 없습니다."),
-    BOARD_LIMIT_EXCEEDED(HttpStatus.BAD_REQUEST, "B007", "팀 내 생성 가능한 보드 개수를 초과했습니다.");
+    BOARD_LIMIT_EXCEEDED(HttpStatus.BAD_REQUEST, "B007", "팀 내 생성 가능한 보드 개수를 초과했습니다."),
+
+    // 멤버 (Team/Board 공통 사용 가능)
+    MEMBER_NOT_FOUND(HttpStatus.NOT_FOUND, "M001", "존재하지 않는 멤버입니다."),
+    MEMBER_ALREADY_EXISTS(HttpStatus.CONFLICT, "M002", "이미 존재하는 멤버입니다."),
+    MEMBER_INVITE_UPDATE_FORBIDDEN(HttpStatus.FORBIDDEN, "M003", "초대 상태를 변경할 권한이 없습니다."),
+    MEMBER_INVITE_FORBIDDEN(HttpStatus.FORBIDDEN, "M004", "멤버 초대 권한이 없습니다."),
+    MEMBER_UPDATE_FORBIDDEN(HttpStatus.FORBIDDEN, "M005", "멤버 정보 수정 권한이 없습니다."),
+    MEMBER_DELETE_FORBIDDEN(HttpStatus.FORBIDDEN, "M006", "멤버 추방/탈퇴 권한이 없습니다.");
 
     private final HttpStatus status;
     private final String code;

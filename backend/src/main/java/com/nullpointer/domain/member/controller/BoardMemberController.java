@@ -5,8 +5,10 @@ import com.nullpointer.domain.member.dto.board.BoardMemberResponse;
 import com.nullpointer.domain.member.dto.board.BoardRoleUpdateRequest;
 import com.nullpointer.domain.member.service.BoardMemberService;
 import com.nullpointer.global.common.ApiResponse;
+import com.nullpointer.global.security.jwt.CustomUserDetails;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -21,11 +23,10 @@ public class BoardMemberController {
     // 보드 멤버 초대
     @PostMapping("")
     public ApiResponse<String> inviteBoardMember(@PathVariable Long boardId,
-                                                @Valid @RequestBody BoardInviteRequest req) {
+                                                @Valid @RequestBody BoardInviteRequest req,
+                                                 @AuthenticationPrincipal CustomUserDetails user) {
 
-        req.setBoardId(boardId);
-
-        boardMemberService.inviteBoardMember(req);
+        boardMemberService.inviteBoardMember(boardId, req, user.getUserId());
         return ApiResponse.success("보드 멤버 초대 성공");
     }
 
@@ -39,16 +40,18 @@ public class BoardMemberController {
     @PatchMapping("/{memberId}")
     public ApiResponse<String> changeBoardMember(@PathVariable Long boardId,
                                                  @PathVariable Long memberId,
-                                                 @Valid @RequestBody BoardRoleUpdateRequest req) {
-        boardMemberService.changeBoardRole(boardId, memberId, req);
+                                                 @Valid @RequestBody BoardRoleUpdateRequest req,
+                                                 @AuthenticationPrincipal CustomUserDetails user) {
+        boardMemberService.changeBoardRole(boardId, memberId, req, user.getUserId());
         return ApiResponse.success("역할 변경 완료");
     }
 
     // 보드 탈퇴
     @DeleteMapping("/{memberId}")
     public ApiResponse<String> deleteBoardMember(@PathVariable Long boardId,
-                                                 @PathVariable Long memberId) {
-        boardMemberService.deleteBoardMember(boardId, memberId);
+                                                 @PathVariable Long memberId,
+                                                 @AuthenticationPrincipal CustomUserDetails user) {
+        boardMemberService.deleteBoardMember(boardId, memberId, user.getUserId());
         return ApiResponse.success("보드 탈퇴 완료");
     }
 }
