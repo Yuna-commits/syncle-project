@@ -298,9 +298,6 @@ public class AuthServiceImpl implements AuthService {
 
         return LoginResponse
                 .builder()
-                .id(user.getId())
-                .email(user.getEmail())
-                .nickname(user.getNickname())
                 .accessToken(accessToken)
                 .refreshToken(refreshToken)
                 .build();

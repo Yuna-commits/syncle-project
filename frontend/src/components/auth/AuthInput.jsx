@@ -4,6 +4,9 @@ export default function AuthInput({
   label,
   type = 'text',
   id,
+  name,
+  value,
+  onChange,
   placeholder,
   required = false,
 }) {
@@ -24,8 +27,12 @@ export default function AuthInput({
       <div className="relative">
         <input
           id={id}
+          name={name}
           type={inputType}
+          value={value}
+          onChange={onChange}
           placeholder={placeholder}
+          required={required}
           className="h-11 w-full rounded-lg border border-gray-300 bg-transparent px-4 py-2.5 text-sm text-gray-800 shadow-sm placeholder:text-gray-400 focus:border-blue-300 focus:ring-2 focus:ring-blue-500/20"
         />
         {/* 비밀번호 토글 */}
