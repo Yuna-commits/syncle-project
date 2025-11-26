@@ -12,6 +12,9 @@ import com.nullpointer.domain.member.vo.BoardMemberVo;
 import com.nullpointer.domain.member.vo.enums.Role;
 import com.nullpointer.global.common.enums.ErrorCode;
 import com.nullpointer.global.exception.BusinessException;
+import com.nullpointer.global.validator.board.BoardValidator;
+import com.nullpointer.global.validator.member.MemberValidator;
+import com.nullpointer.global.validator.team.TeamValidator;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -24,13 +27,19 @@ public class BoardServiceImpl implements BoardService {
 
     private final BoardMapper boardMapper;
     private final BoardMemberMapper boardMemberMapper;
+    private final TeamValidator teamVal;
+    private final MemberValidator memberVal;
+    private final BoardValidator boardVal;
 
     @Override
     @Transactional
     public void createBoard(Long teamId, CreateBoardRequest req, Long userId) {
 
-        // 팀 소속 여부 확인
+        // 팀 유효성 확인
+        teamVal.getValidTeam(teamId);
 
+        // 팀 소속 여부 확인
+        memberVal.validateTeamMember(teamId, userId);
 
         // 보드 개수 제한 체크 (팀당 최대 10개)
         int currentBoardCount = boardMapper.countBoardByTeamId(teamId);
@@ -43,11 +52,15 @@ public class BoardServiceImpl implements BoardService {
 
         boardMapper.insertBoard(boardVo);
 
-        // 2. 방금 만든 보드 ID 가져오기
+        // 방금 만든 보드 ID 가져오기
         Long createBoardId = boardVo.getId();
 
-        // 3. 보드 멤버 VO 생성 (DTO -> VO)
-        BoardMemberVo boardMemberVo = BoardMemberVo.builder().boardId(createBoardId).userId(userId).role(Role.OWNER).build();
+        // 보드 멤버 VO 생성 (DTO -> VO)
+        BoardMemberVo boardMemberVo = BoardMemberVo.builder()
+                .boardId(createBoardId)
+                .userId(userId)
+                .role(Role.OWNER)
+                .build();
 
         boardMemberMapper.insertBoardMember(boardMemberVo);
     }
@@ -68,7 +81,7 @@ public class BoardServiceImpl implements BoardService {
     @Transactional(readOnly = true)
     public BoardDetailResponse getBoardDetail(Long boardId) {
         // 1. 공통 검증 메서드로 보드 조회
-        BoardVo boardVo = findValidBoard(boardId);
+        BoardVo boardVo = boardVal.getValidBoard(boardId);
         return BoardDetailResponse.from(boardVo);
     }
 
@@ -77,58 +90,25 @@ public class BoardServiceImpl implements BoardService {
     public void updateBoard(Long boardId, UpdateBoardRequest req, Long userId) {
 
         // 1. 공통 검증 메서드로 보드 조회
-        BoardVo boardVo = findValidBoard(boardId);
+        BoardVo boardVo = boardVal.getValidBoard(boardId);
 
-        // 2. 권한 체크 (TODO 부분)
-        validateOwner(boardId, userId);
+        // 2. 권한 체크 (OWNER)
+        memberVal.validateTeamOwner(boardId, userId, ErrorCode.BOARD_UPDATE_FORBIDDEN);
 
-        BoardVo vo = req.toVo(boardId);
-        boardMapper.updateBoard(vo);
+        boardMapper.updateBoard(boardVo);
     }
 
     @Override
     @Transactional
     public void deleteBoard(Long boardId, Long userId) {
         // 1. 공통 검증 메서드로 보드 조회
-        findValidBoard(boardId);
+        BoardVo boardVo = boardVal.getValidBoard(boardId);
 
-//        // 2. 권한 체크 (TODO 부분)
-//        validateOwner(boardId, userId);
+        // 2. 권한 체크 (OWNER)
+        memberVal.validateTeamOwner(boardId, userId, ErrorCode.BOARD_DELETE_FORBIDDEN);
 
         // 3. 삭제 진행
         boardMapper.deleteBoard(boardId);
     }
 
-
-    /**
-     * 보드가 존재하는지, 삭제되지 않았는지 검증 후 반환
-     */
-
-    private BoardVo findValidBoard(Long boardId) {
-        BoardVo board = boardMapper.findBoardByBoardId(boardId);
-
-        // 1. 물리적 존재 여부 (DB에 아예 없는 경우)
-        if (board == null) {
-            throw new BusinessException(ErrorCode.BOARD_NOT_FOUND);
-        }
-
-        // 2. 논리적 삭제 여부 (Soft Delete 된 경우)
-        if (board.getDeletedAt() != null) {
-            throw new BusinessException(ErrorCode.BOARD_DELETED);
-        }
-
-        return board;
-    }
-
-    /**
-     * role(OWNER) 검증
-     */
-
-    private void validateOwner(Long boardId, Long userId) {
-        // TODO: 실제 구현 시 주석 해제
-        // BoardMemberVo member = boardMemberMapper.findMember(boardId, userId);
-        // if (member == null || !member.getRole().equals(Role.OWNER)) {
-        //     throw new BusinessException(ErrorCode.BOARD_UPDATE_FORBIDDEN); // 혹은 ACCESS_DENIED
-        // }
-    }
 }

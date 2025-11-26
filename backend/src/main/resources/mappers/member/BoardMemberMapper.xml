@@ -44,4 +44,22 @@
         WHERE board_id = #{boardId}
           AND user_id = #{userId}
     </update>
+
+    <!-- 보드 멤버로 이미 등록되어 있는지 확인 -->
+    <select id="existsByBoardIdAndUserId">
+        SELECT COUNT(*) > 0
+        FROM board_member
+        WHERE board_id = #{boardId}
+          AND user_id = #{userId}
+          AND deleted_at IS NULL
+    </select>
+
+    <!-- 권한 확인용 조회 -->
+    <select id="findMember">
+        SELECT *
+        FROM board_member
+        WHERE board_id = #{boardId}
+          AND user_id = #{userId}
+          AND deleted_at IS NULL
+    </select>
 </mapper>

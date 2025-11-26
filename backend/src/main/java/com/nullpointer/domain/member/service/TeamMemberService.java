@@ -12,16 +12,16 @@ import java.util.List;
 public interface TeamMemberService {
 
     // 팀 멤버 초대
-    void inviteTeamMember(TeamInviteRequest req);
+    void inviteTeamMember(Long teamId, TeamInviteRequest req, Long userId);
     
     // 팀 멤버 조회
     List<TeamMemberResponse> getTeamMembers(Long teamId);
 
     // 팀 역할 변경
-    void changeTeamRole(Long teamId, Long memberId, TeamRoleUpdateRequest req);
+    void changeTeamRole(Long teamId, Long memberId, TeamRoleUpdateRequest req, Long userId);
 
     // 초대 상태 변경
-    void changeTeamInvite(Long teamId, Long memberId, TeamInviteUpdateRequest req);
+    void changeTeamInvite(Long teamId, Long memberId, TeamInviteUpdateRequest req, Long userId);
 
     // 팀 탈퇴
     void deleteTeamMember(Long teamId, Long memberId, Long userId);

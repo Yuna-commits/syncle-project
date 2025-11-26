@@ -7,6 +7,7 @@ import com.nullpointer.domain.board.dto.request.CreateBoardRequest;
 import com.nullpointer.domain.board.service.BoardService;
 import com.nullpointer.domain.board.vo.BoardVo;
 import com.nullpointer.global.common.ApiResponse;
+import com.nullpointer.global.common.annotation.LoginUser;
 import com.nullpointer.global.security.jwt.CustomUserDetails;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
@@ -27,23 +28,21 @@ public class BoardController {
     @PostMapping("/teams/{teamId}/boards")
     public ApiResponse<String> createBoard(@PathVariable Long teamId,
                                            @Valid @RequestBody CreateBoardRequest req,
-                                           @AuthenticationPrincipal CustomUserDetails user) {
-        Long userId = user.getUserId();
+                                           @LoginUser Long userId) {
         boardService.createBoard(teamId, req, userId);
         return ApiResponse.success("보드 추가 성공");
     }
 
     // 내 보드 조회
     @GetMapping("/boards/me")
-    public ApiResponse<List<BoardResponse>> getMyBoards(@AuthenticationPrincipal CustomUserDetails user) {
-        Long userId = user.getUserId();
+    public ApiResponse<List<BoardResponse>> getMyBoards(@LoginUser Long userId) {
         return ApiResponse.success(boardService.getMyBoards(userId));
     }
 
     // 팀 보드 조회
     @GetMapping("/teams/{teamId}/boards")
     public ApiResponse<List<BoardResponse>> getTeamBoards(@PathVariable Long teamId,
-                                                          @AuthenticationPrincipal CustomUserDetails user) {
+                                                          @LoginUser Long userId) {
         return ApiResponse.success(boardService.getTeamBoards(teamId));
     }
 
@@ -57,8 +56,7 @@ public class BoardController {
     @PatchMapping("/boards/{boardId}")
     public ApiResponse<String> updateBoard(@PathVariable Long boardId,
                                            @Valid @RequestBody UpdateBoardRequest req,
-                                           @AuthenticationPrincipal CustomUserDetails user) {
-        Long userId = user.getUserId();
+                                           @LoginUser Long userId) {
         boardService.updateBoard(boardId, req, userId);
         return ApiResponse.success("보드 정보 수정 완료");
     }
@@ -66,8 +64,7 @@ public class BoardController {
     // 보드 삭제
     @DeleteMapping("/boards/{boardId}")
     public ApiResponse<String> deleteBoard(@PathVariable Long boardId,
-                                           @AuthenticationPrincipal CustomUserDetails user) {
-        Long userId = user.getUserId();
+                                           @LoginUser Long userId) {
         boardService.deleteBoard(boardId, userId);
         return ApiResponse.success("보드 삭제 성공");
     }

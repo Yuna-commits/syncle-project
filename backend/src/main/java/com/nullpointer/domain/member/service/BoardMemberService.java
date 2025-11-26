@@ -9,16 +9,16 @@ import java.util.List;
 public interface BoardMemberService {
 
     // 보드 멤버 초대
-    void inviteBoardMember(BoardInviteRequest req);
+    void inviteBoardMember(Long boardId, BoardInviteRequest req, Long userId);
 
     // 보드 멤버 조회
     List<BoardMemberResponse> getBoardMembers(Long boardId);
 
     // 보드 역할 변경
 
-    void changeBoardRole(Long boardId, Long memberId, BoardRoleUpdateRequest req);
+    void changeBoardRole(Long boardId, Long memberId, BoardRoleUpdateRequest req, Long userId);
 
     // 보드 탈퇴
-    void deleteBoardMember(Long boardId, Long memberId);
+    void deleteBoardMember(Long boardId, Long memberId, Long userId);
 
 }
