@@ -35,3 +35,6 @@ build/
 ### User Uploads ###
 /uploads/
 !/uploads/.gitkeep
+
+### application-secret.yml
+/application-secret.yml

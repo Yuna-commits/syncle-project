@@ -5,10 +5,10 @@ spring:
   profiles:
     active: local
 
+  config:
+    import: application-secret.yml
+
   datasource:
-    url: jdbc:mariadb://192.168.0.176:3306/syncle?useUnicode=true&characterEncoding=UTF-8&serverTimezone=Asia/Seoul
-    username: nullpointer
-    password: nullpointer
     driver-class-name: org.mariadb.jdbc.Driver
 
   jackson:
@@ -21,7 +21,6 @@ spring:
     host: smtp.gmail.com # Gmail의 SMTP 서버 호스트
     port: 587 # Gmail STMP 서버는 587번 포트 사용
     username: ksm13563661@gmail.com
-    password: suoc hvpg zduz cyac
     properties:
       mail:
         smtp:
@@ -47,14 +46,8 @@ spring:
       max-request-size: 10MB
 
 app:
-  jwt:
-    secret: 9e5e5b6c67264cb6cee8e18f8f35517aec75e14383934dd8554090be30a1facd
-
   email:
-    verify-base-url: http://localhost:8080/api/auth/email/verification
-
-  google:
-    client-id: 1077568018264-rrmqlanf1tbtmciv91eu91h5kg8pcvrj.apps.googleusercontent.com
+    verify-base-url: http://localhost:8080/login/oauth2/code/google
 
   file:
     upload-dir: ./uploads
