@@ -5,6 +5,7 @@ import com.nullpointer.domain.member.dto.board.BoardMemberResponse;
 import com.nullpointer.domain.member.dto.board.BoardRoleUpdateRequest;
 import com.nullpointer.domain.member.service.BoardMemberService;
 import com.nullpointer.global.common.ApiResponse;
+import com.nullpointer.global.common.annotation.LoginUser;
 import com.nullpointer.global.security.jwt.CustomUserDetails;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
@@ -24,9 +25,9 @@ public class BoardMemberController {
     @PostMapping("")
     public ApiResponse<String> inviteBoardMember(@PathVariable Long boardId,
                                                 @Valid @RequestBody BoardInviteRequest req,
-                                                 @AuthenticationPrincipal CustomUserDetails user) {
+                                                 @LoginUser Long userId) {
 
-        boardMemberService.inviteBoardMember(boardId, req, user.getUserId());
+        boardMemberService.inviteBoardMember(boardId, req, userId);
         return ApiResponse.success("보드 멤버 초대 성공");
     }
 
@@ -41,8 +42,8 @@ public class BoardMemberController {
     public ApiResponse<String> changeBoardMember(@PathVariable Long boardId,
                                                  @PathVariable Long memberId,
                                                  @Valid @RequestBody BoardRoleUpdateRequest req,
-                                                 @AuthenticationPrincipal CustomUserDetails user) {
-        boardMemberService.changeBoardRole(boardId, memberId, req, user.getUserId());
+                                                 @LoginUser Long userId) {
+        boardMemberService.changeBoardRole(boardId, memberId, req, userId);
         return ApiResponse.success("역할 변경 완료");
     }
 
@@ -50,8 +51,8 @@ public class BoardMemberController {
     @DeleteMapping("/{memberId}")
     public ApiResponse<String> deleteBoardMember(@PathVariable Long boardId,
                                                  @PathVariable Long memberId,
-                                                 @AuthenticationPrincipal CustomUserDetails user) {
-        boardMemberService.deleteBoardMember(boardId, memberId, user.getUserId());
+                                                 @LoginUser Long userId) {
+        boardMemberService.deleteBoardMember(boardId, memberId, userId);
         return ApiResponse.success("보드 탈퇴 완료");
     }
 }
