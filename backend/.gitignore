@@ -37,4 +37,4 @@ build/
 !/uploads/.gitkeep
 
 ### application-secret.yml
-/application-secret.yml
+**/application-secret.yml
