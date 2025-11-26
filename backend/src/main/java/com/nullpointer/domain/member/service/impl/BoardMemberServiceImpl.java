@@ -10,6 +10,7 @@ import com.nullpointer.domain.member.vo.TeamMemberVo;
 import com.nullpointer.domain.member.vo.enums.Role;
 import com.nullpointer.global.common.enums.ErrorCode;
 import com.nullpointer.global.exception.BusinessException;
+import com.nullpointer.global.validator.member.MemberValidator;
 import lombok.Builder;
 import org.springframework.stereotype.Service;
 
@@ -20,14 +21,15 @@ import java.util.List;
 
 public class BoardMemberServiceImpl implements BoardMemberService {
     private final BoardMemberMapper boardMemberMapper;
+    private final MemberValidator memberVal;
 
     @Override
     public void inviteBoardMember(Long boardId, BoardInviteRequest req, Long userId) {
         // 1. 요청자가 초대 권한(OWNER)이 있는지 확인
-        validateOwner(boardId, userId, ErrorCode.MEMBER_INVITE_FORBIDDEN);
+        memberVal.validateBoardOwner(boardId, userId, ErrorCode.MEMBER_INVITE_FORBIDDEN);
 
         for (Long targetUserId : req.getUserIds()) {
-            // 2. 이미 존재하는 멤버인지 확인 (중복 방지)
+            // 2. 이미 존재하는 멤버인지 확인
             if (boardMemberMapper.existsByBoardIdAndUserId(boardId, targetUserId)) {
                 throw new BusinessException(ErrorCode.MEMBER_ALREADY_EXISTS);
             }
@@ -44,7 +46,7 @@ public class BoardMemberServiceImpl implements BoardMemberService {
     @Override
     public void changeBoardRole(Long boardId, Long memberId, BoardRoleUpdateRequest req, Long userId) {
         // 1. 권한 확인
-        validateOwner(boardId, userId, ErrorCode.MEMBER_UPDATE_FORBIDDEN);
+        memberVal.validateBoardOwner(boardId, userId, ErrorCode.MEMBER_UPDATE_FORBIDDEN);
 
         // 2. 멤버 존재 확인
         if (!boardMemberMapper.existsByBoardIdAndUserId(boardId, memberId)) {
@@ -63,20 +65,10 @@ public class BoardMemberServiceImpl implements BoardMemberService {
 
         // 2. 권한 확인 (본인 탈퇴 or OWNER의 추방)
         if (!userId.equals(memberId)) {
-            validateOwner(boardId, userId, ErrorCode.MEMBER_DELETE_FORBIDDEN);
+            memberVal.validateBoardOwner(boardId, userId, ErrorCode.MEMBER_DELETE_FORBIDDEN);
         }
 
         boardMemberMapper.deleteBoardMember(boardId, memberId);
     }
 
-    /**
-     * role(OWNER) 검증
-     */
-
-    private void validateOwner(Long boardId, Long userId, ErrorCode errorCode) {
-        BoardMemberVo member = boardMemberMapper.findMember(boardId, userId);
-        if (member == null || !member.getRole().equals(Role.OWNER)) {
-            throw new BusinessException(errorCode);
-        }
-    }
 }

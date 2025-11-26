@@ -7,9 +7,10 @@ import com.nullpointer.domain.member.dto.team.TeamRoleUpdateRequest;
 import com.nullpointer.domain.member.mapper.TeamMemberMapper;
 import com.nullpointer.domain.member.service.TeamMemberService;
 import com.nullpointer.domain.member.vo.TeamMemberVo;
-import com.nullpointer.domain.member.vo.enums.Role;
 import com.nullpointer.global.common.enums.ErrorCode;
 import com.nullpointer.global.exception.BusinessException;
+import com.nullpointer.global.validator.member.MemberValidator;
+import com.nullpointer.global.validator.team.TeamValidator;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -21,15 +22,16 @@ import java.util.List;
 public class TeamMemberServiceImpl implements TeamMemberService {
 
     private final TeamMemberMapper teamMemberMapper;
+    private final MemberValidator memberVal;
 
     @Override
     @Transactional
     public void inviteTeamMember(Long teamId, TeamInviteRequest req, Long userId) {
         // 1. 요청자가 초대 권한(OWNER)이 있는지 확인
-        validateOwner(teamId, userId, ErrorCode.MEMBER_INVITE_FORBIDDEN);
+        memberVal.validateTeamOwner(teamId, userId, ErrorCode.MEMBER_INVITE_FORBIDDEN);
 
         for (Long targetUserId : req.getUserIds()) {
-            // 2. 이미 존재하는 멤버인지 확인 (중복 방지)
+            // 2. 이미 존재하는 멤버인지 확인
             if (teamMemberMapper.existsByTeamIdAndUserId(teamId, targetUserId)) {
                 throw new BusinessException(ErrorCode.MEMBER_ALREADY_EXISTS);
             }
@@ -47,7 +49,7 @@ public class TeamMemberServiceImpl implements TeamMemberService {
     @Transactional
     public void changeTeamRole(Long teamId, Long memberId, TeamRoleUpdateRequest req, Long userId) {
         // 1. 요청자가 OWNER인지 확인
-        validateOwner(teamId, userId, ErrorCode.MEMBER_UPDATE_FORBIDDEN);
+        memberVal.validateTeamOwner(teamId, userId, ErrorCode.MEMBER_UPDATE_FORBIDDEN);
 
         // 2. 대상 멤버가 존재하는지 확인
         if (!teamMemberMapper.existsByTeamIdAndUserId(teamId, memberId)) {
@@ -69,7 +71,7 @@ public class TeamMemberServiceImpl implements TeamMemberService {
 
         // 2. 초대 승인/거절 본인 체크
         if (!userId.equals(memberId)) {
-            validateOwner(teamId, userId, ErrorCode.MEMBER_INVITE_UPDATE_FORBIDDEN);
+            memberVal.validateTeamOwner(teamId, userId, ErrorCode.MEMBER_INVITE_UPDATE_FORBIDDEN);
         }
 
         // 3. 업데이트
@@ -88,21 +90,11 @@ public class TeamMemberServiceImpl implements TeamMemberService {
         // Case A: 본인 탈퇴 (user == member) -> OK
         // Case B: 추방 (user != member) -> user가 OWNER여야 함
         if (!userId.equals(memberId)) {
-            validateOwner(teamId, userId, ErrorCode.MEMBER_DELETE_FORBIDDEN);
+            memberVal.validateTeamOwner(teamId, userId, ErrorCode.MEMBER_DELETE_FORBIDDEN);
         }
 
         // 3. 탈퇴 처리
         teamMemberMapper.deleteTeamMember(teamId, memberId);
     }
 
-    /**
-     * role(OWNER) 검증
-     */
-
-    private void validateOwner(Long teamId, Long userId, ErrorCode errorCode) {
-        TeamMemberVo member = teamMemberMapper.findMember(teamId, userId);
-        if (member == null || !member.getRole().equals(Role.OWNER)) {
-            throw new BusinessException(errorCode);
-        }
-    }
 }
