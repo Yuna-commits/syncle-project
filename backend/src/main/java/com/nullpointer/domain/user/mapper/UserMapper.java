@@ -5,6 +5,7 @@ import com.nullpointer.domain.user.dto.response.UserSummaryResponse;
 import com.nullpointer.domain.user.vo.UserVo;
 import com.nullpointer.domain.user.vo.enums.VerifyStatus;
 
+import java.util.List;
 import java.util.Optional;
 
 public interface UserMapper {
@@ -48,5 +49,11 @@ public interface UserMapper {
 
     // 계정 삭제
     void deleteUser(Long id);
+
+    // 미인증 계정 삭제
+    int deleteUnverifiedUsers();
+
+    // 기간 만료된 비활성화 계정 아이디 목록 조회
+    List<Long> findIdsByDeactivatedAndExpired();
 
 }

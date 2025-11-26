@@ -7,13 +7,13 @@ import com.google.api.client.json.gson.GsonFactory;
 import com.nullpointer.global.common.enums.ErrorCode;
 import com.nullpointer.global.exception.BusinessException;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.stereotype.Service;
+import org.springframework.stereotype.Component;
 
 import java.io.IOException;
 import java.security.GeneralSecurityException;
 import java.util.Collections;
 
-@Service
+@Component
 public class GoogleTokenVerifier {
 
     private final GoogleIdTokenVerifier verifier;

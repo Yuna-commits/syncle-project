@@ -2,11 +2,11 @@ package com.nullpointer.global.util;
 
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.redis.core.StringRedisTemplate;
-import org.springframework.stereotype.Service;
+import org.springframework.stereotype.Component;
 
 import java.time.Duration;
 
-@Service
+@Component
 @RequiredArgsConstructor
 public class RedisUtil {
 
