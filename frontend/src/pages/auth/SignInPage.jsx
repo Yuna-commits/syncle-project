@@ -11,7 +11,8 @@ export default function SignIn() {
   const navigate = useNavigate()
 
   // Zustand Store에서 상태와 액션 꺼내기
-  const { formData, setFormData, login, reset } = useSignInStore()
+  const { formData, setFormData, login, isKeepLogin, toggleKeepLogin, reset } =
+    useSignInStore()
 
   // 페이지에서 나가면 상태 초기화
   useEffect(() => {
@@ -75,6 +76,8 @@ export default function SignIn() {
           <label className="flex cursor-pointer items-center gap-2">
             <input
               type="checkbox"
+              checked={isKeepLogin}
+              onChange={toggleKeepLogin}
               className="h-5 w-5 rounded-md border border-gray-300 checked:border-transparent checked:bg-blue-500"
             />
             <span className="text-sm text-gray-700">로그인 상태 유지</span>
