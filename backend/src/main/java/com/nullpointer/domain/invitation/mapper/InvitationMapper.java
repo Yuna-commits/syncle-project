@@ -1,19 +1,22 @@
 package com.nullpointer.domain.invitation.mapper;
 
+import com.nullpointer.domain.invitation.dto.MyInvitationResponse;
+import com.nullpointer.domain.invitation.dto.TeamInvitationResponse;
 import com.nullpointer.domain.invitation.vo.InvitationVo;
 import com.nullpointer.domain.invitation.vo.enums.Status;
 import io.lettuce.core.dynamic.annotation.Param;
 
+import java.util.List;
 import java.util.Optional;
 
 public interface InvitationMapper {
-    // 초대장 생성
+    // 초대 메일 생성
     void insertInvitation(InvitationVo invitationVo);
 
     // 토큰으로 초대장 조회
     Optional<InvitationVo> findByToken(String token);
 
-    //  ID로 초대장 조회
+    // ID로 초대장 조회
     Optional<InvitationVo> findById(Long id);
 
     // 상태 변경 (수락/거절/만료)
@@ -25,4 +28,10 @@ public interface InvitationMapper {
             @Param("inviteeId") Long inviteeId,
             @Param("status") Status status
     );
+    
+    // 팀원 초대 목록
+    List<TeamInvitationResponse> findAllByTeamId(Long teamId);
+    
+    // 내 초대 목록
+    List<MyInvitationResponse> findAllByUserId(Long userId);
 }

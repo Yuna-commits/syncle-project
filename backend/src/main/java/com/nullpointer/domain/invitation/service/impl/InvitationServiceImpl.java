@@ -1,5 +1,7 @@
 package com.nullpointer.domain.invitation.service.impl;
 
+import com.nullpointer.domain.invitation.dto.MyInvitationResponse;
+import com.nullpointer.domain.invitation.dto.TeamInvitationResponse;
 import com.nullpointer.domain.invitation.dto.TeamInviteRequest;
 import com.nullpointer.domain.invitation.mapper.InvitationMapper;
 import com.nullpointer.domain.invitation.service.InvitationEmailService;
@@ -24,6 +26,7 @@ import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.util.UriComponentsBuilder;
 
 import java.time.LocalDateTime;
+import java.util.List;
 import java.util.UUID;
 
 @Service
@@ -42,7 +45,7 @@ public class InvitationServiceImpl implements InvitationService {
     private String frontendUrl;
 
     // ========================================================
-    //  1. 초대 메일 발송
+    //  초대 메일 발송
     // ========================================================
     @Override
     @Transactional
@@ -59,23 +62,21 @@ public class InvitationServiceImpl implements InvitationService {
                 .orElseThrow(() -> new BusinessException(ErrorCode.USER_NOT_FOUND));
 
         for (Long targetUserId : req.getUserIds()) {
-            // [보완 1] 자기 자신을 초대하는 경우 방지
+            // 자기 자신을 초대하는 경우 방지
             if (targetUserId.equals(inviterId)) {
-                throw new BusinessException(ErrorCode.CANNOT_INVITE_SELF); // ErrorCode 추가 필요
+                throw new BusinessException(ErrorCode.CANNOT_INVITE_SELF);
             }
 
             UserVo targetUser = userMapper.findById(targetUserId)
                     .orElseThrow(() -> new BusinessException(ErrorCode.USER_NOT_FOUND));
 
-            // [보완 2] 이미 팀 멤버인지 확인 (Validator 메서드명 변경 제안)
-            // validateTeamMember -> validateNotTeamMember (멤버면 예외 발생)
+            // 이미 팀 멤버인지 확인 (Validator 메서드명 변경 제안)
             memberValidator.validateNotTeamMember(teamId, targetUserId, ErrorCode.MEMBER_ALREADY_EXISTS);
 
-            // [보완 3] 이미 대기 중(PENDING)인 초대장이 있는지 확인
-            // (Mapper에 findPendingInvitation 메서드 추가 필요)
+            // 이미 대기 중(PENDING)인 초대장이 있는지 확인
             boolean hasPendingInvite = invitationMapper.existsByTeamIdAndInviteeIdAndStatus(teamId, targetUserId, Status.PENDING);
             if (hasPendingInvite) {
-                throw new BusinessException(ErrorCode.INVITATION_ALREADY_SENT); // ErrorCode 추가 필요
+                throw new BusinessException(ErrorCode.INVITATION_ALREADY_SENT);
             }
 
             // 4. 토큰 및 초대 데이터 생성 (Status: PENDING)
@@ -113,7 +114,7 @@ public class InvitationServiceImpl implements InvitationService {
     }
 
     // ========================================================
-    //  2. 초대 수락
+    //  초대 수락
     // ========================================================
     @Override
     @Transactional
@@ -145,12 +146,11 @@ public class InvitationServiceImpl implements InvitationService {
             throw new BusinessException(ErrorCode.INVITATION_EXPIRED);
         }
 
-        // 4. 초대 상태 수락으로 변경 (Invitation 테이블)
+        // 4. 초대 상태 수락으로 변경
         invitation.setStatus(Status.ACCEPTED);
         invitationMapper.updateStatus(invitation);
 
-        // 5. [핵심] 실제 멤버로 등록 (Status 없이 Role만 부여)
-        // 여기서는 수락 과정이므로 검증보다는 등록(addMember)이 주 목적입니다.
+        // 5. 실제 멤버로 등록
         teamMemberService.addMember(invitation.getTeamId(), loginUserId, Role.MEMBER);
 
         // 6. Redis 정리
@@ -158,7 +158,7 @@ public class InvitationServiceImpl implements InvitationService {
     }
 
     // ========================================================
-    //  3. 초대 거절
+    //  초대 거절
     // ========================================================
     @Override
     @Transactional
@@ -176,5 +176,29 @@ public class InvitationServiceImpl implements InvitationService {
         }
 
         redisUtil.deleteData(RedisKeyType.INVITATION.getKey(token));
+    }
+
+    // ========================================================
+    //  팀원 초대 리스트 조회
+    // ========================================================
+
+    @Override
+    @Transactional(readOnly = true)
+    public List<TeamInvitationResponse> getSentInvitations(Long teamId, Long userId) {
+        // 1. 요청자가 팀장(OWNER)인지 확인
+        memberValidator.validateTeamOwner(teamId, userId, ErrorCode.TEAM_ACCESS_DENIED);
+
+        // 2. 해당 팀의 초대 내역 조회
+        return invitationMapper.findAllByTeamId(teamId);
+    }
+
+    // ========================================================
+    //  내 초대 리스트 조회
+    // ========================================================
+
+    @Override
+    @Transactional(readOnly = true)
+    public List<MyInvitationResponse> getMyInvitations(Long userId) {
+        return invitationMapper.findAllByUserId(userId);
     }
 }
