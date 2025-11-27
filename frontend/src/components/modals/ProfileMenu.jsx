@@ -29,7 +29,8 @@ function ProfileMenu({ onClose }) {
         {/* 사용자 정보 */}
         <div className="mt-3 flex items-center gap-3">
           <div className="flex h-10 w-10 items-center justify-center rounded-full bg-blue-600 text-lg font-bold text-white">
-            박
+            {!user?.profileImage &&
+              (user?.nickname ? user.nickname.charAt(0).toUpperCase() : '?')}
           </div>
           <div>
             <div className="text-sm font-semibold">{user?.nickname}</div>

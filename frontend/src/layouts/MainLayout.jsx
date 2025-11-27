@@ -6,11 +6,13 @@ import TeamCreateModal from '../components/modals/TeamCreateModal'
 import NotificationMenu from '../components/modals/NotificationMenu'
 import ProfileMenu from '../components/modals/ProfileMenu'
 import useUserStore from '../stores/useUserStore'
+import useUiStore from '../stores/useUiStore'
 
 function MainLayout() {
   const [openTeamModal, setOpenTeamModal] = useState(false)
-  const [openNotiMenu, setopenNotiMenu] = useState(false)
-  const [openProfileMenu, setOpenProfileMenu] = useState(false)
+
+  // 메뉴 정보 가져오기
+  const { openedMenu, closeAll } = useUiStore()
 
   // 스토어에서 유저 정보 가져오기
   const { fetchUser } = useUserStore()
@@ -21,12 +23,8 @@ function MainLayout() {
   }, [fetchUser])
 
   return (
-    <>
-      <Header
-        onOpenTeamModal={() => setOpenTeamModal(true)}
-        onOpenNotiMenu={() => setopenNotiMenu((prev) => !prev)}
-        onOpenProfileMenu={() => setOpenProfileMenu((prev) => !prev)}
-      />
+    <div onClick={closeAll}>
+      <Header onOpenTeamModal={() => setOpenTeamModal(true)} />
 
       <div className="flex min-h-screen">
         <Sidebar />
@@ -39,15 +37,19 @@ function MainLayout() {
       )}
 
       {/* 알림 메뉴 */}
-      {openNotiMenu && (
-        <NotificationMenu onClose={() => setopenNotiMenu(false)} />
+      {openedMenu === 'notification' && (
+        <div onClick={(e) => e.stopPropagation()}>
+          <NotificationMenu onClose={closeAll} />
+        </div>
       )}
 
       {/* 프로필 메뉴 */}
-      {openProfileMenu && (
-        <ProfileMenu onClose={() => setOpenProfileMenu(false)} />
+      {openedMenu === 'profile' && (
+        <div onClick={(e) => e.stopPropagation()}>
+          <ProfileMenu onClose={closeAll} />
+        </div>
       )}
-    </>
+    </div>
   )
 }
 

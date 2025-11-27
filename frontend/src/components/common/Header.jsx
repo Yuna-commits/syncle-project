@@ -1,10 +1,12 @@
 import React from 'react'
 import { Link } from 'react-router-dom'
 import useUserStore from '../../stores/useUserStore'
+import useUiStore from '../../stores/useUiStore'
 
-function Header({ onOpenTeamModal, onOpenNotiMenu, onOpenProfileMenu }) {
+function Header({ onOpenTeamModal }) {
   const notificationCount = 1
   const { user } = useUserStore()
+  const { toggleMenu } = useUiStore()
 
   return (
     <nav className="flex h-14 w-full items-center justify-between border-b border-gray-200 bg-white px-7">
@@ -56,7 +58,10 @@ function Header({ onOpenTeamModal, onOpenNotiMenu, onOpenProfileMenu }) {
           onMouseDown={(e) => {
             e.stopPropagation()
           }}
-          onClick={onOpenNotiMenu}
+          onClick={(e) => {
+            e.stopPropagation()
+            toggleMenu('notification')
+          }}
         >
           <svg
             className="h-5 w-5 text-gray-600"
@@ -82,7 +87,10 @@ function Header({ onOpenTeamModal, onOpenNotiMenu, onOpenProfileMenu }) {
           onMouseDown={(e) => {
             e.stopPropagation()
           }}
-          onClick={onOpenProfileMenu}
+          onClick={(e) => {
+            e.stopPropagation()
+            toggleMenu('profile')
+          }}
           // 프로필 이미지 있으면 이미지로 대체
           style={
             user?.profileImage
