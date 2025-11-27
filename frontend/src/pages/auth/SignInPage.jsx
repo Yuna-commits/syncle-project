@@ -1,65 +1,32 @@
-import React from 'react'
-import { useState } from 'react'
-import { useNavigate, Link } from 'react-router-dom'
+import React, { useEffect } from 'react'
+import { Link, useNavigate } from 'react-router-dom'
 import googleIcon from '../../assets/icons/google.svg'
 import AuthHeader from '../../components/auth/AuthHeader'
 import AuthInput from '../../components/auth/AuthInput'
 import AuthFooter from '../../components/auth/AuthFooter'
 import AuthSocialButton from '../../components/auth/AuthSocialButton'
-import api from '../../api/AxiosInterceptor'
+import useSignInStore from '../../stores/useSignInStore'
 
 export default function SignIn() {
   const navigate = useNavigate()
 
-  // 입력값 상태 관리
-  const [formData, setFormData] = useState({
-    email: '',
-    password: '',
-  })
+  // Zustand Store에서 상태와 액션 꺼내기
+  const { formData, setFormData, login, reset } = useSignInStore()
+
+  // 페이지에서 나가면 상태 초기화
+  useEffect(() => {
+    return () => reset()
+  }, [reset])
 
   // 입력 핸들러
   const handleChange = (e) => {
-    const { name, value } = e.target
-    setFormData({ ...formData, [name]: value })
+    setFormData(e.target.name, e.target.value)
   }
 
-  // 로그인 제출 핸들러
+  // 제출 핸들러
   const handleSubmit = async (e) => {
-    e.preventDefault() // 새로고침 방지
-
-    try {
-      // 1) 백엔드 API 호출
-      const response = await api.post('/auth/login', {
-        email: formData.email,
-        password: formData.password,
-      })
-
-      // 2) 응답에서 데이터 추출
-      // LoginResponse { status: "SUCCESS", data: {accessToken: {...}, refreshToken: {...}}}
-      const { accessToken, refreshToken } = response.data.data
-
-      // 3) 토큰 저장 (Local Storage)
-      localStorage.setItem('accessToken', accessToken)
-      localStorage.setItem('refreshToken', refreshToken)
-
-      // 4) 메인 페이지(대시보드)로 이동
-      alert('로그인 성공!')
-      navigate('/dashboard')
-    } catch (error) {
-      // 5) 에러 처리
-      console.error('로그인 실패: ', error)
-
-      const errorCode = error.response?.data?.errorCode
-
-      if (errorCode === 'U007') {
-        // 비활성 계정
-        if (window.confirm('비활성화된 계정입니다. 복구하시겠습니까?')) {
-          navigate('/auth/reactivate')
-        }
-      } else {
-        alert('이메일 또는 비밀번호를 확인해주세요.')
-      }
-    }
+    e.preventDefault()
+    await login(navigate)
   }
 
   return (
@@ -86,7 +53,6 @@ export default function SignIn() {
       <form onSubmit={handleSubmit} className="space-y-6">
         {/* 이메일 */}
         <AuthInput
-          id="email"
           name="email"
           type="email"
           value={formData.email}
@@ -96,7 +62,6 @@ export default function SignIn() {
         />
         {/* 비밀번호 */}
         <AuthInput
-          id="password"
           name="password"
           type="password"
           value={formData.password}
