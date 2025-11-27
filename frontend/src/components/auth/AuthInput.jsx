@@ -1,14 +1,12 @@
 import React, { useState } from 'react'
 
 export default function AuthInput({
+  name,
   label,
   type = 'text',
-  id,
-  name,
   value,
   onChange,
   placeholder,
-  required = false,
   error,
   className = '', // 외부 스타일 주입
   children,
@@ -21,7 +19,7 @@ export default function AuthInput({
   return (
     <div className="text-left">
       <label
-        htmlFor={id}
+        htmlFor={name}
         className="mb-1.5 block text-left text-sm font-medium text-gray-700"
       >
         {label}
@@ -29,13 +27,12 @@ export default function AuthInput({
 
       <div className="relative">
         <input
-          id={id}
+          id={name}
           name={name}
           type={inputType}
           value={value}
           onChange={onChange}
           placeholder={placeholder}
-          required={required}
           className={`h-11 w-full rounded-lg border bg-transparent px-4 py-2.5 text-sm text-gray-800 shadow-sm placeholder:text-gray-400 focus:ring-2 focus:outline-none ${className} ${
             error
               ? 'border-red-500 focus:border-red-500 focus:ring-red-500/20'
