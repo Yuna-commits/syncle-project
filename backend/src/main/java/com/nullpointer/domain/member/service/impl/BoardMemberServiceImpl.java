@@ -6,12 +6,9 @@ import com.nullpointer.domain.member.dto.board.BoardRoleUpdateRequest;
 import com.nullpointer.domain.member.mapper.BoardMemberMapper;
 import com.nullpointer.domain.member.service.BoardMemberService;
 import com.nullpointer.domain.member.vo.BoardMemberVo;
-import com.nullpointer.domain.member.vo.TeamMemberVo;
-import com.nullpointer.domain.member.vo.enums.Role;
 import com.nullpointer.global.common.enums.ErrorCode;
 import com.nullpointer.global.exception.BusinessException;
 import com.nullpointer.global.validator.member.MemberValidator;
-import lombok.Builder;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
@@ -19,7 +16,6 @@ import java.util.List;
 
 @Service
 @RequiredArgsConstructor
-
 public class BoardMemberServiceImpl implements BoardMemberService {
     private final BoardMemberMapper boardMemberMapper;
     private final MemberValidator memberVal;

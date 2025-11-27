@@ -1,15 +1,25 @@
-import React, { useState } from 'react'
+import React, { useEffect, useState } from 'react'
 import Header from '../components/common/Header'
 import Sidebar from '../components/common/Sidebar'
 import { Outlet } from 'react-router-dom'
 import TeamCreateModal from '../components/modals/TeamCreateModal'
 import NotificationMenu from '../components/modals/NotificationMenu'
 import ProfileMenu from '../components/modals/ProfileMenu'
+import useUserStore from '../stores/useUserStore'
 
 function MainLayout() {
   const [openTeamModal, setOpenTeamModal] = useState(false)
   const [openNotiMenu, setopenNotiMenu] = useState(false)
   const [openProfileMenu, setOpenProfileMenu] = useState(false)
+
+  // 스토어에서 유저 정보 가져오기
+  const { fetchUser } = useUserStore()
+
+  // 마운트(로그인) 시 내 정보 가져오기
+  useEffect(() => {
+    fetchUser()
+  }, [fetchUser])
+
   return (
     <>
       <Header

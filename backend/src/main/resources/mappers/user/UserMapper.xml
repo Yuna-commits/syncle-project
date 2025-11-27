@@ -93,8 +93,8 @@
                 WHERE bm.user_id = u.id
                   AND bm.deleted_at IS NULL) AS "activity.participatedBoards",
                (SELECT COUNT(*)
-                FROM card_permission cp
-                WHERE cp.user_id = u.id)     AS "activity.createdCards",
+                FROM card cd
+                WHERE cd.assignee_id = u.id) AS "activity.createdCards",
                (SELECT COUNT(*)
                 FROM comment c
                          JOIN board_member bm ON c.board_member_id = bm.user_id

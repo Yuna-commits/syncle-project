@@ -1,8 +1,11 @@
 import React from 'react'
 import { Link } from 'react-router-dom'
+import useUserStore from '../../stores/useUserStore'
 
 function Header({ onOpenTeamModal, onOpenNotiMenu, onOpenProfileMenu }) {
   const notificationCount = 1
+  const { user } = useUserStore()
+
   return (
     <nav className="flex h-14 w-full items-center justify-between border-b border-gray-200 bg-white px-7">
       {/* ---------------- 좌측: 로고 ---------------- */}
@@ -75,11 +78,20 @@ function Header({ onOpenTeamModal, onOpenNotiMenu, onOpenProfileMenu }) {
 
         {/* 프로필 아이콘 */}
         <div
-          className="h-8 w-8 cursor-pointer rounded-full bg-blue-600 hover:opacity-80"
+          className="h-8 w-8 cursor-pointer items-center justify-center rounded-full bg-blue-600 hover:opacity-80"
           onMouseDown={(e) => {
             e.stopPropagation()
           }}
           onClick={onOpenProfileMenu}
+          // 프로필 이미지 있으면 이미지로 대체
+          style={
+            user?.profileImage
+              ? {
+                  backgroundImage: `url(${user.profileImage})`,
+                  backgroundSize: 'cover',
+                }
+              : {}
+          }
         ></div>
       </div>
     </nav>

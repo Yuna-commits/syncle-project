@@ -1,8 +1,10 @@
 import React, { useEffect, useRef } from 'react'
 import { Link } from 'react-router-dom'
+import useUserStore from '../../stores/useUserStore'
 
 function ProfileMenu({ onClose }) {
   const menuRef = useRef(null)
+  const { user, logout } = useUserStore()
 
   // 바깥 클릭 시 닫기
   useEffect(() => {
@@ -30,8 +32,8 @@ function ProfileMenu({ onClose }) {
             박
           </div>
           <div>
-            <div className="text-sm font-semibold">박성철</div>
-            <div className="text-xs text-gray-500">sungcheol9920@gmail.com</div>
+            <div className="text-sm font-semibold">{user?.nickname}</div>
+            <div className="text-xs text-gray-500">{user?.email}</div>
           </div>
         </div>
       </div>
@@ -78,7 +80,10 @@ function ProfileMenu({ onClose }) {
 
       {/* --- 4. 로그아웃 --- */}
       <div className="px-3 pt-2 pb-2">
-        <button className="flex w-full items-center rounded-md px-3 py-2 text-sm text-red-600 hover:bg-red-50">
+        <button
+          className="flex w-full items-center rounded-md px-3 py-2 text-sm text-red-600 hover:bg-red-50"
+          onClick={logout}
+        >
           로그아웃
         </button>
       </div>
