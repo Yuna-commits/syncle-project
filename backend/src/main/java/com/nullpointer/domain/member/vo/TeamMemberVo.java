@@ -1,6 +1,5 @@
 package com.nullpointer.domain.member.vo;
 
-import com.nullpointer.domain.member.vo.enums.InvitationStatus;
 import com.nullpointer.domain.member.vo.enums.Role;
 import lombok.*;
 
@@ -18,9 +17,6 @@ public class TeamMemberVo {
 
     @Builder.Default
     private Role role = Role.MEMBER;
-
-    @Builder.Default
-    private InvitationStatus invitationStatus = InvitationStatus.PENDING;
 
     private LocalDateTime joinedAt;
     private LocalDateTime deletedAt;

@@ -12,12 +12,13 @@ import com.nullpointer.global.common.enums.ErrorCode;
 import com.nullpointer.global.exception.BusinessException;
 import com.nullpointer.global.validator.member.MemberValidator;
 import lombok.Builder;
+import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
 
 @Service
-@Builder
+@RequiredArgsConstructor
 
 public class BoardMemberServiceImpl implements BoardMemberService {
     private final BoardMemberMapper boardMemberMapper;

@@ -58,4 +58,18 @@ public class MemberValidator {
             throw new BusinessException(errorCode);
         }
     }
+
+    // ========================================================
+    //  2. 중복 방지 (새로 추가할 부분!)
+    // ========================================================
+
+    /**
+     * 팀 멤버가 아닌지 확인 (초대/가입 시 중복 방지)
+     * 용도: 초대장 발송 시 이미 멤버라면 에러 발생
+     */
+    public void validateNotTeamMember(Long teamId, Long userId, ErrorCode errorCode) {
+        if (teamMemberMapper.existsByTeamIdAndUserId(teamId, userId)) {
+            throw new BusinessException(errorCode); // 예: MEMBER_ALREADY_EXISTS
+        }
+    }
 }

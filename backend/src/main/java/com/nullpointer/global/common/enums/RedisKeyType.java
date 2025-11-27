@@ -14,7 +14,10 @@ public enum RedisKeyType {
     VERIFICATION_CODE("np:auth:code:%s:%s", 300_000L),
 
     // Password Reset - 10분
-    PASSWORD_RESET_TOKEN("np:auth:pw-token:%s", 600_000L);
+    PASSWORD_RESET_TOKEN("np:auth:pw-token:%s", 600_000L),
+
+    // INVITATION - 7일
+    INVITATION("np:team:invitation:%s", 604_800_000L);
 
     private final String pattern;
     private final long defaultTtl;

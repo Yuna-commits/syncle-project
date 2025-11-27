@@ -18,9 +18,6 @@ public interface TeamMemberMapper {
     // 팀 역할 변경
     void updateTeamRole(TeamMemberVo vo);
 
-    // 초대 상태 변경
-    void updateTeamInvite(TeamMemberVo vo);
-
     // 팀 탈퇴
     void deleteTeamMember(@Param("teamId") Long teamId, @Param("userId") Long memberId);
 

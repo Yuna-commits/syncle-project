@@ -15,7 +15,6 @@ public interface BoardMemberService {
     List<BoardMemberResponse> getBoardMembers(Long boardId);
 
     // 보드 역할 변경
-
     void changeBoardRole(Long boardId, Long memberId, BoardRoleUpdateRequest req, Long userId);
 
     // 보드 탈퇴

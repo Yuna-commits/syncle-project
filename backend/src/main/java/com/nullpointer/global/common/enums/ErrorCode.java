@@ -54,7 +54,17 @@ public enum ErrorCode {
     MEMBER_INVITE_UPDATE_FORBIDDEN(HttpStatus.FORBIDDEN, "M003", "초대 상태를 변경할 권한이 없습니다."),
     MEMBER_INVITE_FORBIDDEN(HttpStatus.FORBIDDEN, "M004", "멤버 초대 권한이 없습니다."),
     MEMBER_UPDATE_FORBIDDEN(HttpStatus.FORBIDDEN, "M005", "멤버 정보 수정 권한이 없습니다."),
-    MEMBER_DELETE_FORBIDDEN(HttpStatus.FORBIDDEN, "M006", "멤버 추방/탈퇴 권한이 없습니다.");
+    MEMBER_DELETE_FORBIDDEN(HttpStatus.FORBIDDEN, "M006", "멤버 추방/탈퇴 권한이 없습니다."),
+
+    // 초대
+    INVITATION_NOT_FOUND(HttpStatus.NOT_FOUND, "I001", "존재하지 않거나 만료된 초대장입니다."),
+    INVITATION_ALREADY_SENT(HttpStatus.CONFLICT, "I002", "이미 초대 요청을 보낸 사용자입니다."),
+    INVITATION_ALREADY_MEMBER(HttpStatus.CONFLICT, "I003", "이미 해당 팀의 멤버인 사용자입니다."),
+    INVITATION_EMAIL_MISMATCH(HttpStatus.BAD_REQUEST, "I004", "초대된 이메일과 로그인 계정이 일치하지 않습니다."),
+    CANNOT_INVITE_SELF(HttpStatus.BAD_REQUEST, "I005", "본인에게는 초대장을 보낼 수 없습니다."),
+    INVITATION_MISMATCH(HttpStatus.BAD_REQUEST, "I006", "초대받은 사용자 정보와 일치하지 않습니다."),
+    INVITATION_EXPIRED(HttpStatus.BAD_REQUEST, "I007", "유효 기간이 만료된 초대장입니다."),
+    INVITATION_ALREADY_PROCESSED(HttpStatus.CONFLICT, "I008", "이미 처리된(수락/거절) 초대장입니다.");
 
     private final HttpStatus status;
     private final String code;

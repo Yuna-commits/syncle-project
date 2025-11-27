@@ -28,12 +28,13 @@ import java.util.List;
 @RequiredArgsConstructor
 public class BoardServiceImpl implements BoardService {
 
+    private static final int MAX_BOARDS_PER_TEAM = 10;
+
     private final BoardMapper boardMapper;
     private final BoardMemberMapper boardMemberMapper;
     private final TeamValidator teamVal;
     private final MemberValidator memberVal;
     private final BoardValidator boardVal;
-
     private final ListMapper listMapper;
 
     @Override
@@ -48,7 +49,7 @@ public class BoardServiceImpl implements BoardService {
 
         // 보드 개수 제한 체크 (팀당 최대 10개)
         int currentBoardCount = boardMapper.countBoardByTeamId(teamId);
-        if (currentBoardCount >= 10) {
+        if (currentBoardCount >= MAX_BOARDS_PER_TEAM) {
             throw new BusinessException(ErrorCode.BOARD_LIMIT_EXCEEDED);
         }
 

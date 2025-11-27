@@ -2,16 +2,14 @@
 <!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
 <mapper namespace="com.nullpointer.domain.member.mapper.TeamMemberMapper">
 
-    <!-- 팀 멤버 초대 -->
+    <!-- 팀 멤버 추가 -->
     <insert id="insertTeamMember" parameterType="TeamMemberVo">
         INSERT INTO team_member (team_id,
                                  user_id,
-                                 role,
-                                 invitation_status)
+                                 role)
         VALUES (#{teamId},
                 #{userId},
-                #{role},
-                #{invitationStatus})
+                #{role})
     </insert>
 
     <!-- 팀 멤버 조회 -->
@@ -19,7 +17,6 @@
         SELECT a.team_id,
                a.user_id,
                a.role,
-               a.invitation_status,
                b.email,
                b.nickname,
                b.position,
@@ -39,13 +36,6 @@
           AND user_id = #{userId}
     </update>
 
-    <!-- 초대 상태 변경 -->
-    <update id="updateTeamInvite" parameterType="TeamMemberVo">
-        UPDATE team_member
-        SET invitation_status = #{invitationStatus}
-        WHERE team_id = #{teamId}
-          AND user_id = #{userId}
-    </update>
 
     <!-- 팀 탈퇴 -->
     <update id="deleteTeamMember">

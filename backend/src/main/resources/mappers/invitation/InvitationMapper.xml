@@ -1,0 +1,65 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.nullpointer.domain.invitation.mapper.InvitationMapper">
+
+    <resultMap id="invitationResultMap" type="com.nullpointer.domain.invitation.vo.InvitationVo">
+        <id property="id" column="id"/>
+        <result property="teamId" column="team_id"/>
+        <result property="inviterId" column="inviter_id"/>
+
+        <result property="inviteeId" column="invitee_id"/>
+
+        <result property="token" column="token"/>
+        <result property="status" column="status"/>
+        <result property="expiredAt" column="expired_at"/>
+        <result property="createdAt" column="created_at"/>
+        <result property="updatedAt" column="updated_at"/>
+    </resultMap>
+
+    <insert id="insertInvitation" parameterType="com.nullpointer.domain.invitation.vo.InvitationVo"
+            useGeneratedKeys="true" keyProperty="id">
+        INSERT INTO invitation (team_id,
+                                inviter_id,
+                                invitee_id,
+                                token,
+                                status,
+                                expired_at,
+                                created_at)
+        VALUES (#{teamId},
+                #{inviterId},
+                #{inviteeId}, #{token},
+                #{status},
+                #{expiredAt},
+                NOW())
+    </insert>
+
+    <select id="findByToken" resultMap="invitationResultMap">
+        SELECT *
+        FROM invitation
+        WHERE token = #{token}
+    </select>
+
+    <select id="findById" resultMap="invitationResultMap">
+        SELECT *
+        FROM invitation
+        WHERE id = #{id}
+    </select>
+
+    <update id="updateStatus" parameterType="com.nullpointer.domain.invitation.vo.InvitationVo">
+        UPDATE invitation
+        SET status = #{status},
+            responded_at = NOW()
+        WHERE id = #{id}
+    </update>
+
+    <select id="existsByTeamIdAndInviteeIdAndStatus" resultType="boolean">
+        SELECT COUNT(*) > 0
+        FROM invitation
+        WHERE team_id = #{teamId}
+          AND invitee_id = #{inviteeId}
+          AND status = #{status}
+    </select>
+
+</mapper>

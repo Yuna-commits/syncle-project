@@ -7,7 +7,6 @@ import com.nullpointer.domain.board.vo.BoardVo;
 import com.nullpointer.domain.member.dto.team.TeamMemberResponse;
 import com.nullpointer.domain.member.mapper.TeamMemberMapper;
 import com.nullpointer.domain.member.vo.TeamMemberVo;
-import com.nullpointer.domain.member.vo.enums.InvitationStatus;
 import com.nullpointer.domain.member.vo.enums.Role;
 import com.nullpointer.domain.team.dto.request.CreateTeamRequest;
 import com.nullpointer.domain.team.dto.request.UpdateTeamRequest;
@@ -54,7 +53,6 @@ public class TeamServiceImpl implements TeamService {
                 .teamId(createTeamId)
                 .userId(userId)
                 .role(Role.OWNER)
-                .invitationStatus(InvitationStatus.ACCEPTED)
                 .build();
 
         teamMemberMapper.insertTeamMember(teamMemberVo);
@@ -79,7 +77,6 @@ public class TeamServiceImpl implements TeamService {
                 .teamId(teamId)
                 .userId(userId)
                 .role(Role.OWNER)
-                .invitationStatus(InvitationStatus.ACCEPTED)
                 .build();
 
         teamMemberMapper.insertTeamMember(teamMember);

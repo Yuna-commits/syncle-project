@@ -1,4 +1,4 @@
-package com.nullpointer.domain.member.dto.team;
+package com.nullpointer.domain.invitation.dto;
 
 import com.nullpointer.domain.member.vo.TeamMemberVo;
 import com.nullpointer.domain.member.vo.enums.Role;

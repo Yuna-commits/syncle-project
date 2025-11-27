@@ -1,6 +1,5 @@
 package com.nullpointer.domain.member.dto.board;
 
-import com.nullpointer.domain.member.vo.enums.InvitationStatus;
 import com.nullpointer.domain.member.vo.enums.Role;
 import lombok.Getter;
 
