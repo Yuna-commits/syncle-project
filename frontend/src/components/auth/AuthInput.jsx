@@ -9,9 +9,12 @@ export default function AuthInput({
   onChange,
   placeholder,
   required = false,
+  error,
+  className = '', // 외부 스타일 주입
+  children,
+  ...props // 기타 속성
 }) {
   const [showPassword, setShowPassword] = useState(false)
-
   const isPassword = type === 'password'
   const inputType = isPassword && showPassword ? 'text' : type
 
@@ -21,7 +24,7 @@ export default function AuthInput({
         htmlFor={id}
         className="mb-1.5 block text-left text-sm font-medium text-gray-700"
       >
-        {label} {required && <span className="text-red-500">*</span>}
+        {label}
       </label>
 
       <div className="relative">
@@ -33,7 +36,12 @@ export default function AuthInput({
           onChange={onChange}
           placeholder={placeholder}
           required={required}
-          className="h-11 w-full rounded-lg border border-gray-300 bg-transparent px-4 py-2.5 text-sm text-gray-800 shadow-sm placeholder:text-gray-400 focus:border-blue-300 focus:ring-2 focus:ring-blue-500/20"
+          className={`h-11 w-full rounded-lg border bg-transparent px-4 py-2.5 text-sm text-gray-800 shadow-sm placeholder:text-gray-400 focus:ring-2 focus:outline-none ${className} ${
+            error
+              ? 'border-red-500 focus:border-red-500 focus:ring-red-500/20'
+              : 'border-gray-300 focus:border-blue-300 focus:ring-blue-500/20'
+          }`}
+          {...props} // 나머지 속성 전달 (maxLength 등)
         />
         {/* 비밀번호 토글 */}
         {isPassword && (
@@ -49,7 +57,7 @@ export default function AuthInput({
                 viewBox="0 0 24 24"
                 strokeWidth="1.5"
                 stroke="currentColor"
-                className="h-5 w-5 text-gray-500"
+                className="h-5 w-5 text-gray-400"
               >
                 {/* 눈 전체 윤곽 */}
                 <path
@@ -72,7 +80,7 @@ export default function AuthInput({
                 viewBox="0 0 24 24"
                 strokeWidth="1.5"
                 stroke="currentColor"
-                className="h-5 w-5 text-gray-500"
+                className="h-5 w-5 text-gray-400"
               >
                 {/* 눈 전체 윤곽 */}
                 <path
@@ -98,7 +106,10 @@ export default function AuthInput({
             )}
           </span>
         )}
+        {children}
       </div>
+      {/* 에러 메시지 출력 */}
+      {error && <p className="mt-1 text-xs text-red-500">{error}</p>}
     </div>
   )
 }

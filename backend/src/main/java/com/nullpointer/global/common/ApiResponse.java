@@ -29,7 +29,16 @@ public class ApiResponse<T> {
         return new ApiResponse<>(
                 "fail",
                 errorCode.getMessage(),
-                null,
+                null, // 에러 상세 목록
+                errorCode.getCode()
+        );
+    }
+
+    public static <T> ApiResponse<T> error(ErrorCode errorCode, T data) {
+        return new ApiResponse<>(
+                "fail",
+                errorCode.getMessage(),
+                data, // 에러 상세 목록
                 errorCode.getCode()
         );
     }

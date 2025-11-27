@@ -1,4 +1,4 @@
-import React from 'react'
+import React, { useEffect } from 'react'
 import { useState } from 'react'
 import { useNavigate, Link } from 'react-router-dom'
 import googleIcon from '../../assets/icons/google.svg'
@@ -11,23 +11,57 @@ import api from '../../api/AxiosInterceptor'
 export default function SignUp() {
   const navigate = useNavigate()
 
-  // 회원가입 단계 관리 (1: 정보입력, 2: 인증코드 입력)
+  // 회원가입 단계 (1: 정보입력, 2: 인증코드 입력)
   const [step, setStep] = useState(1)
 
-  // 입력값 상태 관리
+  // 입력값 상태
   const [formData, setFormData] = useState({
     email: '',
     password: '',
     nickname: '',
   })
 
-  // 2단계 인증 코드 관리
+  // 로딩 상태
+  const [isLoading, setIsLoading] = useState(false)
+
+  // 2단계 상태 관리 (코드, 재전송, 타이머)
   const [authCode, setAuthCode] = useState('')
+  const [isResending, setIsResending] = useState(false)
+  const [timeLeft, setTimeLeft] = useState(300) // 5분
+
+  // 필드별 에러 메시지 상태
+  const [errors, setErrors] = useState({})
+  const [globalError, setGlobalError] = useState('')
+
+  // 타이머 (2단계일 때만 동작)
+  useEffect(() => {
+    if (step === 2 && timeLeft > 0) {
+      const timerId = setInterval(() => {
+        setTimeLeft((prev) => prev - 1)
+      }, 1000)
+      return () => clearInterval(timerId)
+    } else if (timeLeft === 0) {
+      setGlobalError('인증 시간이 만료되었습니다. 재전송해주세요.')
+    }
+  }, [step, timeLeft])
+
+  // 시간 포맷팅 (300 -> "05:00")
+  const formatTime = (time) => {
+    const minutes = Math.floor(time / 60)
+    const seconds = time % 60
+
+    return `${String(minutes).padStart(2, '0')}:${String(seconds).padStart(2, '0')}`
+  }
 
   // 입력 핸들러
   const handleChange = (e) => {
     const { name, value } = e.target
     setFormData({ ...formData, [name]: value })
+
+    // 사용자가 다시 입력을 시작하면 해당 필드의 에러 제거
+    if (errors[name]) {
+      setErrors({ ...errors, [name]: '' })
+    }
   }
 
   // ============================================================
@@ -35,21 +69,44 @@ export default function SignUp() {
   // ============================================================
   const handleSendCode = async (e) => {
     e.preventDefault()
+    // 에러 초기화
+    setErrors({})
+    setGlobalError('')
 
     try {
       // 1) 백엔드에 가입 정보 전송
-      await api.post('/auth/signup/code', {
-        email: formData.email,
-        password: formData.password,
-        nickname: formData.nickname,
-      })
+      await api.post('/auth/signup', formData)
 
-      // 2) 성공 시 다음 단계로 전환
-      alert('인증 코드가 이메일로 발송되었습니다.')
+      // 2) 성공 시 타이머 초기화, 다음 단계로 전환
+      setTimeLeft(300)
       setStep(2)
     } catch (error) {
+      // 예외 메시지 표시
       console.error('가입 요청 실패: ', error)
-      alert('회원가입 요청 중 오류가 발생했습니다.')
+      const response = error.response?.data
+
+      // 1) @Valid 검증 실패 (응답 데이터에 errors 리스트가 있는지 확인)
+      if (response?.data && Array.isArray(response.data)) {
+        const newErrors = {}
+
+        // [{"field": "email", "reason": "..."}] -> { email: "..." } 변환
+        response.data.forEach((err) => {
+          newErrors[err.field] = err.reason
+        })
+        setErrors(newErrors)
+      }
+      // 2) 중복 이메일, 닉네임
+      else if (response?.errorCode === 'U002') {
+        setErrors({ email: response.message })
+      } else if (response?.errorCode === 'U003') {
+        setErrors({ nickname: response.message })
+      }
+      // 3) 그 외
+      else {
+        setGlobalError(
+          response?.message || '회원가입 요청 중 문제가 발생했습니다.',
+        )
+      }
     }
   }
 
@@ -58,6 +115,10 @@ export default function SignUp() {
   // ============================================================
   const handleVerify = async (e) => {
     e.preventDefault()
+    if (isLoading) return
+
+    setIsLoading(true)
+    setGlobalError('')
 
     try {
       // 1) 백엔드에 인증코드 전송
@@ -82,13 +143,46 @@ export default function SignUp() {
       const errorCode = error.response?.data?.errorCode
 
       if (errorCode === 'A005') {
-        alert('인증 시간이 만료되었습니다. 다시 가입해주세요.')
-        setStep(1)
+        setGlobalError(
+          '인증 시간이 만료되었습니다. 처음부터 다시 시도해주세요.',
+        )
+        setTimeout(() => setStep(1), 2000)
       } else if (errorCode === 'A004') {
-        alert('인증 코드가 일치하지 않습니다. 다시 확인해주세요.')
+        setErrors('인증 코드가 일치하지 않습니다. 다시 확인해주세요.')
       } else {
-        alert('인증에 실패했습니다.')
+        setGlobalError('인증에 실패했습니다. 다시 시도해주세요.')
       }
+    } finally {
+      setIsLoading(false)
+    }
+  }
+
+  // 인증코드 재전송 핸들러
+  const handleResend = async () => {
+    if (isResending) return
+
+    setIsResending(true)
+    setGlobalError('')
+
+    try {
+      await api.post('/auth/signup/resend', {
+        email: formData.email,
+      })
+
+      setAuthCode('')
+      setTimeLeft(300) // 타이머 초기화
+    } catch (error) {
+      console.error('재전송 실패: ', error)
+      const response = error.response?.data
+
+      if (response?.errorCode === 'A006') {
+        alert(response.message)
+        navigate('/auth/signin')
+      } else {
+        setGlobalError(response?.message || '메일 재전송에 실패했습니다.')
+      }
+    } finally {
+      setTimeout(() => setIsResending(false), 3000)
     }
   }
 
@@ -106,31 +200,31 @@ export default function SignUp() {
         }
       />
 
-      {/* Google로 로그인하기 */}
-      <AuthSocialButton text="Google로 로그인하기" icon={googleIcon} />
+      {/* 글로벌 에러 메시지 */}
+      {globalError && (
+        <div className="mb-4 rounded-lg bg-red-50 p-3 text-sm text-red-600">
+          {globalError}
+        </div>
+      )}
 
-      {/* 구분선 */}
-      <div className="relative py-5">
-        <div className="absolute inset-0 flex items-center">
-          <div className="w-full border-t border-gray-200"></div>
-        </div>
-        <div className="relative flex justify-center text-sm">
-          <span className="bg-white px-3 text-gray-400">Or</span>
-        </div>
-      </div>
+      {/* Google로 로그인하기 */}
+      {step === 1 && (
+        <>
+          <AuthSocialButton text="Google로 로그인하기" icon={googleIcon} />
+          <div className="relative py-5">
+            <div className="absolute inset-0 flex items-center">
+              <div className="w-full border-t border-gray-200"></div>
+            </div>
+            <div className="relative flex justify-center text-sm">
+              <span className="bg-white px-3 text-gray-400">Or</span>
+            </div>
+          </div>
+        </>
+      )}
 
       {/* 1단계: 회원가입 정보 입력 */}
       {step === 1 && (
         <form onSubmit={handleSendCode} className="space-y-6">
-          {/* 닉네임 */}
-          <AuthInput
-            id="nickname"
-            name="nickname"
-            label="닉네임"
-            value={formData.nickname}
-            onChange={handleChange}
-            placeholder="닉네임을 입력해 주세요."
-          />
           {/* 이메일 */}
           <AuthInput
             id="email"
@@ -138,18 +232,33 @@ export default function SignUp() {
             label="이메일"
             type="email"
             value={formData.email}
-            onChange={handleChange}
             placeholder="이메일을 입력해 주세요."
+            onChange={handleChange}
+            error={errors.email}
+            required
           />
           {/* 비밀번호 */}
           <AuthInput
             id="password"
             name="password"
+            label="비밀번호"
             type="password"
             value={formData.password}
-            onChange={handleChange}
-            label="비밀번호"
             placeholder="비밀번호를 입력해 주세요."
+            onChange={handleChange}
+            error={errors.password}
+            required
+          />
+          {/* 닉네임 */}
+          <AuthInput
+            id="nickname"
+            name="nickname"
+            label="닉네임"
+            value={formData.nickname}
+            placeholder="닉네임을 입력해 주세요."
+            onChange={handleChange}
+            error={errors.nickname}
+            required
           />
           {/* 폼 제출 */}
           <button
@@ -164,28 +273,47 @@ export default function SignUp() {
       {/* 2단계: 인증번호 입력 */}
       {step === 2 && (
         <form onSubmit={handleVerify} className="space-y-6">
-          <div className="text-left">
-            <label className="mb-1.5 block text-sm font-medium text-gray-700">
-              인증 코드 (6자리)
-            </label>
-            <input
-              type="text"
+          {/* 인증번호 입력 구역 */}
+          <div className="relative">
+            <AuthInput
+              id="authCode"
+              name="authCode"
+              label="인증번호"
               value={authCode}
               onChange={(e) => setAuthCode(e.target.value)}
-              className="h-11 w-full rounded-lg border border-gray-300 px-4 text-center text-lg tracking-widest focus:border-blue-500 focus:ring-1 focus:ring-blue-500"
+              placeholder={'인증번호 6자리를 입력해주세요.'}
               maxLength={6}
               required
-            />
+              error={errors.authCode || globalError}
+              className="text-center text-lg tracking-widest"
+            >
+              {/* 타이머 */}
+              <div className="absolute top-1/2 right-4 -translate-y-1/2 text-sm font-medium text-red-500 tabular-nums">
+                {formatTime(timeLeft)}
+              </div>
+            </AuthInput>
           </div>
 
-          <button
-            type="submit"
-            className="inline-flex w-full items-center justify-center rounded-lg bg-blue-500 px-4 py-3 text-sm font-medium text-white shadow-sm transition hover:cursor-pointer hover:bg-blue-600"
-          >
-            인증하기
-          </button>
+          {/* 버튼 구역 */}
+          <div className="grid grid-cols-2 gap-4">
+            <button
+              type="submit"
+              disabled={isLoading || timeLeft === 0}
+              className="inline-flex w-full items-center justify-center rounded-lg bg-blue-500 px-4 py-3 text-sm font-medium text-white shadow-sm transition hover:cursor-pointer hover:bg-blue-600"
+            >
+              인증하기
+            </button>
+            {/* 재전송 */}
+            <button
+              type="button"
+              onClick={handleResend}
+              className={`inline-flex w-full items-center justify-center rounded-lg border border-gray-300 bg-white px-4 py-3 text-sm font-medium shadow-sm transition ${isResending ? 'cursor-not-allowed text-gray-400' : ' text-blue-500 hover:cursor-pointer hover:bg-gray-200 '}`}
+            >
+              {isResending ? '전송 중...' : '인증번호 재전송'}
+            </button>
+          </div>
 
-          {/* 다시 입력하기 (뒤로가기) */}
+          {/* 뒤로가기 */}
           <button
             type="button"
             onClick={() => setStep(1)}

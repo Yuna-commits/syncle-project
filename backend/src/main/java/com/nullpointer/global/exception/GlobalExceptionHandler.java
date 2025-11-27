@@ -4,11 +4,16 @@ import com.nullpointer.global.common.ApiResponse;
 import com.nullpointer.global.common.enums.ErrorCode;
 import jakarta.validation.ConstraintViolationException;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.http.converter.HttpMessageNotReadableException;
 import org.springframework.validation.BindException;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
+
+import java.util.List;
+import java.util.Map;
 
 
 @Slf4j
@@ -20,34 +25,32 @@ public class GlobalExceptionHandler {
      */
     @ExceptionHandler(BusinessException.class)
     public ResponseEntity<ApiResponse<Void>> handleBusinessException(BusinessException ex) {
-        ErrorCode errorCode = ex.getErrorCode();
-        log.warn("도메인 규칙 위반: errorCode={}, message={}", errorCode.getCode(), ex.getMessage());
+        log.warn("비즈니스 로직 예외 발생: {}", ex.getMessage());
 
-        ApiResponse<Void> body = ApiResponse.error(errorCode);
-
-        return new ResponseEntity<>(body, errorCode.getStatus());
+        return ResponseEntity
+                .status(ex.getErrorCode().getStatus())
+                .body(ApiResponse.error(ex.getErrorCode()));
     }
 
     /**
      * 2) @Valid, @Validated 바인딩 실패 (DTO 필드 검증 오류)
+     * -> 필드별 상세 에러 반환
      */
     @ExceptionHandler(MethodArgumentNotValidException.class)
-    public ResponseEntity<ApiResponse<Void>> handleMethodArgumentNotValidException(MethodArgumentNotValidException ex) {
-        StringBuilder sb = new StringBuilder();
+    public ResponseEntity<ApiResponse<Object>> handleMethodArgumentNotValidException(MethodArgumentNotValidException ex) {
+        // Map List 필드 에러
+        // ex) [{"field": "email", "reason": "잘못된 이메일 형식"}, ...]
+        List<Map<String, String>> errors = ex.getBindingResult().getFieldErrors().stream()
+                .map(error -> Map.of(
+                        "field", error.getField(),
+                        "reason", error.getDefaultMessage()))
+                .toList();
 
-        ex.getBindingResult().getFieldErrors().forEach(error -> {
-            sb.append(error.getField())
-                    .append(" : ")
-                    .append(error.getDefaultMessage())
-                    .append("; ");
-        });
+        log.warn("DTO 필드 유효성 검증 실패: {}", errors);
 
-        String detailMessage = sb.toString();
-        log.warn("DTO 필드 유효성 검증 실패: {}", detailMessage);
-
-        ApiResponse<Void> body = ApiResponse.error(ErrorCode.INVALID_INPUT_VALUE);
-
-        return new ResponseEntity<>(body, ErrorCode.INVALID_INPUT_VALUE.getStatus());
+        return ResponseEntity
+                .status(ErrorCode.INVALID_INPUT_VALUE.getStatus())
+                .body(ApiResponse.error(ErrorCode.INVALID_INPUT_VALUE, errors)); // 에러 상세 목록 전달
     }
 
     /**
@@ -57,8 +60,9 @@ public class GlobalExceptionHandler {
     public ResponseEntity<ApiResponse<Void>> handleBindException(Exception ex) {
         log.warn("단일 파라미터 값 바인딩/검증 실패: {}", ex.getMessage());
 
-        ApiResponse<Void> body = ApiResponse.error(ErrorCode.INVALID_INPUT_VALUE);
-        return new ResponseEntity<>(body, ErrorCode.INVALID_INPUT_VALUE.getStatus());
+        return ResponseEntity
+                .status(ErrorCode.INVALID_INPUT_VALUE.getStatus())
+                .body(ApiResponse.error(ErrorCode.INVALID_INPUT_VALUE));
     }
 
 //    /**
@@ -72,17 +76,19 @@ public class GlobalExceptionHandler {
 //        return new ResponseEntity<>(body, ErrorCode.METHOD_NOT_ALLOWED.getStatus());
 //    }
 //
-//    /**
-//     * 6) JSON 파싱 오류 등 바디 형식이 잘못된 경우
-//     */
-//    @ExceptionHandler(HttpMessageNotReadableException.class)
-//    public ResponseEntity<ApiResponse<Void>> handleHttpMessageNotReadableException(HttpMessageNotReadableException ex) {
-//        log.warn("JSON 파싱 실패: {}", ex.getMessage());
-//
-//        ApiResponse<Void> body = ApiResponse.error(ErrorCode.INVALID_INPUT_VALUE);
-//        return new ResponseEntity<>(body, ErrorCode.INVALID_INPUT_VALUE.getStatus());
-//    }
-//
+
+    /**
+     * 6) JSON 파싱 오류 등 바디 형식이 잘못된 경우
+     */
+    @ExceptionHandler(HttpMessageNotReadableException.class)
+    public ResponseEntity<ApiResponse<Void>> handleHttpMessageNotReadableException(HttpMessageNotReadableException ex) {
+        log.warn("JSON 파싱 실패: {}", ex.getMessage());
+
+        return ResponseEntity
+                .status(HttpStatus.BAD_REQUEST)
+                .body(ApiResponse.error(ErrorCode.INVALID_TYPE_VALUE));
+    }
+
 //    /**
 //     * 7) Spring Security 인가 예외 (권한 부족)
 //     */
@@ -102,9 +108,9 @@ public class GlobalExceptionHandler {
     public ResponseEntity<ApiResponse<Void>> handleException(Exception ex) {
         log.error("서버 오류 발생: ", ex);
 
-        ApiResponse<Void> body = ApiResponse.error(ErrorCode.INTERNAL_SERVER_ERROR);
-
-        return new ResponseEntity<>(body, ErrorCode.INTERNAL_SERVER_ERROR.getStatus());
+        return ResponseEntity
+                .status(HttpStatus.INTERNAL_SERVER_ERROR)
+                .body(ApiResponse.error(ErrorCode.INTERNAL_SERVER_ERROR));
     }
 
 }
