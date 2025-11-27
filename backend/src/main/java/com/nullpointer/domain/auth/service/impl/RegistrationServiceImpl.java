@@ -4,6 +4,7 @@ import com.nullpointer.domain.auth.dto.request.AuthRequest;
 import com.nullpointer.domain.auth.service.RegistrationService;
 import com.nullpointer.domain.user.mapper.UserMapper;
 import com.nullpointer.domain.user.vo.UserVo;
+import com.nullpointer.domain.user.vo.enums.VerifyStatus;
 import com.nullpointer.global.common.enums.ErrorCode;
 import com.nullpointer.global.exception.BusinessException;
 import lombok.RequiredArgsConstructor;
@@ -21,33 +22,64 @@ public class RegistrationServiceImpl implements RegistrationService {
 
     @Override
     public UserVo registerLocalUser(AuthRequest.Signup req) {
-
-        // 1) 이메일/닉네임 최종 중복 확인
-        if (userMapper.existsByEmail(req.getEmail())) {
-            throw new BusinessException(ErrorCode.USER_EMAIL_DUPLICATE);
-        }
-
-        if (userMapper.existsByNickname(req.getNickname())) {
-            throw new BusinessException(ErrorCode.USER_NICKNAME_DUPLICATE);
-        }
+        // 1) 이메일로 기존 사용자 조회
+        UserVo existingUser = userMapper.findByEmail(req.getEmail()).orElse(null);
 
         // 2) 비밀번호 암호화
         String encodedPassword = passwordEncoder.encode(req.getPassword());
 
-        // 3) DTO -> VO(provider=LOCAL, verifyStatus=PENDING, userStatus=ACTIVATED)
+        /**
+         * 회원가입 시 중복 이메일을 입력한 경우,
+         * 미인증 상태면 덮어씌우고 가입이 가능하도록 수정
+         */
+        // 3-1) 신규 회원인 경우
+        if (existingUser == null) {
+            return createNewUser(req, encodedPassword);
+        }
+
+        // 3-2) 이메일이 이미 존재하는 경우
+        // A. 이미 인증 완료된 계정이면 에러
+        if (existingUser.getVerifyStatus() == VerifyStatus.VERIFIED) {
+            throw new BusinessException(ErrorCode.ALREADY_VERIFIED);
+        }
+
+        // B. 미인증 계정이면 정보 덮어쓰기 (재가입 시도)
+        return updatePendingUser(existingUser, req, encodedPassword);
+    }
+
+    private UserVo createNewUser(AuthRequest.Signup req, String encodedPassword) {
+        // 닉네임 중복 확인
+        if (userMapper.existsByNickname(req.getNickname())) {
+            throw new BusinessException(ErrorCode.USER_NICKNAME_DUPLICATE);
+        }
+
         UserVo newUser = UserVo.builder()
                 .email(req.getEmail())
                 .password(encodedPassword)
                 .nickname(req.getNickname())
                 .build();
 
-        // 4) DB 저장
+        // DB 저장
         userMapper.insertUser(newUser);
 
-        /**
-         * 추가) 팀+보드+리스트 생성 트랜잭션
-         */
-
         return newUser;
+    }
+
+    private UserVo updatePendingUser(UserVo user, AuthRequest.Signup req, String encodedPassword) {
+        // 닉네임이 변경되었으면 중복 확인
+        if (!user.getNickname().equals(req.getNickname())) {
+            if (userMapper.existsByNickname(req.getNickname())) {
+                throw new BusinessException(ErrorCode.USER_NICKNAME_DUPLICATE);
+            }
+            user.setNickname(req.getNickname());
+        }
+
+        // 정보 덮어쓰기
+        user.setPassword(encodedPassword);
+
+        // DB 업데이트
+        userMapper.updateUser(user);
+
+        return user;
     }
 }
