@@ -7,7 +7,7 @@ import com.nullpointer.domain.auth.dto.response.LoginResponse;
 import com.nullpointer.domain.auth.dto.response.PasswordVerifyResponse;
 import com.nullpointer.domain.auth.service.AuthService;
 import com.nullpointer.global.common.ApiResponse;
-import jakarta.servlet.http.HttpServletRequest;
+import com.nullpointer.global.common.enums.VerificationType;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.web.bind.annotation.*;
@@ -22,11 +22,18 @@ public class AuthController {
     /**
      * 회원가입
      */
-    // 인증코드 발송
-    @PostMapping("/signup/code")
-    public ApiResponse<String> sendSignupCode(@Valid @RequestBody AuthRequest.Signup req) {
-        authService.sendSignupCode(req);
-        return ApiResponse.success("이메일 인증 코드 발송 성공");
+    // 회원가입 (정보 저장 + 코드 발송)
+    @PostMapping("/signup")
+    public ApiResponse<String> signup(@Valid @RequestBody AuthRequest.Signup req) {
+        authService.signup(req); // 내부에서 sendVerificationCode 호출
+        return ApiResponse.success("인증 코드 발송 성공");
+    }
+
+    // 인증코드 재발송 (이메일만 사용, 프론트에서 시간 제한)
+    @PostMapping("/signup/resend")
+    public ApiResponse<String> resendSignupCode(@Valid @RequestBody VerificationRequest.EmailOnly req) {
+        authService.sendVerificationCode(req.getEmail(), VerificationType.SIGNUP);
+        return ApiResponse.success("인증 코드 발송 성공");
     }
 
     // 인증코드 검증 & 자동 로그인
@@ -48,16 +55,14 @@ public class AuthController {
 
     // 구글 로그인
     @PostMapping("/login/google")
-    public ApiResponse<LoginResponse> googleLogin(@RequestBody VerificationRequest.Token req) {
+    public ApiResponse<LoginResponse> googleLogin(@Valid @RequestBody VerificationRequest.Token req) {
         LoginResponse response = authService.googleLogin(req.getToken());
         return ApiResponse.success(response);
     }
 
     // 로그아웃
     @PostMapping("/logout")
-    public ApiResponse<String> logout(HttpServletRequest request) {
-        String bearerToken = request.getHeader("Authorization");
-
+    public ApiResponse<String> logout(@RequestHeader(value = "Authorization", required = false) String bearerToken) {
         // 헤더에서 Bearer 제거
         if (bearerToken != null && bearerToken.startsWith("Bearer ")) {
             String accessToken = bearerToken.substring(7);
@@ -70,7 +75,7 @@ public class AuthController {
     // 토큰 재발급
     // 클라이언트가 보낸 Refresh Token을 받아 서비스에 전달, 갱신된 토큰 세트를 응답
     @PostMapping("/token/refresh")
-    public ApiResponse<LoginResponse> reissue(@RequestBody VerificationRequest.Token req) {
+    public ApiResponse<LoginResponse> reissue(@Valid @RequestBody VerificationRequest.Token req) {
         LoginResponse response = authService.reissue(req.getToken());
         return ApiResponse.success(response);
     }
@@ -80,9 +85,16 @@ public class AuthController {
      */
     // 인증코드 발송
     @PostMapping("/password/code")
-    public ApiResponse<String> sendPwCode(@Valid @RequestBody VerificationRequest.EmailOnly req) {
-        authService.sendPasswordResetCode(req);
-        return ApiResponse.success("비밀번호 재설정 인증 코드 발송 성공");
+    public ApiResponse<String> sendPasswordResetCode(@Valid @RequestBody VerificationRequest.EmailOnly req) {
+        authService.sendVerificationCode(req.getEmail(), VerificationType.PASSWORD_RESET);
+        return ApiResponse.success("인증 코드 발송 성공");
+    }
+
+    // 인증코드 재발송
+    @PostMapping("/password/resend")
+    public ApiResponse<String> resendPwResetCode(@Valid @RequestBody VerificationRequest.EmailOnly req) {
+        authService.sendVerificationCode(req.getEmail(), VerificationType.PASSWORD_RESET);
+        return ApiResponse.success("인증 코드 발송 성공");
     }
 
     // 인증코드 검증 & 임시 토큰 발급

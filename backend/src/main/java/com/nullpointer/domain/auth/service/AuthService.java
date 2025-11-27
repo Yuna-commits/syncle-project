@@ -5,14 +5,18 @@ import com.nullpointer.domain.auth.dto.request.PasswordRequest;
 import com.nullpointer.domain.auth.dto.request.VerificationRequest;
 import com.nullpointer.domain.auth.dto.response.LoginResponse;
 import com.nullpointer.domain.auth.dto.response.PasswordVerifyResponse;
+import com.nullpointer.global.common.enums.VerificationType;
 
 public interface AuthService {
+
+    // 인증코드 발송
+    void sendVerificationCode(String email, VerificationType type);
 
     /**
      * 회원가입
      */
-    // 회원 정보 입력 & 인증코드 발송
-    void sendSignupCode(AuthRequest.Signup req);
+    // 회원가입 (정보 저장 + 코드 발송)
+    void signup(AuthRequest.Signup req);
 
     // 인증코드 검증 & 자동 로그인
     LoginResponse verifySignup(VerificationRequest.Code req);
@@ -32,8 +36,6 @@ public interface AuthService {
     /**
      * 비밀번호 재설정
      */
-    // 이메일 확인 & 인증코드 발송
-    void sendPasswordResetCode(VerificationRequest.EmailOnly req);
 
     // 인증코드 검증 & 임시 토큰 발급
     PasswordVerifyResponse verifyPasswordResetCode(VerificationRequest.Code req);

@@ -47,23 +47,47 @@ public class AuthServiceImpl implements AuthService {
 
     private final TeamService teamService;
 
+    /**
+     * 공용 인증 코드 발송 (회원가입, 비밀번호 재설정)
+     * - DB에 등록된 가입한 사용자만 메일 발송 가능
+     */
+    @Override
+    public void sendVerificationCode(String email, VerificationType type) {
+        // 1) 사용자 조회
+        UserVo user = userMapper.findByEmail(email).orElse(null);
+
+        // 2) 타입별 검증
+        if (type == VerificationType.SIGNUP) { // 회원가입인 경우
+            if (user != null && user.getVerifyStatus() == VerifyStatus.VERIFIED) {
+                throw new BusinessException(ErrorCode.ALREADY_VERIFIED);
+            }
+        } else if (type == VerificationType.PASSWORD_RESET) {
+            if (user == null) {
+                throw new BusinessException(ErrorCode.USER_NOT_FOUND);
+            }
+        } // 확장
+
+        // 3) 인증코드 생성, 저장
+        String code = codeHelper.generateAndSaveCode(email, type);
+
+        // 4) 메일 발송
+        emailService.sendVerificationEmail(email, code, type);
+    }
+
     // ==================================================================
     // 1. 회원가입 (Signup)
     // ==================================================================
 
     /**
-     * 1단계: 회원 정보 입력 & 인증코드 발송
+     * 1단계: 가입 정보 저장 & 코드 발송
      */
     @Override
-    public void sendSignupCode(AuthRequest.Signup req) {
+    public void signup(AuthRequest.Signup req) {
         // 1) DB 저장 (verifyStatus = PENDING)
-        UserVo user = registrationService.registerLocalUser(req);
+        registrationService.registerLocalUser(req);
 
-        // 2) 인증코드 생성, 저장
-        String code = codeHelper.generateAndSaveCode(user.getEmail(), VerificationType.SIGNUP);
-
-        // 3) 메일 발송
-        emailService.sendVerificationEmail(user.getEmail(), code, VerificationType.SIGNUP);
+        // 2) 통합 인증코드 발송 메서드 호출
+        this.sendVerificationCode(req.getEmail(), VerificationType.SIGNUP);
     }
 
     /**
@@ -228,21 +252,8 @@ public class AuthServiceImpl implements AuthService {
     // ==================================================================
 
     /**
-     * 1단계: 이메일 확인 & 인증코드 발송
+     * 1단계: sendVerificationcode 인증코드 발송
      */
-    @Override
-    public void sendPasswordResetCode(VerificationRequest.EmailOnly req) {
-        // 1) 사용자 검증
-        if (userMapper.findByEmail(req.getEmail()).isEmpty()) {
-            throw new BusinessException(ErrorCode.USER_NOT_FOUND);
-        }
-
-        // 2) 인증코드 생성, 저장
-        String code = codeHelper.generateAndSaveCode(req.getEmail(), VerificationType.PASSWORD_RESET);
-
-        // 3) 메일 발송
-        emailService.sendVerificationEmail(req.getEmail(), code, VerificationType.PASSWORD_RESET);
-    }
 
     /**
      * 2단계: 인증코드 검증 & 임시 토큰 발급
