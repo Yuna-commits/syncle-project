@@ -14,7 +14,6 @@ function DashboardPage() {
         // 1. 내 팀 목록 (+ 보드 리스트) 조회
         const response = await api.get('/boards/me')
         const data = await response.data.data
-        console.log('내 팀 목록 + 보드들:', data)
         const groupedMap = data.reduce((acc, cur) => {
           const tName = cur.teamName || 'Unknown Team'
 
