@@ -22,6 +22,9 @@ public class JwtTokenProvider {
 
     private Key key;
 
+    @Value("${app.jwt.access-expiration}")
+    private long accessTokenExpiration; // 1시간
+
     @PostConstruct // 빈 초기화 시점에 한 번만 실행
     public void init() {
         // secretKey -> Key 객체로 변환
@@ -37,7 +40,7 @@ public class JwtTokenProvider {
                 .claim(JwtConstants.CLAIM_USER_ID.getValue(), userId)
                 .claim(JwtConstants.CLAIM_TYPE.getValue(), JwtConstants.TYPE_ACCESS)
                 .setIssuedAt(new Date())
-                .setExpiration(new Date(System.currentTimeMillis() + RedisKeyType.ACCESS_TOKEN.getDefaultTtl()))
+                .setExpiration(new Date(System.currentTimeMillis() + accessTokenExpiration))
                 .signWith(key, SignatureAlgorithm.HS256)
                 .compact();
     }

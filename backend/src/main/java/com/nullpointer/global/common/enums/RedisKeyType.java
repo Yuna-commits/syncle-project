@@ -6,7 +6,6 @@ import lombok.Getter;
 public enum RedisKeyType {
 
     // Auth
-    ACCESS_TOKEN("np:auth:access:%s", 3_600_000L), // 1시간
     REFRESH_TOKEN("np:auth:refresh:%s", 1_209_600_000L), // 2주
     BLACKLIST("np:auth:blacklist:%s", 0L),
 
