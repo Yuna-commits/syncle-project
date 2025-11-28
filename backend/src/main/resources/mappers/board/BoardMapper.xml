@@ -5,11 +5,11 @@
 <mapper namespace="com.nullpointer.domain.board.mapper.BoardMapper">
 
     <!-- 보드 생성 -->
-    <insert id="insertBoard" parameterType="BoardVo"  useGeneratedKeys="true" keyProperty="id">
+    <insert id="insertBoard" parameterType="BoardVo" useGeneratedKeys="true" keyProperty="id">
         INSERT INTO board (title,
-                          team_id,
-                          description,
-                          visibility)
+                           team_id,
+                           description,
+                           visibility)
         VALUES (#{title},
                 #{teamId},
                 #{description},
@@ -65,9 +65,9 @@
     <!-- 보드 정보 수정 -->
     <update id="updateBoard" parameterType="BoardVo">
         UPDATE board
-        SET title = #{title},
+        SET title       = #{title},
             description = #{description},
-            visibility = #{visibility}
+            visibility  = #{visibility}
         WHERE id = #{id}
     </update>
 
@@ -84,5 +84,18 @@
         FROM board
         WHERE team_id = #{id}
           AND deleted_at IS NULL
+    </select>
+
+    <!-- 소속 멤버 보드 조회 -->
+    <select id="findMemberBoard" resultType="BoardVo">
+        SELECT b.id,
+               b.title
+        FROM board b
+                 LEFT JOIN board_member bm
+                           ON b.id = bm.board_id
+                               AND bm.user_id = #{userId}
+        WHERE b.team_id = #{teamId}
+          AND b.deleted_at IS NULL
+          AND (b.visibility = 'TEAM' OR bm.user_id IS NOT NULL)
     </select>
 </mapper>

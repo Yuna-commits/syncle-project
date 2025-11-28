@@ -2,6 +2,7 @@ package com.nullpointer.domain.board.mapper;
 
 
 import com.nullpointer.domain.board.vo.BoardVo;
+import org.apache.ibatis.annotations.Param;
 
 import java.util.List;
 
@@ -11,13 +12,13 @@ public interface BoardMapper {
     void insertBoard(BoardVo boardVo);
 
     // 내 보드 목록 조회
-    List<BoardVo> findBoardByUserId(Long user_id);
+    List<BoardVo> findBoardByUserId(Long userId);
 
     // 특정 팀 보드 목록 조회
-    List<BoardVo> findBoardByTeamId(Long team_id);
+    List<BoardVo> findBoardByTeamId(Long teamId);
 
     // 보드 상세 조회
-    BoardVo findBoardByBoardId(Long board_id);
+    BoardVo findBoardByBoardId(Long boardId);
 
     // 보드 정보 수정
     void updateBoard(BoardVo boardVo);
@@ -27,4 +28,7 @@ public interface BoardMapper {
 
     // 보드 개수 체크
     int countBoardByTeamId(Long teamId);
+
+    //소속 멤버 보드 조회
+    List<BoardVo> findMemberBoard(@Param("teamId") Long teamId, @Param("userId") Long memberId);
 }

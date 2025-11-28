@@ -9,9 +9,9 @@ export default function DashboardRoutes() {
   return (
     <Routes>
       <Route index element={<DashboardPage />} />
-      <Route path="team-board" element={<TeamBoardPage />} />
-      <Route path="team-members" element={<TeamMembersPage />} />
-      <Route path="team-settings" element={<TeamSetting />} />
+      <Route path="teams/:teamId/boards" element={<TeamBoardPage />} />
+      <Route path="teams/:teamId/members" element={<TeamMembersPage />} />
+      <Route path="teams/:teamId/settings" element={<TeamSetting />} />
     </Routes>
   )
 }

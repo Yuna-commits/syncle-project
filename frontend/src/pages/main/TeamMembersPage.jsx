@@ -1,80 +1,88 @@
-import React, { useState } from 'react'
+import React, { useEffect, useState } from 'react'
 import defaultProfile from '../../assets/images/default.png'
+import api from '../../api/AxiosInterceptor'
+import { useParams } from 'react-router-dom'
 
 export default function TeamMembersPage() {
-  const members = [
-    {
-      id: 1,
-      name: '둘리',
-      teamRole: '관리자',
-      position: '프론트엔드 개발자',
-      email: 'dooly@mail.com',
-      profile_img: defaultProfile,
-      status: 'Active',
-      boards: [
-        { id: 1, name: '프로젝트 A', color: '#4F46E5' },
-        { id: 2, name: '디자인 시스템', color: '#EC4899' },
-        { id: 3, name: '백엔드 API', color: '#10B981' },
-      ],
-    },
-    {
-      id: 2,
-      name: '또치',
-      teamRole: '멤버',
-      position: '백엔드 개발자',
-      email: 'ddochi@mail.com',
-      profile_img: defaultProfile,
-      status: 'Pending',
-      boards: [{ id: 1, name: '백엔드 API', color: '#10B981' }],
-    },
-    {
-      id: 3,
-      name: '희동이',
-      teamRole: '멤버',
-      position: 'UI/UX 디자이너',
-      email: 'heedong@mail.com',
-      profile_img: defaultProfile,
-      status: 'Active',
-      boards: [{ id: 1, name: '디자인 시스템', color: '#EC4899' }],
-    },
-    {
-      id: 4,
-      name: '길동이',
-      teamRole: '멤버',
-      position: '서비스 기획자',
-      email: 'gildong@mail.com',
-      profile_img: defaultProfile,
-      status: 'Active',
-    },
-    {
-      id: 5,
-      name: '영희',
-      teamRole: '멤버',
-      position: '데이터 분석가',
-      email: 'younghee@mail.com',
-      profile_img: defaultProfile,
-      status: 'Expired',
-    },
-    {
-      id: 6,
-      name: '철수',
-      teamRole: '읽기 전용',
-      position: '사장',
-      email: 'chulsu@mail.com',
-      profile_img: defaultProfile,
-      status: 'Active',
-    },
-  ]
+  const { teamId } = useParams()
+  const [members, setMembers] = useState([])
 
-  const [openBoardMenuId, setOpenBoardMenuId] = useState(false)
-  const [openRoleMenuId, setOpenRoleMenuId] = useState(false)
+  // [변경] 현재 열려있는 메뉴의 ID를 저장 (예: 'role-1', 'board-2')
+  const [activeMenu, setActiveMenu] = useState(null)
 
-  const toggleBoardMenu = (id) => {
-    setOpenBoardMenuId((prev) => (prev === id ? null : id))
+  // [추가] 로딩 상태 관리 (어떤 멤버의 보드를 로딩 중인지)
+  const [loadingMemberId, setLoadingMemberId] = useState(null)
+
+  // 1. 초기 멤버 목록 조회
+  useEffect(() => {
+    if (!teamId) return
+
+    const fetchMembers = async () => {
+      try {
+        const response = await api.get(`/teams/${teamId}/members`)
+        console.log('멤버 데이터:', response.data.data)
+        setMembers(response.data.data)
+      } catch (error) {
+        console.error('멤버 조회 실패', error)
+      }
+    }
+    fetchMembers()
+  }, [teamId])
+
+  // [추가] 외부 클릭 시 메뉴 닫기
+  useEffect(() => {
+    const closeMenu = () => setActiveMenu(null)
+    window.addEventListener('click', closeMenu)
+    return () => window.removeEventListener('click', closeMenu)
+  }, [])
+
+  // 2. 메뉴 토글 함수 (역할/보드 공통 사용)
+  const toggleMenu = (e, type, id) => {
+    e.stopPropagation() // 클릭 이벤트 전파 방지
+    const menuId = `${type}-${id}`
+    // 이미 열려있으면 닫고(null), 아니면 엶
+    setActiveMenu((prev) => (prev === menuId ? null : menuId))
   }
 
-  const toggleRoleMenu = (id) => {
-    setOpenRoleMenuId((prev) => (prev === id ? null : id))
+  // 3. [핵심] 보드 보기 클릭 핸들러 (Lazy Loading)
+  const handleBoardClick = async (e, memberId) => {
+    // 일단 메뉴를 엽니다.
+    toggleMenu(e, 'board', memberId)
+
+    // 해당 멤버를 찾습니다.
+    const targetMember = members.find((m) => m.userId === memberId)
+
+    // 이미 보드 데이터가 배열로 존재하면 API 호출 스킵 (캐싱)
+    if (targetMember && Array.isArray(targetMember.boards)) {
+      return
+    }
+
+    // 데이터가 없으면 API 호출 시작
+    try {
+      setLoadingMemberId(memberId)
+
+      // [API 호출] 해당 멤버의 보드 목록 가져오기
+      // 경로는 백엔드 명세에 따라 수정 필요 (예: /teams/{teamId}/members/{memberId}/boards)
+      const response = await api.get(
+        `/teams/${teamId}/members/${memberId}/boards`,
+      )
+      const fetchedBoards = response.data.data || [] // 데이터가 없으면 빈 배열
+
+      // [상태 업데이트] 기존 members 배열에서 해당 멤버만 찾아서 boards 업데이트
+      setMembers((prev) =>
+        prev.map((m) =>
+          m.userId === memberId ? { ...m, boards: fetchedBoards } : m,
+        ),
+      )
+    } catch (error) {
+      console.error('보드 목록 조회 실패', error)
+      // 에러 나면 빈 배열로 처리해서 계속 로딩 뜨는 것 방지
+      setMembers((prev) =>
+        prev.map((m) => (m.userId === memberId ? { ...m, boards: [] } : m)),
+      )
+    } finally {
+      setLoadingMemberId(null)
+    }
   }
 
   return (
@@ -89,7 +97,7 @@ export default function TeamMembersPage() {
         </div>
 
         <div className="rounded-xl border border-gray-300">
-          <div className="max-w-full overflow-x-auto">
+          <div className="min-h-[300px] max-w-full overflow-x-auto">
             {/* 테이블 */}
             <table className="min-w-full">
               <thead className="border-b border-gray-300">
@@ -110,136 +118,141 @@ export default function TeamMembersPage() {
                     이메일
                   </th>
                   <th className="px-5 py-3 text-start text-sm font-medium text-gray-500">
-                    상태
-                  </th>
-                  <th className="px-5 py-3 text-start text-sm font-medium text-gray-500">
                     관리
                   </th>
                 </tr>
               </thead>
 
               <tbody className="divide-y divide-gray-300">
-                {members.map((member) => (
-                  <tr key={member.id}>
-                    {/* 유저 정보 */}
-                    <td className="px-5 py-4 whitespace-nowrap">
-                      <div className="flex items-center gap-3">
-                        <div className="h-10 w-10 overflow-hidden rounded-full">
-                          <img
-                            src={member.profile_img}
-                            alt={member.name}
-                            className="h-full w-full object-cover"
-                          />
-                        </div>
-                        <div>
-                          <span className="block font-medium text-gray-800">
-                            {member.name}
-                          </span>
-                        </div>
-                      </div>
-                    </td>
+                {members.map((member) => {
+                  // 현재 렌더링 중인 행의 메뉴 ID들
+                  const roleMenuId = `role-${member.userId}`
+                  const boardMenuId = `board-${member.userId}`
 
-                    {/* 팀 역할 */}
-                    <td className="relative px-4 py-3 text-sm text-gray-800">
-                      <button
-                        onClick={() => toggleRoleMenu(member.id)}
-                        className="rounded-lg border border-gray-300 px-3 py-1 hover:cursor-pointer hover:bg-gray-200"
-                      >
-                        {member.teamRole}
-                      </button>
-
-                      {/* 역할 선택 드롭다운 */}
-                      {openRoleMenuId === member.id && (
-                        <div className="absolute top-1/2 left-[70%] z-20 w-36 -translate-y-1/2 rounded-lg border border-gray-300 bg-white shadow-md">
-                          <div className="flex flex-col p-1 text-sm text-gray-800">
-                            <div className="cursor-pointer rounded-md px-3 py-2 hover:bg-gray-200">
-                              관리자
-                            </div>
-                            <div className="cursor-pointer rounded-md px-3 py-2 hover:bg-gray-200">
-                              멤버
-                            </div>
-                            <div className="cursor-pointer rounded-md px-3 py-2 hover:bg-gray-200">
-                              읽기 전용
-                            </div>
+                  return (
+                    <tr key={member.userId}>
+                      {/* 유저 정보 */}
+                      <td className="px-5 py-4 whitespace-nowrap">
+                        <div className="flex items-center gap-3">
+                          <div className="h-10 w-10 overflow-hidden rounded-full">
+                            <img
+                              src={member.profile_img || defaultProfile}
+                              alt={member.nickname}
+                              className="h-full w-full object-cover"
+                            />
+                          </div>
+                          <div>
+                            <span className="block font-medium text-gray-800">
+                              {member.nickname}
+                            </span>
                           </div>
                         </div>
-                      )}
-                    </td>
+                      </td>
 
-                    {/* 직책 (개인 직책) */}
-                    <td className="px-4 py-3 text-sm text-gray-800">
-                      {member.position}
-                    </td>
+                      {/* 팀 역할 */}
+                      <td className="relative px-4 py-3 text-sm text-gray-800">
+                        <button
+                          onClick={(e) => toggleMenu(e, 'role', member.userId)}
+                          className="rounded-lg border border-gray-300 px-3 py-1 hover:cursor-pointer hover:bg-gray-200"
+                        >
+                          {member.role || 'Member'}
+                        </button>
 
-                    {/* 보드 */}
-                    <td className="relative px-4 py-3 text-sm text-gray-800">
-                      <button
-                        onClick={() => toggleBoardMenu(member.id)}
-                        className="rounded-lg border border-gray-300 px-3 py-1 text-sm hover:cursor-pointer hover:bg-gray-200"
-                      >
-                        보드 보기
-                      </button>
-                      {/* 보드 리스트 */}
-                      {openBoardMenuId === member.id && (
-                        <div className="absolute top-1/2 left-[80%] z-20 w-48 -translate-y-1/2 rounded-lg border border-gray-300 bg-white shadow-lg">
-                          <div className="max-h-48 space-y-1 overflow-y-auto p-2">
-                            {/* boards가 null 또는 빈 배열일 때 */}
-                            {(!member.boards || member.boards.length === 0) && (
-                              <div className="px-2 py-1 text-sm text-gray-500">
-                                참여한 보드가 없습니다
-                              </div>
-                            )}
-
-                            {/* 보드 목록 */}
-                            {member.boards?.map((board) => (
-                              <div
-                                key={board.id}
-                                className="flex cursor-pointer items-center gap-2 rounded-md px-2 py-1 hover:bg-gray-200"
-                              >
+                        {/* 역할 선택 드롭다운 (activeMenu가 일치할 때만 렌더링) */}
+                        {activeMenu === roleMenuId && (
+                          <div
+                            onClick={(e) => e.stopPropagation()}
+                            className="absolute top-1/2 left-[70%] z-20 w-36 -translate-y-1/2 rounded-lg border border-gray-300 bg-white shadow-md"
+                          >
+                            <div className="flex flex-col p-1 text-sm text-gray-800">
+                              {['OWNER', 'ADMIN', 'MEMBER'].map((role) => (
                                 <div
-                                  className="h-3 w-3 rounded-full"
-                                  style={{ backgroundColor: board.color }}
-                                />
-                                <span className="text-sm text-gray-800">
-                                  {board.name}
-                                </span>
-                              </div>
-                            ))}
+                                  key={role}
+                                  className="cursor-pointer rounded-md px-3 py-2 hover:bg-gray-200"
+                                  // onClick={() => handleRoleChange(member.userId, role)}
+                                >
+                                  {role}
+                                </div>
+                              ))}
+                            </div>
                           </div>
-                        </div>
-                      )}
-                    </td>
+                        )}
+                      </td>
 
-                    {/* 이메일 */}
-                    <td className="px-4 py-3 text-sm text-gray-800">
-                      {member.email}
-                    </td>
+                      {/* 직책 (개인 직책) */}
+                      <td className="px-4 py-3 text-sm text-gray-800">
+                        {member.position || '-'}
+                      </td>
 
-                    {/* 상태 */}
-                    <td className="px-4 py-3 text-sm">
-                      {member.status === 'Active' ? (
-                        <span className="inline-flex items-center rounded-full bg-green-50 px-2.5 py-0.5 text-xs font-medium text-green-600">
-                          Active
-                        </span>
-                      ) : member.status === 'Pending' ? (
-                        <span className="inline-flex items-center rounded-full bg-yellow-50 px-2.5 py-0.5 text-xs font-medium text-yellow-600">
-                          Pending
-                        </span>
-                      ) : (
-                        <span className="inline-flex items-center rounded-full bg-red-50 px-2.5 py-0.5 text-xs font-medium text-red-600">
-                          Expired
-                        </span>
-                      )}
-                    </td>
+                      {/* 보드 */}
+                      <td className="relative px-4 py-3 text-sm text-gray-800">
+                        <button
+                          // [변경] 클릭 시 handleBoardClick 호출 (API 호출 포함)
+                          onClick={(e) => handleBoardClick(e, member.userId)}
+                          className="rounded-lg border border-gray-300 px-3 py-1 text-sm hover:cursor-pointer hover:bg-gray-200"
+                        >
+                          보드 보기
+                        </button>
 
-                    {/* 관리 (수정 버튼) */}
-                    <td className="px-4 py-3 text-sm">
-                      <button className="rounded-lg border border-gray-300 px-3 py-1 text-sm text-red-600 hover:cursor-pointer hover:bg-gray-200">
-                        내보내기
-                      </button>
-                    </td>
-                  </tr>
-                ))}
+                        {/* 보드 리스트 드롭다운 (activeMenu가 일치할 때만 렌더링) */}
+                        {activeMenu === boardMenuId && (
+                          <div
+                            onClick={(e) => e.stopPropagation()}
+                            className="absolute top-1/2 left-[80%] z-20 w-48 -translate-y-1/2 rounded-lg border border-gray-300 bg-white shadow-lg"
+                          >
+                            <div className="max-h-48 space-y-1 overflow-y-auto p-2">
+                              {/* 1. 로딩 중일 때 */}
+                              {loadingMemberId === member.userId && (
+                                <div className="px-2 py-1 text-center text-sm text-gray-500">
+                                  로딩 중...
+                                </div>
+                              )}
+
+                              {/* 2. 로딩 완료 + 데이터 없음 */}
+                              {loadingMemberId !== member.userId &&
+                                member.boards &&
+                                member.boards.length === 0 && (
+                                  <div className="px-2 py-1 text-center text-sm text-gray-500">
+                                    참여한 보드가 없습니다
+                                  </div>
+                                )}
+
+                              {/* 3. 데이터 있음 */}
+                              {member.boards?.map((board) => (
+                                <div
+                                  key={board.id}
+                                  className="flex cursor-pointer items-center gap-2 rounded-md px-2 py-1 hover:bg-gray-200"
+                                >
+                                  <div
+                                    className="h-3 w-3 rounded-full"
+                                    style={{
+                                      backgroundColor: board.color || '#ccc',
+                                    }}
+                                  />
+                                  <span className="truncate text-sm text-gray-800">
+                                    {board.name || board.title}
+                                  </span>
+                                </div>
+                              ))}
+                            </div>
+                          </div>
+                        )}
+                      </td>
+
+                      {/* 이메일 */}
+                      <td className="px-4 py-3 text-sm text-gray-800">
+                        {member.email}
+                      </td>
+
+                      {/* 관리 (수정 버튼) */}
+                      <td className="px-4 py-3 text-sm">
+                        <button className="rounded-lg border border-gray-300 px-3 py-1 text-sm text-red-600 hover:cursor-pointer hover:bg-gray-200">
+                          내보내기
+                        </button>
+                      </td>
+                    </tr>
+                  )
+                })}
               </tbody>
             </table>
           </div>

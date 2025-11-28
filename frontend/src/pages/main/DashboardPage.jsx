@@ -4,8 +4,7 @@ import api from '../../api/AxiosInterceptor'
 import TeamBoardSection from '../../components/dashboard/TeamBoardSection'
 
 function DashboardPage() {
-  const [teams, setTeams] = useState([]) // 팀별로 그룹화된 데이터
-  // const [recentBoards, setRecentBoards] = useState([]) // 최근 본 보드 목록
+  const [teams, setTeams] = useState([])
 
   // 데이터 불러오기
   useEffect(() => {
@@ -14,6 +13,7 @@ function DashboardPage() {
         // 1. 내 팀 목록 (+ 보드 리스트) 조회
         const response = await api.get('/boards/me')
         const data = await response.data.data
+
         const groupedMap = data.reduce((acc, cur) => {
           const tName = cur.teamName || 'Unknown Team'
 
@@ -38,7 +38,6 @@ function DashboardPage() {
 
           return acc
         }, {})
-
         setTeams(Object.values(groupedMap))
       } catch (error) {
         console.error('내 팀 목록 조회 실패:', error)
@@ -72,10 +71,7 @@ function DashboardPage() {
           {teams.length > 0 ? (
             teams.map((team) => (
               // 분리한 컴포넌트 사용
-              <TeamBoardSection
-                key={team.teamId || team.teamName}
-                team={team}
-              />
+              <TeamBoardSection key={team.teamId} team={team} />
             ))
           ) : (
             <div className="text-gray-500">소속된 팀이 없습니다.</div>

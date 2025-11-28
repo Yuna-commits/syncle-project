@@ -5,7 +5,7 @@ import { Routes, Route } from 'react-router-dom'
 function BoardRoutes() {
   return (
     <Routes>
-      <Route index element={<Board />} />
+      <Route path=":boardId" element={<Board />} />
     </Routes>
   )
 }

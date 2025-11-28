@@ -4,6 +4,7 @@ import com.nullpointer.domain.board.dto.request.CreateBoardRequest;
 import com.nullpointer.domain.board.dto.request.UpdateBoardRequest;
 import com.nullpointer.domain.board.dto.response.BoardDetailResponse;
 import com.nullpointer.domain.board.dto.response.BoardResponse;
+import com.nullpointer.domain.board.dto.response.MemberBoardResponse;
 
 import java.util.List;
 
@@ -30,4 +31,6 @@ public interface BoardService {
     // 보드 삭제
     void deleteBoard(Long boardId, Long userId);
 
+    //소속 멤버 보드 조회
+    List<MemberBoardResponse> getMemberBoards(Long teamId, Long memberId, Long userId);
 }
