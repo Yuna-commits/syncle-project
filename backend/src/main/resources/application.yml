@@ -46,6 +46,9 @@ spring:
       max-request-size: 10MB
 
 app:
+  jwt:
+    access-expiration: 3600000
+
   domain:
     frontend: http://localhost:5173
 
