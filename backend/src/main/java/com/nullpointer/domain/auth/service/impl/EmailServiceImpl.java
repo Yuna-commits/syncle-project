@@ -31,8 +31,8 @@ public class EmailServiceImpl implements EmailService {
     @Override
     public void sendVerificationEmail(String toEmail, String code, VerificationType type) {
         String subject = (type == VerificationType.SIGNUP)
-                ? "[SYNCLE] 회원가입 인증코드"
-                : "[SYNCLE] 비밀번호 재설정 인증코드";
+                ? "[SYNCLE] 회원가입 인증번호"
+                : "[SYNCLE] 비밀번호 재설정 인증번호";
 
         String htmlContent = getVerificationHtml(subject, code);
 
@@ -105,7 +105,7 @@ public class EmailServiceImpl implements EmailService {
                              ">
                                  안녕하세요!<br>
                                  <strong>SYNCLE</strong>입니다.<br>
-                                 요청하신 인증 코드를 확인해주세요.
+                                 요청하신 인증번호를 확인해주세요.
                              </p>
                 \s
                              <div style="text-align: center; margin: 32px 0;">
@@ -131,7 +131,7 @@ public class EmailServiceImpl implements EmailService {
                                  margin-top: 32px;
                                  text-align: center;
                              ">
-                                 인증 코드는 <strong>5분간</strong> 유효합니다.<br>
+                                 인증번호는 <strong>5분간</strong> 유효합니다.<br>
                                  본인이 요청하지 않았다면 이 메일을 무시해주세요.
                              </p>
                          </div>

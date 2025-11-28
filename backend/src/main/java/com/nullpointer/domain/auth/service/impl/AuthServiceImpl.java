@@ -65,6 +65,11 @@ public class AuthServiceImpl implements AuthService {
             if (user == null) {
                 throw new BusinessException(ErrorCode.USER_NOT_FOUND);
             }
+
+            // 소셜 로그인 유저는 비밀번호 재설정 필요 x
+            if (user.getProvider() != Provider.LOCAL) {
+                throw new BusinessException(ErrorCode.SOCIAL_ACCOUNT_NOT_ALLOWED);
+            }
         } // 확장
 
         // 3) 인증코드 생성, 저장

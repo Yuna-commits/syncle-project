@@ -11,7 +11,7 @@ public enum ErrorCode {
     INVALID_INPUT_VALUE(HttpStatus.BAD_REQUEST, "C002", "요청 값이 올바르지 않습니다."),
     METHOD_NOT_ALLOWED(HttpStatus.METHOD_NOT_ALLOWED, "C003", "허용되지 않은 HTTP 메서드입니다."),
     INVALID_TYPE_VALUE(HttpStatus.BAD_REQUEST, "C004", "올바르지 않은 JSON 형식입니다."),
-    
+
     // 인증/인가
     // - 토큰
     INVALID_TOKEN(HttpStatus.UNAUTHORIZED, "A001", "유효하지 않은 토큰입니다."), // Access Token 등 일반적 오류
@@ -23,6 +23,7 @@ public enum ErrorCode {
     EXPIRED_VERIFICATION_TOKEN(HttpStatus.BAD_REQUEST, "A005", "만료된 인증 토큰입니다."), // 시간 초과
     ALREADY_VERIFIED(HttpStatus.BAD_REQUEST, "A006", "이미 이메일 인증이 완료된 계정입니다."),
     EMAIL_NOT_VERIFIED(HttpStatus.UNAUTHORIZED, "A007", "이메일 인증이 완료되지 않은 계정입니다."),
+    SOCIAL_ACCOUNT_NOT_ALLOWED(HttpStatus.BAD_REQUEST, "A008", "소셜 로그인 계정입니다."),
 
     // 비즈니스
     USER_NOT_FOUND(HttpStatus.NOT_FOUND, "U001", "존재하지 않는 사용자입니다."),

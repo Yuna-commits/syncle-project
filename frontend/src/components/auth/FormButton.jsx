@@ -20,7 +20,7 @@ export default function FormButton({
     primary:
       'bg-blue-500 text-white shadow-sm hover:bg-blue-600 focus:ring-blue-500',
     secondary:
-      'bg-white text-gray-700 border border-gray-300 shadow-sm hover:bg-gray-50 focus:ring-gray-200',
+      'bg-white text-gray-700 border border-gray-300 shadow-sm hover:bg-gray-200 focus:ring-gray-200',
     // 소셜 버튼용
     social:
       'bg-gray-100 text-gray-700 border border-gray-300 shadow-sm hover:bg-gray-200 focus:ring-gray-200',
