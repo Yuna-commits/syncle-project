@@ -2,7 +2,7 @@ import React from 'react'
 import BoardCard from '../common/BoardCard'
 import CreateBoardButton from '../common/CreateBoardButton'
 
-function TeamBoardSection({ team }) {
+function TeamBoardSection({ team, onBoardCreated }) {
   return (
     <div className="mb-10">
       {/* 팀 헤더 */}
@@ -30,7 +30,10 @@ function TeamBoardSection({ team }) {
         ))}
 
         {/* 보드 생성 버튼 (팀 ID 전달) */}
-        <CreateBoardButton teamId={team.teamId} />
+        <CreateBoardButton
+          teamId={team.teamId}
+          onBoardCreated={onBoardCreated}
+        />
       </div>
     </div>
   )

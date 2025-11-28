@@ -2,7 +2,7 @@ import React from 'react'
 import CreateBoardMenu from '../modals/CreateBoardMenu'
 import useUiStore from '../../stores/useUiStore'
 
-function CreateBoardButton({ teamId }) {
+function CreateBoardButton({ teamId, onBoardCreated }) {
   const { openedMenu, toggleMenu, closeAll } = useUiStore()
 
   const menuId = `createBoard_${teamId}`
@@ -23,7 +23,11 @@ function CreateBoardButton({ teamId }) {
       {/* 메뉴가 열려있을 때만 렌더링 */}
       {isOpen && (
         <div onClick={(e) => e.stopPropagation()}>
-          <CreateBoardMenu teamId={teamId} onClose={closeAll} />
+          <CreateBoardMenu
+            teamId={teamId}
+            onClose={closeAll}
+            onSuccess={onBoardCreated}
+          />
         </div>
       )}
     </div>

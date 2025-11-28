@@ -1,20 +1,40 @@
 import React, { useState } from 'react'
+import api from '../../api/AxiosInterceptor'
 
-// 이 팝오버는 'onClose' 함수를 props로 받습니다.
-function CreateBoardMenu({ onClose }) {
+function CreateBoardMenu({ teamId, onClose, onSuccess }) {
+  // 입력 상태 관리
   const [title, setTitle] = useState('')
+  const [description, setDescription] = useState('')
+  const [visibility, setVisibility] = useState('TEAM')
+
+  // UI 상태 관리
   const [error, setError] = useState(null)
 
   // 폼 제출 핸들러
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault()
     if (!title.trim()) {
-      setError('Board title is required')
+      setError('보드 제목은 필수입니다.')
       return
     }
-    setError(null)
-    // onCreate?.({ title, ... }); // (실제 API 호출)
-    onClose() // 팝오버 닫기
+
+    try {
+      setError(null)
+
+      // API 호출
+      const response = await api.post(`/teams/${teamId}/boards`, {
+        title,
+        description,
+        visibility,
+      })
+
+      const newBoard = response.data.data
+      onSuccess(newBoard) // 보드 생성 성공 콜백 호출
+      onClose()
+    } catch (err) {
+      console.error('보드 생성 실패:', err)
+      setError('보드 생성에 실패했습니다. 다시 시도해주세요.')
+    }
   }
 
   return (
@@ -63,6 +83,8 @@ function CreateBoardMenu({ onClose }) {
             id="boardTitlePop"
             value={title}
             onChange={(e) => setTitle(e.target.value)}
+            placeholder="프로젝트 제목 입력"
+            autoFocus
             className={`mt-1 w-full rounded-md border ${
               error ? 'border-red-500' : 'border-gray-300'
             } px-3 py-2 text-sm shadow-sm focus:ring-2 focus:ring-blue-500 focus:outline-none`}
@@ -81,6 +103,9 @@ function CreateBoardMenu({ onClose }) {
           <textarea
             id="boardDescPop"
             rows={3}
+            value={description}
+            onChange={(e) => setDescription(e.target.value)}
+            placeholder="보드에 대한 간단한 설명을 입력하세요."
             className="mt-1 w-full rounded-md border border-gray-300 px-3 py-2 text-sm shadow-sm focus:ring-2 focus:ring-blue-500 focus:outline-none"
           />
         </div>
@@ -95,7 +120,8 @@ function CreateBoardMenu({ onClose }) {
           </label>
           <select
             id="boardVisPop"
-            defaultValue="TEAM"
+            value={visibility}
+            onChange={(e) => setVisibility(e.target.value)}
             className="mt-1 w-full rounded-md border border-gray-300 bg-white px-3 py-2 text-sm shadow-sm focus:ring-2 focus:ring-blue-500 focus:outline-none"
           >
             <option value="PRIVATE">Private</option>

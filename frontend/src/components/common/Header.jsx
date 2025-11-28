@@ -1,12 +1,18 @@
-import React from 'react'
-import { Link } from 'react-router-dom'
+import React, { useEffect } from 'react'
+import { Link, useLocation } from 'react-router-dom'
 import useUserStore from '../../stores/useUserStore'
 import useUiStore from '../../stores/useUiStore'
 
 function Header({ onOpenTeamModal }) {
   const notificationCount = 1
   const { user } = useUserStore()
-  const { toggleMenu } = useUiStore()
+  const { toggleMenu, closeAll } = useUiStore()
+  const location = useLocation()
+
+  useEffect(() => {
+    // 경로가 바뀔 때마다 모든 메뉴 닫기
+    closeAll()
+  }, [location.pathname, closeAll])
 
   return (
     <nav className="flex h-14 w-full items-center justify-between border-b border-gray-200 bg-white px-7">

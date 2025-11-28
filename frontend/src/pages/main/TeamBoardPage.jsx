@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react'
+import React, { useCallback, useEffect, useState } from 'react'
 import { useParams } from 'react-router-dom' // URL 파라미터 읽기용
 import api from '../../api/AxiosInterceptor' // API 설정 파일
 import BoardCard from '../../components/common/BoardCard'
@@ -12,28 +12,22 @@ function TeamBoardPage() {
   const [team, setTeam] = useState(null)
   const [loading, setLoading] = useState(true)
 
-  useEffect(() => {
-    // teamId가 바뀔 때마다 새로 데이터 요청
-    const fetchTeamDetail = async () => {
-      try {
-        setLoading(true)
-        // 백엔드 API 호출: GET /api/teams/{teamId}
-        const response = await api.get(`/teams/${teamId}`)
-
-        console.log('팀 상세 데이터:', response.data.data)
-        setTeam(response.data.data)
-      } catch (error) {
-        console.error('팀 정보 조회 실패:', error)
-        // 에러 시 처리 (예: 404면 대시보드로 이동 등)
-      } finally {
-        setLoading(false)
-      }
-    }
-
-    if (teamId) {
-      fetchTeamDetail()
+  // teamId가 바뀔 때마다 새로 데이터 요청
+  const fetchTeamDetail = useCallback(async () => {
+    try {
+      setLoading(true)
+      const response = await api.get(`/teams/${teamId}`)
+      setTeam(response.data.data)
+    } catch (error) {
+      console.error('팀 정보 조회 실패:', error)
+    } finally {
+      setLoading(false)
     }
   }, [teamId])
+
+  useEffect(() => {
+    if (teamId) fetchTeamDetail()
+  }, [teamId, fetchTeamDetail])
 
   if (loading) return <div className="p-8">Loading...</div>
   if (!team) return <div className="p-8">팀 정보를 찾을 수 없습니다.</div>
@@ -73,7 +67,7 @@ function TeamBoardPage() {
             {team.members &&
               team.members.map((member) => (
                 <img
-                  key={member.id}
+                  key={member.userId}
                   className="h-9 w-9 rounded-full object-cover ring-2 ring-white"
                   // DB에 이미지가 없으면 기본 이미지 사용
                   src={member.profileImg || defaultProfile}
@@ -96,14 +90,17 @@ function TeamBoardPage() {
               team.boards.map((board) => (
                 <BoardCard
                   key={board.id}
-                  // 이미지가 없으면 랜덤 이미지 or 기본값
+                  id={board.id}
                   imageUrl={board.imageUrl || 'https://picsum.photos/400/200'}
                   title={board.title}
                 />
               ))}
 
-            {/* [중요] 이 페이지는 특정 팀 페이지이므로 teamId를 명확하게 넘겨줌 */}
-            <CreateBoardButton teamId={team.id} teamName={team.name} />
+            <CreateBoardButton
+              teamId={team.id}
+              teamName={team.name}
+              onBoardCreated={fetchTeamDetail}
+            />
           </div>
         </section>
       </div>
