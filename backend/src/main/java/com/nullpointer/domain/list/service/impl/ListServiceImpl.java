@@ -2,6 +2,8 @@ package com.nullpointer.domain.list.service.impl;
 
 import com.nullpointer.domain.list.dto.CreateListRequest;
 import com.nullpointer.domain.list.dto.ListResponse;
+import com.nullpointer.domain.list.dto.UpdateListOrderRequest;
+import com.nullpointer.domain.list.dto.UpdateListRequest;
 import com.nullpointer.domain.list.mapper.ListMapper;
 import com.nullpointer.domain.list.service.ListService;
 import com.nullpointer.domain.list.vo.ListVo;
@@ -12,7 +14,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 /**
- * 리스트 생성/조회 로직 구현체
+ * 리스트 생성/조회/수정/삭제 로직 구현체
  */
 @Service
 public class ListServiceImpl implements ListService {
@@ -23,34 +25,46 @@ public class ListServiceImpl implements ListService {
         this.listMapper = listMapper;
     }
 
+    // ---------------------- 공통 유틸 ----------------------
+
+    /**
+     * role 값이 OWNER 또는 MEMBER 인지 검증.
+     * 아니면 IllegalArgumentException 던짐.
+     */
+    private void validateRole(String role) {
+        if (role == null || (!"OWNER".equals(role) && !"MEMBER".equals(role))) {
+            throw new IllegalArgumentException("role 은 OWNER 또는 MEMBER 만 가능합니다.");
+        }
+    }
+
+    // ---------------------- 생성 ----------------------
+
     @Override
     @Transactional
     public ListResponse createList(Long boardId, CreateListRequest request) {
-        // 1. DB에 넣을 VO 만들기
         ListVo listVo = new ListVo();
         listVo.setBoardId(boardId);
         listVo.setTitle(request.getTitle());
+        listVo.setOrderIndex(0); // 처음 생성 시 0 (나중에 정렬 로직 추가 가능)
 
-        // 2. INSERT 실행 (id 채워짐)
         listMapper.insertList(listVo);
 
-        // 3. 응답 DTO 생성
         ListResponse response = new ListResponse();
         response.setId(listVo.getId());
         response.setBoardId(listVo.getBoardId());
         response.setTitle(listVo.getTitle());
-        response.setOrderIndex(listVo.getOrderIndex()); // 지금은 0 (INSERT 시 0 넣었음)
+        response.setOrderIndex(listVo.getOrderIndex());
 
         return response;
     }
 
+    // ---------------------- 목록 조회 ----------------------
+
     @Override
     @Transactional(readOnly = true)
     public List<ListResponse> getLists(Long boardId) {
-        // 1. DB에서 VO 목록 조회
         List<ListVo> voList = listMapper.findByBoardId(boardId);
 
-        // 2. VO → Response 로 변환
         List<ListResponse> responseList = new ArrayList<>();
         for (ListVo vo : voList) {
             ListResponse res = new ListResponse();
@@ -62,5 +76,44 @@ public class ListServiceImpl implements ListService {
         }
 
         return responseList;
+    }
+
+    // ---------------------- 순서 변경 ----------------------
+
+    @Override
+    @Transactional
+    public void updateListOrders(Long boardId, UpdateListOrderRequest request) {
+        // 여러 리스트를 한 트랜잭션 안에서 업데이트
+        for (UpdateListOrderRequest.ListOrderItem item : request.getLists()) {
+            ListVo vo = new ListVo();
+            vo.setId(item.getListId());
+            vo.setBoardId(boardId);
+            vo.setOrderIndex(item.getOrderIndex());
+
+            listMapper.updateOrderIndex(vo);
+        }
+    }
+
+    // ---------------------- 리스트 정보 수정 ----------------------
+
+    @Override
+    @Transactional
+    public void updateList(Long listId, UpdateListRequest request) {
+        // role 이 OWNER 또는 MEMBER 인지 검증
+        validateRole(request.getRole());
+
+        ListVo vo = new ListVo();
+        vo.setId(listId);
+        vo.setTitle(request.getTitle());
+
+        listMapper.updateListInfo(vo);
+    }
+
+    // ---------------------- 리스트 삭제 (soft) ----------------------
+
+    @Override
+    @Transactional
+    public void deleteList(Long listId) {
+        listMapper.softDeleteList(listId);
     }
 }

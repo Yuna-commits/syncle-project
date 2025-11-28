@@ -8,7 +8,8 @@ public class ListVo {
     private Long id;
     private Long boardId;
     private String title;
-    private Integer orderIndex; // order_index 컬럼과 매핑 (정렬용)
+    // 정렬용 컬럼 (DB: order_index)
+    private Integer orderIndex;
 
     public ListVo() {
     }
