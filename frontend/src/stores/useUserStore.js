@@ -1,5 +1,5 @@
 import { create } from 'zustand'
-import axios from 'axios'
+import api from '../api/AxiosInterceptor'
 
 const useUserStore = create((set) => ({
   user: null,
@@ -9,11 +9,7 @@ const useUserStore = create((set) => ({
   fetchUser: async () => {
     set({ isLoading: true })
     try {
-      const response = await axios.get('/api/users/me', {
-        headers: {
-          Authorization: `Bearer ${localStorage.getItem('accessToken')}`,
-        },
-      })
+      const response = await api.get('/api/users/me')
 
       // API 호출 성공 시 user 정보 저장
       set({ user: response.data.data })
@@ -27,9 +23,15 @@ const useUserStore = create((set) => ({
 
   // 로그아웃 (상태 초기화)
   logout: () => {
-    localStorage.removeItem('accessToken') // 토큰 삭제
+    // 모든 저장소의 토큰 삭제
+    localStorage.removeItem('accessToken')
+    localStorage.removeItem('refreshToken')
+    sessionStorage.removeItem('accessToken')
+    sessionStorage.removeItem('refreshToken')
+
     set({ user: null })
-    window.location.href = '/auth/Signin' // 로그인 페이지로 이동
+
+    window.location.href = '/auth/signin' // 로그인 페이지로 이동
   },
 }))
 
