@@ -23,6 +23,7 @@ function TeamBoardSection({ team }) {
         {team.boards.map((board) => (
           <BoardCard
             key={board.id}
+            id={board.id}
             imageUrl="https://picsum.photos/400/200"
             title={board.title}
           />

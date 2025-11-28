@@ -4,6 +4,7 @@ import com.nullpointer.domain.board.dto.request.CreateBoardRequest;
 import com.nullpointer.domain.board.dto.request.UpdateBoardRequest;
 import com.nullpointer.domain.board.dto.response.BoardDetailResponse;
 import com.nullpointer.domain.board.dto.response.BoardResponse;
+import com.nullpointer.domain.board.dto.response.MemberBoardResponse;
 import com.nullpointer.domain.board.mapper.BoardMapper;
 import com.nullpointer.domain.board.service.BoardService;
 import com.nullpointer.domain.board.vo.BoardVo;
@@ -62,11 +63,7 @@ public class BoardServiceImpl implements BoardService {
         Long createBoardId = boardVo.getId();
 
         // 보드 멤버 VO 생성 (DTO -> VO)
-        BoardMemberVo boardMemberVo = BoardMemberVo.builder()
-                .boardId(createBoardId)
-                .userId(userId)
-                .role(Role.OWNER)
-                .build();
+        BoardMemberVo boardMemberVo = BoardMemberVo.builder().boardId(createBoardId).userId(userId).role(Role.OWNER).build();
 
         boardMemberMapper.insertBoardMember(boardMemberVo);
     }
@@ -75,12 +72,7 @@ public class BoardServiceImpl implements BoardService {
     @Transactional
     public void createDefaultBoard(Long teamId, Long userId) {
         // 1. 기본 보드 생성
-        BoardVo board = BoardVo.builder()
-                .teamId(teamId)
-                .title("기본 보드")
-                .description("자유롭게 일정을 관리해보세요.")
-                .visibility(Visibility.PRIVATE)
-                .build();
+        BoardVo board = BoardVo.builder().teamId(teamId).title("기본 보드").description("자유롭게 일정을 관리해보세요.").visibility(Visibility.PRIVATE).build();
 
         boardMapper.insertBoard(board);
 
@@ -88,11 +80,7 @@ public class BoardServiceImpl implements BoardService {
         Long boardId = board.getId();
 
         // 2. 보드 멤버 연결
-        BoardMemberVo boardMember = BoardMemberVo.builder()
-                .boardId(boardId)
-                .userId(userId)
-                .role(Role.OWNER)
-                .build();
+        BoardMemberVo boardMember = BoardMemberVo.builder().boardId(boardId).userId(userId).role(Role.OWNER).build();
 
         boardMemberMapper.insertBoardMember(boardMember);
 
@@ -169,4 +157,14 @@ public class BoardServiceImpl implements BoardService {
         return list;
     }
 
+    //소속 멤버 보드 조회
+
+    @Override
+    public List<MemberBoardResponse> getMemberBoards(Long teamId, Long memberId, Long userId) {
+
+        // 1. 권한 체크 (OWNER)
+        memberVal.validateTeamOwner(teamId, userId, ErrorCode.TEAM_ACCESS_DENIED);
+        List<BoardVo> boards = boardMapper.findMemberBoard(teamId, memberId);
+        return boards.stream().map(MemberBoardResponse::from).toList();
+    }
 }

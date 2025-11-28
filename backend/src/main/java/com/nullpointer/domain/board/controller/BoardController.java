@@ -4,6 +4,7 @@ import com.nullpointer.domain.board.dto.request.UpdateBoardRequest;
 import com.nullpointer.domain.board.dto.response.BoardDetailResponse;
 import com.nullpointer.domain.board.dto.response.BoardResponse;
 import com.nullpointer.domain.board.dto.request.CreateBoardRequest;
+import com.nullpointer.domain.board.dto.response.MemberBoardResponse;
 import com.nullpointer.domain.board.service.BoardService;
 import com.nullpointer.domain.board.vo.BoardVo;
 import com.nullpointer.global.common.ApiResponse;
@@ -69,4 +70,11 @@ public class BoardController {
         return ApiResponse.success("보드 삭제 성공");
     }
 
+    //소속 멤버 보드 조회
+    @GetMapping("/teams/{teamId}/members/{memberId}/boards")
+    public ApiResponse<List<MemberBoardResponse>> getMemberBoards(@PathVariable Long teamId,
+                                                                  @PathVariable Long memberId,
+                                                                  @LoginUser Long userId) {
+        return ApiResponse.success(boardService.getMemberBoards(teamId, memberId, userId));
+    }
 }
