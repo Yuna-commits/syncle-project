@@ -1,8 +1,8 @@
 import React, { useEffect } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
-import AuthInput from '../../components/auth/AuthInput'
+import FormInput from '../../components/common/FormInput'
 import useSignInStore from '../../stores/useSignInStore'
-import FormButton from '../../components/auth/FormButton'
+import FormButton from '../../components/common/FormButton'
 import { GoogleLogin } from '@react-oauth/google'
 
 export default function SignIn() {
@@ -74,7 +74,7 @@ export default function SignIn() {
       {/* 로그인 폼 */}
       <form onSubmit={handleSubmit} className="space-y-6">
         {/* 이메일 */}
-        <AuthInput
+        <FormInput
           name="email"
           type="email"
           value={formData?.email}
@@ -83,7 +83,7 @@ export default function SignIn() {
           placeholder="이메일을 입력해 주세요."
         />
         {/* 비밀번호 */}
-        <AuthInput
+        <FormInput
           name="password"
           type="password"
           value={formData?.password}

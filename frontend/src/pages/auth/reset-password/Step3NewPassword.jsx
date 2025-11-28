@@ -1,8 +1,8 @@
 import React from 'react'
 import { useNavigate } from 'react-router-dom'
 import useResetPasswordStore from '../../../stores/useResetPasswordStore'
-import AuthInput from '../../../components/auth/AuthInput'
-import FormButton from '../../../components/auth/FormButton'
+import FormInput from '../../../components/common/FormInput'
+import FormButton from '../../../components/common/FormButton'
 
 function Step3NewPassword() {
   const navigate = useNavigate()
@@ -17,7 +17,7 @@ function Step3NewPassword() {
 
   return (
     <form onSubmit={handleSubmit} className="space-y-6">
-      <AuthInput
+      <FormInput
         name="newPassword"
         type="password"
         label="새 비밀번호"

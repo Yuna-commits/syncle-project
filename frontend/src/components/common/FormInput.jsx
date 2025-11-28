@@ -1,6 +1,6 @@
 import React, { useState } from 'react'
 
-export default function AuthInput({
+export default function FormInput({
   name,
   label,
   type = 'text',
@@ -123,6 +123,8 @@ export default function AuthInput({
             )}
           </span>
         )}
+
+        {/* 추가 Children (ex. 타이머) */}
         {children}
       </div>
 

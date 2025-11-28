@@ -1,7 +1,7 @@
 import React, { useEffect } from 'react'
 import useResetPasswordStore from '../../../stores/useResetPasswordStore'
-import AuthInput from '../../../components/auth/AuthInput'
-import FormButton from '../../../components/auth/FormButton'
+import FormInput from '../../../components/common/FormInput'
+import FormButton from '../../../components/common/FormButton'
 
 function Step2Verify() {
   const {
@@ -49,7 +49,7 @@ function Step2Verify() {
   return (
     <form onSubmit={handleSubmit} className="space-y-6">
       <div className="relative">
-        <AuthInput
+        <FormInput
           name="authCode"
           label="인증번호"
           value={authCode}
@@ -65,7 +65,7 @@ function Step2Verify() {
           <div className="absolute top-1/2 right-4 -translate-y-1/2 text-sm font-medium text-red-500 tabular-nums">
             {formatTime(timeLeft)}
           </div>
-        </AuthInput>
+        </FormInput>
 
         {/* 버튼 구역 */}
         <div className="mt-5 mb-5 grid grid-cols-2 gap-4">

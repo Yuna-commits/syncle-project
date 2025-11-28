@@ -6,8 +6,16 @@ import FormModal from '../../components/modals/FormModal'
 import useUserStore from '../../stores/useUserStore'
 
 export default function ProfilePage() {
-  const { user, isLoading, fetchUserProfile, updateUserProfile } =
-    useUserStore()
+  const {
+    user,
+    isLoading,
+    fetchUserProfile,
+    updateUserProfile,
+    checkNicknameDuplicate,
+    checkStatus,
+    resetCheckStatus,
+  } = useUserStore()
+
   const [isEditProfileOpen, setEditProfileOpen] = useState(false)
 
   // 마운트될 때마다 프로필 정보 가져오기
@@ -42,7 +50,13 @@ export default function ProfilePage() {
 
   const handleEditProfile = async (values) => {
     const success = await updateUserProfile(values)
-    if (success) setEditProfileOpen(false)
+    if (success) closeEditModal()
+  }
+
+  // 모달 닫을 때 상태 초기화
+  const closeEditModal = () => {
+    setEditProfileOpen(false)
+    resetCheckStatus()
   }
 
   return (
@@ -297,7 +311,19 @@ export default function ProfilePage() {
         <FormModal
           title="프로필 수정"
           fields={[
-            { label: '닉네임', name: 'nickname', value: user.nickname },
+            {
+              label: '닉네임',
+              name: 'nickname',
+              value: user.nickname,
+              // 닉네임 중복 확인
+              onCheck: (currentValue) => checkNicknameDuplicate(currentValue),
+              isChecking: checkStatus.nickname.loading,
+              // 성공/실패 메시지 표시
+              error:
+                !checkStatus.nickname.isValid && checkStatus.nickname.message,
+              success:
+                checkStatus.nickname.isValid && checkStatus.nickname.message,
+            },
             {
               label: '자기소개',
               name: 'description',
@@ -306,7 +332,7 @@ export default function ProfilePage() {
             { label: '직책', name: 'position', value: user.position || '' },
           ]}
           onSubmit={handleEditProfile}
-          onClose={() => setEditProfileOpen(false)}
+          onClose={closeEditModal}
         />
       )}
     </div>

@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from 'react'
+import FormInput from '../common/FormInput'
 
 export default function FormModal({ title, fields, onSubmit, onClose }) {
   const [formData, setFormData] = useState({})
@@ -54,19 +55,18 @@ export default function FormModal({ title, fields, onSubmit, onClose }) {
         {/* 필드 */}
         <form onSubmit={handleSubmit} className="space-y-5">
           {fields.map((field) => (
-            <div key={field.name}>
-              <label className="mb-1.5 block text-sm font-medium text-gray-700">
-                {field.label}
-              </label>
-              <input
-                type={field.type || 'text'}
-                name={field.name}
-                value={formData[field.name] || ''}
-                onChange={handleChange}
-                className="h-11 w-full rounded-lg border border-gray-300 px-4 text-sm transition-all focus:border-blue-500 focus:ring-1 focus:ring-blue-500 focus:outline-none"
-                placeholder={`${field.label}을(를) 입력해주세요.`}
-              />
-            </div>
+            <FormInput
+              key={field.name}
+              {...field}
+              value={formData[field.name] || ''}
+              onChange={handleChange}
+              // 입력된 값을 인자로 전달
+              onCheck={
+                field.onCheck
+                  ? () => field.onCheck(formData[field.name])
+                  : undefined
+              }
+            />
           ))}
 
           {/* 비밀번호 일치 여부 표시 */}
@@ -89,7 +89,7 @@ export default function FormModal({ title, fields, onSubmit, onClose }) {
             <button
               type="button"
               onClick={onClose}
-              className="rounded-lg px-4 py-2.5 text-sm font-medium text-gray-700 transition-colors hover:bg-gray-100"
+              className="rounded-lg px-4 py-2.5 text-sm font-medium text-gray-700 transition-colors hover:cursor-pointer hover:bg-gray-100"
             >
               취소
             </button>

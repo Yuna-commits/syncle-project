@@ -1,7 +1,7 @@
 import React from 'react'
 import useResetPasswordStore from '../../../stores/useResetPasswordStore'
-import AuthInput from '../../../components/auth/AuthInput'
-import FormButton from '../../../components/auth/FormButton'
+import FormInput from '../../../components/common/FormInput'
+import FormButton from '../../../components/common/FormButton'
 
 function Step1Email() {
   const { email, setEmail, isLoading, requestResetCode } =
@@ -23,7 +23,7 @@ function Step1Email() {
     <div>
       {/* 폼 */}
       <form onSubmit={handleSubmit} className="space-y-6">
-        <AuthInput
+        <FormInput
           name="email"
           type="email"
           label="이메일"

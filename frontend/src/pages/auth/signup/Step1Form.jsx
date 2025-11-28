@@ -1,6 +1,6 @@
 import React from 'react'
-import AuthInput from '../../../components/auth/AuthInput'
-import FormButton from '../../../components/auth/FormButton'
+import FormInput from '../../../components/common/FormInput'
+import FormButton from '../../../components/common/FormButton'
 import useSignUpStore from '../../../stores/useSignUpStore'
 import { useNavigate } from 'react-router-dom'
 import { GoogleLogin } from '@react-oauth/google'
@@ -65,7 +65,7 @@ export default function Step1Form() {
 
       <form onSubmit={handleSubmit} className="space-y-6">
         {/* 이메일 */}
-        <AuthInput
+        <FormInput
           name="email"
           label="이메일"
           type="email"
@@ -78,7 +78,7 @@ export default function Step1Form() {
           isChecking={checkLoading.email}
         />
         {/* 비밀번호 */}
-        <AuthInput
+        <FormInput
           name="password"
           label="비밀번호"
           type="password"
@@ -88,7 +88,7 @@ export default function Step1Form() {
           error={errors?.password}
         />
         {/* 닉네임 */}
-        <AuthInput
+        <FormInput
           name="nickname"
           label="닉네임"
           value={formData?.nickname}
