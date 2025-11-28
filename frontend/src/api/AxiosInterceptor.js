@@ -51,13 +51,16 @@ const api = axios.create({
 // : 요청을 보내기 전에 헤더에 토큰 자동 추가
 // =====================================================
 
-api.interceptors.request.use((config) => {
-  const token = getAccessToken()
-  if (token) {
-    config.headers['Authorization'] = `Bearer ${token}`
-  }
-  return config
-})
+api.interceptors.request.use(
+  (config) => {
+    const token = getAccessToken()
+    if (token) {
+      config.headers['Authorization'] = `Bearer ${token}`
+    }
+    return config
+  },
+  (error) => Promise.reject(error),
+)
 
 // =====================================================
 // 4. 응답 인터셉터 (Response Interceptor)

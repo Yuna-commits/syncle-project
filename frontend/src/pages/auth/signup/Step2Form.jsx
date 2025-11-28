@@ -1,7 +1,8 @@
 import React, { useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
 import useSignUpStore from '../../../stores/useSignUpStore'
-import AuthInput from '../AuthInput'
+import AuthInput from '../../../components/auth/AuthInput'
+import FormButton from '../../../components/auth/FormButton'
 
 export default function Step2Form() {
   const navigate = useNavigate()
@@ -14,6 +15,7 @@ export default function Step2Form() {
     timeLeft,
     decreaseTime,
     errors,
+    isLoading,
     isResending,
     verifySignupCode,
     resendSignupCode,
@@ -65,7 +67,7 @@ export default function Step2Form() {
           onChange={(e) => setAuthCode(e.target.value)}
           placeholder={'인증번호 6자리를 입력해주세요.'}
           maxLength={6}
-          error={errors.authCode}
+          error={errors?.authCode}
           className="text-center text-lg tracking-widest"
         >
           {/* 타이머 */}
@@ -77,22 +79,20 @@ export default function Step2Form() {
 
       {/* 버튼 구역 */}
       <div className="grid grid-cols-2 gap-4">
-        <button
+        <FormButton
           type="submit"
+          text="인증하기"
+          isLoading={isLoading}
           disabled={timeLeft === 0}
-          className="inline-flex w-full items-center justify-center rounded-lg bg-blue-500 px-4 py-3 text-sm font-medium text-white shadow-sm transition hover:cursor-pointer hover:bg-blue-600"
-        >
-          인증하기
-        </button>
+        />
         {/* 재전송 */}
-        <button
+        <FormButton
           type="button"
+          text={isResending ? '전송 중' : '재전송'}
+          variant="secondary"
           onClick={handleResend}
-          disabled={isResending}
-          className={`inline-flex w-full items-center justify-center rounded-lg border border-gray-300 bg-white px-4 py-3 text-sm font-medium shadow-sm transition ${isResending ? 'cursor-not-allowed text-gray-400' : ' text-blue-500 hover:cursor-pointer hover:bg-gray-200 '}`}
-        >
-          {isResending ? '전송 중...' : '인증번호 재전송'}
-        </button>
+          isLoading={isResending}
+        />
       </div>
 
       {/* 뒤로가기 */}

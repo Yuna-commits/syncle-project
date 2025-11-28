@@ -9,6 +9,7 @@ const useSignUpStore = create((set, get) => ({
   step: 1,
   formData: { email: '', password: '', nickname: '' },
   authCode: '',
+  isLoading: false,
   isResending: false, // 재전송 버튼 로딩 상태
   timeLeft: 300, // 5분
   errors: {},
@@ -38,11 +39,6 @@ const useSignUpStore = create((set, get) => ({
   // 로딩 상태
   setIsResending: (isResending) => set({ isResending }),
 
-  // 에러 처리
-  setErrors: (errors) => set({ errors }),
-  setGlobalError: (msg) => set({ globalError: msg }),
-  clearErrors: () => set({ errors: {}, globalError: '' }),
-
   // 초기화 (컨포넌트 언마운트 시 사용)
   reset: () =>
     set({
@@ -52,6 +48,7 @@ const useSignUpStore = create((set, get) => ({
       timeLeft: 300,
       errors: {},
       globalError: '',
+      isLoading: false,
       isResending: false,
     }),
 
@@ -61,7 +58,7 @@ const useSignUpStore = create((set, get) => ({
 
   // 1단계 - 인증코드 발송 요청
   requestSignupCode: async () => {
-    set({ errors: {}, globalError: '' })
+    set({ isLoading: true, errors: {}, globalError: '' })
 
     try {
       const { formData } = get() // state에서 formData 꺼내기
@@ -99,12 +96,14 @@ const useSignUpStore = create((set, get) => ({
         })
       }
       return false
+    } finally {
+      set({ isLoading: false })
     }
   },
 
   // 2단계 - 인증코드 검증 및 자동 로그인
   verifySignupCode: async () => {
-    set({ errors: {}, globalError: '' })
+    set({ isLoading: true, errors: {}, globalError: '' })
 
     try {
       const { formData, authCode } = get() // state에서 데이터 추출
@@ -144,6 +143,8 @@ const useSignUpStore = create((set, get) => ({
       }
 
       return false
+    } finally {
+      set({ isLoading: false })
     }
   },
 
