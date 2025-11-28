@@ -1,19 +1,26 @@
-import React, { useState } from 'react'
+import React, { useEffect, useState } from 'react'
 
 export default function FormModal({ title, fields, onSubmit, onClose }) {
-  // 입력값 상태 저장
-  const [formValues, setFormValues] = useState(() => {
-    // fields 기반으로 초기화
-    const initial = {}
-    fields.forEach((f) => {
-      initial[f.name] = f.value || ''
+  const [formData, setFormData] = useState({})
+
+  // 모달이 열릴 때(fields가 변경될 때) 초기값 설정
+  useEffect(() => {
+    const initialData = {}
+    fields.forEach((field) => {
+      initialData[field.name] = field.value || ''
     })
-    return initial
-  })
+    setFormData(initialData)
+  }, [fields])
 
   // 입력 시 상태 업데이트
-  const handleChange = (name, value) => {
-    setFormValues((prev) => ({ ...prev, [name]: value }))
+  const handleChange = (e) => {
+    const { name, value } = e.target
+    setFormData((prev) => ({ ...prev, [name]: value }))
+  }
+
+  const handleSubmit = (e) => {
+    e.preventDefault()
+    onSubmit(formData)
   }
 
   // 비밀번호 모달 판단
@@ -21,8 +28,8 @@ export default function FormModal({ title, fields, onSubmit, onClose }) {
     fields.some((f) => f.name === 'newPassword') &&
     fields.some((f) => f.name === 'confirmPassword')
 
-  const newPw = formValues.newPassword || ''
-  const confirmPw = formValues.confirmPassword || ''
+  const newPw = formData.newPassword || ''
+  const confirmPw = formData.confirmPassword || ''
 
   // 둘 다 입력이 없는 경우
   const showCheck = newPw.length > 0 && confirmPw.length > 0
@@ -45,59 +52,63 @@ export default function FormModal({ title, fields, onSubmit, onClose }) {
         )}
 
         {/* 필드 */}
-        <div className="flex flex-col gap-3">
+        <form onSubmit={handleSubmit} className="space-y-5">
           {fields.map((field) => (
-            <div key={field.name} className="flex flex-col gap-1">
-              <label className="text-sm text-gray-700">{field.label}</label>
+            <div key={field.name}>
+              <label className="mb-1.5 block text-sm font-medium text-gray-700">
+                {field.label}
+              </label>
               <input
-                type={field.type}
-                value={formValues[field.name]}
-                onChange={(e) => handleChange(field.name, e.target.value)}
-                className="rounded border border-gray-400 px-3 py-2"
+                type={field.type || 'text'}
+                name={field.name}
+                value={formData[field.name] || ''}
+                onChange={handleChange}
+                className="h-11 w-full rounded-lg border border-gray-300 px-4 text-sm transition-all focus:border-blue-500 focus:ring-1 focus:ring-blue-500 focus:outline-none"
+                placeholder={`${field.label}을(를) 입력해주세요.`}
               />
             </div>
           ))}
-        </div>
 
-        {/* 비밀번호 일치 여부 표시 */}
-        {isPasswordModal && showCheck && (
-          <div className="mt-2">
-            {isMatching && (
-              <p className="text-sm font-medium text-green-600">
-                ✔ 새 비밀번호가 일치합니다.
-              </p>
-            )}
-            {!isMatching && (
-              <p className="text-sm font-medium text-red-600">
-                ✘ 비밀번호가 일치하지 않습니다.
-              </p>
-            )}
+          {/* 비밀번호 일치 여부 표시 */}
+          {isPasswordModal && showCheck && (
+            <div className="mt-2">
+              {isMatching && (
+                <p className="text-sm font-medium text-green-600">
+                  ✔ 새 비밀번호가 일치합니다.
+                </p>
+              )}
+              {!isMatching && (
+                <p className="text-sm font-medium text-red-600">
+                  ✘ 비밀번호가 일치하지 않습니다.
+                </p>
+              )}
+            </div>
+          )}
+
+          <div className="flex justify-end gap-3 pt-2">
+            <button
+              type="button"
+              onClick={onClose}
+              className="rounded-lg px-4 py-2.5 text-sm font-medium text-gray-700 transition-colors hover:bg-gray-100"
+            >
+              취소
+            </button>
+            {/* 비밀번호가 일치하지 않으면 저장 버튼 비활성화 */}
+            <button
+              disabled={isPasswordModal && !isMatching}
+              type="submit"
+              className={`rounded-lg px-4 py-2.5 font-medium text-white shadow-sm hover:cursor-pointer ${
+                isPasswordModal
+                  ? showCheck && isMatching
+                    ? 'bg-blue-500 hover:bg-blue-600'
+                    : 'cursor-not-allowed bg-blue-300'
+                  : 'bg-blue-500 hover:bg-blue-600'
+              }`}
+            >
+              저장
+            </button>
           </div>
-        )}
-
-        {/* 버튼 */}
-        <div className="mt-6 flex justify-end gap-2">
-          <button
-            onClick={onClose}
-            className="rounded border border-gray-400 px-4 py-2 font-semibold text-gray-800 hover:cursor-pointer hover:bg-gray-300"
-          >
-            취소
-          </button>
-          {/* 비밀번호가 일치하지 않으면 저장 버튼 비활성화 */}
-          <button
-            disabled={isPasswordModal && !isMatching}
-            onClick={() => onSubmit(formValues)}
-            className={`rounded px-4 py-2 font-semibold text-white hover:cursor-pointer ${
-              isPasswordModal
-                ? showCheck && isMatching
-                  ? 'bg-blue-500 hover:bg-blue-600'
-                  : 'cursor-not-allowed bg-blue-300'
-                : 'bg-blue-500 hover:bg-blue-600'
-            }`}
-          >
-            저장
-          </button>
-        </div>
+        </form>
       </div>
     </div>
   )
