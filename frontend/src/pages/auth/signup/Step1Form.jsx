@@ -1,14 +1,12 @@
 import React from 'react'
 import googleIcon from '../../../assets/icons/google.svg'
-import useSignUpStore from '../../../stores/useSignUpStore'
-import AuthSocialButton from '../AuthSocialButton'
-import AuthInput from '../AuthInput'
+import AuthInput from '../../../components/auth/AuthInput'
+import FormButton from '../../../components/auth/FormButton'
+import useSignInStore from '../../../stores/useSignInStore'
 
 export default function Step1Form() {
-  const formData = useSignUpStore((state) => state.formData)
-  const errors = useSignUpStore((state) => state.errors)
-  const setFormData = useSignUpStore((state) => state.setFormData)
-  const requestSignupCode = useSignUpStore((state) => state.requestSignupCode)
+  const { formData, errors, isLoading, setFormData, requestSignupCode } =
+    useSignInStore()
 
   const handleChange = (e) => {
     setFormData(e.target.name, e.target.value)
@@ -24,7 +22,16 @@ export default function Step1Form() {
 
   return (
     <>
-      <AuthSocialButton text="Google로 로그인하기" icon={googleIcon} />
+      {/* Google로 로그인하기 */}
+      <FormButton
+        type="button"
+        text="Google로 로그인하기"
+        variant="social"
+        icon={<img src={googleIcon} alt="Google" className="h-5 w-5" />}
+        onClick={() => (window.location.href = '')} // 추가) 구글 링크 이동
+      />
+
+      {/* 구분선 */}
       <div className="relative py-5">
         <div className="absolute inset-0 flex items-center">
           <div className="w-full border-t border-gray-300"></div>
@@ -65,12 +72,7 @@ export default function Step1Form() {
           error={errors.nickname}
         />
         {/* 폼 제출 */}
-        <button
-          type="submit"
-          className="mt-2 inline-flex w-full items-center justify-center rounded-lg bg-blue-500 px-4 py-3 text-sm font-medium text-white shadow-sm transition hover:cursor-pointer hover:bg-blue-600"
-        >
-          인증번호 받기
-        </button>
+        <FormButton type="submit" text="인증번호 받기" isLoading={isLoading} />
       </form>
     </>
   )

@@ -6,6 +6,7 @@ const useSignInStore = create((set, get) => ({
   // 1. 상태 (State)
   // ==========================================
   formData: { email: '', password: '' },
+  isLoading: false,
   isKeepLogin: false, // 로그인 상태 유지 체크 여부
 
   // ==========================================
@@ -25,6 +26,7 @@ const useSignInStore = create((set, get) => ({
   reset: () =>
     set({
       formData: { email: '', password: '' },
+      isLoading: false,
       isKeepLogin: false,
     }),
 
@@ -32,6 +34,7 @@ const useSignInStore = create((set, get) => ({
   // 3. 비동기 액션 (Async Actions) - API 호출
   // =================================================
   login: async (navigate) => {
+    set({ isLoading: true })
     const { formData, isKeepLogin } = get()
 
     try {
@@ -76,6 +79,8 @@ const useSignInStore = create((set, get) => ({
       } else {
         alert(response?.message || '이메일 또는 비밀번호를 확인해주세요.')
       }
+    } finally {
+      set({ isLoading: false })
     }
   },
 }))
