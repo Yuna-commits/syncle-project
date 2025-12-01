@@ -1,5 +1,8 @@
 package com.nullpointer.domain.board.service.impl;
 
+import com.nullpointer.domain.activity.dto.request.ActivitySaveRequest;
+import com.nullpointer.domain.activity.service.ActivityService;
+import com.nullpointer.domain.activity.vo.enums.ActivityType;
 import com.nullpointer.domain.board.dto.request.CreateBoardRequest;
 import com.nullpointer.domain.board.dto.request.UpdateBoardRequest;
 import com.nullpointer.domain.board.dto.response.BoardDetailResponse;
@@ -37,6 +40,7 @@ public class BoardServiceImpl implements BoardService {
     private final MemberValidator memberVal;
     private final BoardValidator boardVal;
     private final ListMapper listMapper;
+    private final ActivityService activityService;
 
     @Override
     @Transactional
@@ -59,6 +63,9 @@ public class BoardServiceImpl implements BoardService {
 
         boardMapper.insertBoard(boardVo);
 
+        // 보드 생성 로그 저장
+        createBoardLog(userId, teamId, boardVo);
+
         // 방금 만든 보드 ID 가져오기
         Long createBoardId = boardVo.getId();
 
@@ -75,6 +82,9 @@ public class BoardServiceImpl implements BoardService {
         BoardVo board = BoardVo.builder().teamId(teamId).title("기본 보드").description("자유롭게 일정을 관리해보세요.").visibility(Visibility.PRIVATE).build();
 
         boardMapper.insertBoard(board);
+
+        // 보드 생성 로그 저장
+        createBoardLog(userId, teamId, board);
 
         // 방금 만든 보드 ID 가져오기
         Long boardId = board.getId();
@@ -132,6 +142,9 @@ public class BoardServiceImpl implements BoardService {
         }
 
         boardMapper.updateBoard(boardVo);
+
+        // 보드 수정 로그 저장
+        updateBoardLog(userId, boardVo.getTeamId(), boardVo);
     }
 
     @Override
@@ -140,11 +153,17 @@ public class BoardServiceImpl implements BoardService {
         // 1. 공통 검증 메서드로 보드 조회
         BoardVo boardVo = boardVal.getValidBoard(boardId);
 
+        Long teamId = boardVo.getTeamId();
+        String boardTitle = boardVo.getTitle();
+
         // 2. 권한 체크 (OWNER)
         memberVal.validateTeamOwner(boardId, userId, ErrorCode.BOARD_DELETE_FORBIDDEN);
 
         // 3. 삭제 진행
         boardMapper.deleteBoard(boardId);
+
+        // 보드 삭제 로그 저장
+        deleteBoardLog(userId, teamId, boardId, boardTitle);
     }
 
     private ListVo createDefaultList(Long boardId, String title, int orderIndex) {
@@ -158,7 +177,6 @@ public class BoardServiceImpl implements BoardService {
     }
 
     //소속 멤버 보드 조회
-
     @Override
     public List<MemberBoardResponse> getMemberBoards(Long teamId, Long memberId, Long userId) {
 
@@ -167,4 +185,48 @@ public class BoardServiceImpl implements BoardService {
         List<BoardVo> boards = boardMapper.findMemberBoard(teamId, memberId);
         return boards.stream().map(MemberBoardResponse::from).toList();
     }
+
+    /**
+     * 보드 관리 로그
+     */
+
+    // 보드 생성 로그
+    private void createBoardLog(Long userId, Long teamId, BoardVo board) {
+        activityService.saveLog(ActivitySaveRequest.builder()
+                .userId(userId)
+                .teamId(teamId)
+                .boardId(board.getId())
+                .type(ActivityType.CREATE_BOARD)
+                .targetId(board.getId())
+                .targetName(board.getTitle())
+                .description("보드가 생성되었습니다.")
+                .build());
+    }
+
+    // 보드 수정 로그
+    private void updateBoardLog(Long userId, Long teamId, BoardVo board) {
+        activityService.saveLog(ActivitySaveRequest.builder()
+                .userId(userId)
+                .teamId(teamId)
+                .boardId(board.getId())
+                .type(ActivityType.UPDATE_BOARD)
+                .targetId(board.getId())
+                .targetName(board.getTitle())
+                .description("보드 설정을 변경했습니다.")
+                .build());
+    }
+
+    // 보드 삭제 로그
+    private void deleteBoardLog(Long userId, Long teamId, Long boardId, String boardTitle) {
+        activityService.saveLog(ActivitySaveRequest.builder()
+                .userId(userId)
+                .teamId(teamId)
+                .boardId(boardId)
+                .type(ActivityType.DELETE_BOARD)
+                .targetId(boardId)
+                .targetName(boardTitle)
+                .description("보드를 삭제했습니다.")
+                .build());
+    }
+
 }

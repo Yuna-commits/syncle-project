@@ -1,5 +1,8 @@
 package com.nullpointer.domain.team.service.impl;
 
+import com.nullpointer.domain.activity.dto.request.ActivitySaveRequest;
+import com.nullpointer.domain.activity.service.ActivityService;
+import com.nullpointer.domain.activity.vo.enums.ActivityType;
 import com.nullpointer.domain.board.dto.response.BoardResponse;
 import com.nullpointer.domain.board.mapper.BoardMapper;
 import com.nullpointer.domain.board.service.BoardService;
@@ -36,6 +39,7 @@ public class TeamServiceImpl implements TeamService {
     private final MemberValidator memberVal;
 
     private final BoardService boardService;
+    private final ActivityService activityService;
 
     @Override
     @Transactional
@@ -44,6 +48,9 @@ public class TeamServiceImpl implements TeamService {
         // 1. 팀 VO 생성 (DTO -> VO)
         TeamVo teamVo = req.toVo();
         teamMapper.insertTeam(teamVo);
+
+        // 팀 생성 로그 저장
+        createTeamLog(userId, teamVo);
 
         // 2. 방금 만든 팀 ID 가져오기
         Long createTeamId = teamVo.getId();
@@ -132,8 +139,11 @@ public class TeamServiceImpl implements TeamService {
         if (req.getDescription() != null) {
             teamVo.setDescription(req.getDescription());
         }
-        
+
         teamMapper.updateTeam(teamVo);
+
+        // 팀 수정 로그 저장
+        updateTeamLog(userId, teamVo);
     }
 
     // 팀 삭제
@@ -148,6 +158,36 @@ public class TeamServiceImpl implements TeamService {
 
         // 3. 삭제 진행 (Soft Delete)
         teamMapper.deleteTeam(teamId);
+    }
+
+    /**
+     * 팀 관리 로그
+     */
+
+    // 팀 생성 로그
+    private void createTeamLog(Long userId, TeamVo team) {
+        activityService.saveLog(ActivitySaveRequest.builder()
+                .userId(userId)
+                .teamId(team.getId())
+                .boardId(null)
+                .type(ActivityType.CREATE_TEAM)
+                .targetId(team.getId())
+                .targetName(team.getName())
+                .description("팀이 생성되었습니다.")
+                .build());
+    }
+
+    // 팀 수정 로그
+    private void updateTeamLog(Long userId, TeamVo team) {
+        activityService.saveLog(ActivitySaveRequest.builder()
+                .userId(userId)
+                .teamId(team.getId())
+                .boardId(null)
+                .type(ActivityType.UPDATE_TEAM)
+                .targetId(team.getId())
+                .targetName(team.getName())
+                .description("팀 설정을 변경했습니다.")
+                .build());
     }
 
 }

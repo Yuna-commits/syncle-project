@@ -1,5 +1,10 @@
 package com.nullpointer.domain.user.controller;
 
+import com.nullpointer.domain.activity.dto.request.ActivityConditionRequest;
+import com.nullpointer.domain.activity.dto.response.ActivityLogResponse;
+import com.nullpointer.domain.activity.dto.response.ActivityStatsResponse;
+import com.nullpointer.domain.activity.dto.response.TopBoardResponse;
+import com.nullpointer.domain.activity.service.ActivityService;
 import com.nullpointer.domain.auth.dto.request.AuthRequest;
 import com.nullpointer.domain.auth.dto.request.PasswordRequest;
 import com.nullpointer.domain.user.dto.request.UpdateProfileRequest;
@@ -22,6 +27,7 @@ import java.util.List;
 public class UserController {
 
     private final UserService userService;
+    private final ActivityService activityService;
 
     // 이메일 중복 확인
     @GetMapping("/check-email")
@@ -100,6 +106,40 @@ public class UserController {
     public ApiResponse<String> deleteUser(@AuthenticationPrincipal CustomUserDetails userDetails) {
         userService.deleteUser(userDetails.getUserId());
         return ApiResponse.success("계정 삭제 성공");
+    }
+
+    // 사용자 활동 통계 조회
+    @GetMapping("/me/activities/stats")
+    public ApiResponse<ActivityStatsResponse> getMyStats(@AuthenticationPrincipal CustomUserDetails userDetails) {
+        ActivityStatsResponse response
+                = activityService.getStats(
+                ActivityConditionRequest.builder()
+                        .userId(userDetails.getUserId()).build());
+        return ApiResponse.success(response);
+    }
+
+    // 사용자 활동 기준 인기 보드 조회
+    @GetMapping("/me/activities/top-boards")
+    public ApiResponse<List<TopBoardResponse>> getMyTopBoards(@AuthenticationPrincipal CustomUserDetails userDetails) {
+        List<TopBoardResponse> response
+                = activityService.getTopBoard(
+                ActivityConditionRequest.builder()
+                        .userId(userDetails.getUserId()).build());
+        return ApiResponse.success(response);
+    }
+
+    // 사용자 활동 타임라인 조회 (검색 포함)
+    @GetMapping("/me/activities")
+    public ApiResponse<List<ActivityLogResponse>> getMyActivities(
+            @AuthenticationPrincipal CustomUserDetails userDetails, @ModelAttribute ActivityConditionRequest condition) {
+        condition.setUserId(userDetails.getUserId());
+        condition.setTeamId(null); // 다른 조건 초기화
+        condition.setBoardId(null);
+
+        List<ActivityLogResponse> response
+                = activityService.getActivities(condition);
+
+        return ApiResponse.success(response);
     }
 
 }
