@@ -37,4 +37,7 @@ public interface InvitationMapper {
 
     // 초대 취소 (ADMIN 권한)
     void deleteInvitation(Long invitationId);
+
+    // 만료 기간이 지난 대기 상태 초대장들을 'EXPIRED'로 일괄 업데이트
+    int updateExpiredInvitations();
 }

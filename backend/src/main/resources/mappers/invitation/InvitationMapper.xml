@@ -87,4 +87,11 @@
         WHERE id = #{invitationId}
     </delete>
 
+    <!-- 만료 기간이 지난 대기 상태 초대장들을 'EXPIRED'로 일괄 업데이트 -->
+    <update id="updateExpiredInvitations">
+        UPDATE invitation
+        SET status = 'EXPIRED'
+        WHERE status = 'PENDING'
+        AND expried_at &lt; NOW();
+    </update>
 </mapper>
