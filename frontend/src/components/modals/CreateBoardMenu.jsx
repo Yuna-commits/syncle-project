@@ -137,7 +137,7 @@ function CreateBoardMenu({ teamId, onClose, onSuccess }) {
             disabled={!title.trim()}
             className="w-full rounded-md bg-blue-600 px-5 py-2 text-sm font-medium text-white shadow-sm hover:bg-blue-700 disabled:opacity-50"
           >
-            Create
+            보드 생성
           </button>
         </div>
       </form>

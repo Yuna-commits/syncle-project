@@ -2,6 +2,7 @@ import React, { useEffect } from 'react'
 import { Link, useLocation } from 'react-router-dom'
 import useUserStore from '../../stores/useUserStore'
 import useUiStore from '../../stores/useUiStore'
+import { Plus } from 'lucide-react'
 
 function Header({ onOpenTeamModal }) {
   const notificationCount = 1
@@ -49,10 +50,11 @@ function Header({ onOpenTeamModal }) {
 
         {/* Create 버튼 */}
         <button
-          className="rounded-md bg-blue-600 px-4 py-2.5 text-sm font-extrabold whitespace-nowrap text-white hover:bg-blue-700"
+          className="flex items-center gap-2 rounded-md bg-blue-600 px-4 py-2.5 text-sm font-extrabold whitespace-nowrap text-white hover:bg-blue-700"
           onClick={onOpenTeamModal}
         >
-          팀 생성
+          <Plus size={16} strokeWidth={3} />
+          <span>팀 생성</span>
         </button>
       </div>
 

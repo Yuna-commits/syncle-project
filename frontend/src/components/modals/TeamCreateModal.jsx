@@ -1,85 +1,109 @@
-import React from 'react'
+import React, { useState } from 'react'
+import { Users, X } from 'lucide-react'
+import api from '../../api/AxiosInterceptor'
 
 function TeamCreateModal({ onClose }) {
+  // 팀 정보 상태
+  const [name, setName] = useState('')
+  const [description, setDescription] = useState('')
+  const [isLoading, setIsLoading] = useState(false)
+
+  // 팀 생성 핸들러
+  const handleSubmit = async () => {
+    if (!name.trim()) return
+
+    setIsLoading(true)
+    try {
+      // API 호출
+      await api.post('/teams', {
+        name,
+        description,
+      })
+
+      alert('팀이 생성되었습니다.')
+      onClose()
+      window.location.reload() // 목록 갱신
+    } catch (error) {
+      console.error('팀 생성 실패:', error)
+      alert(error.response?.data?.message || '팀 생성에 실패했습니다.')
+    } finally {
+      setIsLoading(false)
+    }
+  }
+
   return (
     <div
-      className="fixed inset-0 z-50 flex items-center justify-center bg-black/40"
+      className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-[1px] transition-opacity"
       onClick={onClose}
     >
       <div
-        className="w-[520px] rounded-xl bg-white p-7 shadow-2xl"
+        className="animate-in fade-in zoom-in w-[520px] transform overflow-hidden rounded-xl bg-white shadow-2xl transition-all duration-200"
         onClick={(e) => e.stopPropagation()}
       >
-        {/* 제목 */}
-        <h2 className="mb-6 text-xl font-semibold text-gray-800">팀 생성</h2>
-
-        {/* 팀 이름 입력 */}
-        <div className="mb-5">
-          <label className="mb-1 block text-sm font-medium text-gray-700"></label>
-          <input
-            type="text"
-            placeholder="팀 이름을 입력하세요"
-            className="w-full rounded-lg border border-gray-300 px-3 py-2.5 text-sm transition focus:ring-2 focus:ring-blue-400 focus:outline-none"
-          />
+        {/* 헤더 */}
+        <div className="flex items-center justify-between border-b border-gray-100 p-6 pb-4">
+          <h2 className="flex items-center gap-2 text-xl font-bold text-gray-800">
+            <Users size={24} className="text-blue-600" />팀 생성
+          </h2>
+          <button
+            onClick={onClose}
+            className="rounded-full p-1 text-gray-400 transition hover:bg-gray-100 hover:text-gray-600"
+          >
+            <X size={20} />
+          </button>
         </div>
 
-        {/* 팀 정보 입력 */}
-        <div className="mb-6">
-          <label className="mb-1 block text-sm font-medium text-gray-700">
-            설명
-          </label>
-          <textarea
-            rows={3}
-            placeholder="팀에 대한 간단한 설명을 입력하세요 (선택)"
-            className="w-full resize-none rounded-lg border border-gray-300 px-3 py-2.5 text-sm transition focus:ring-2 focus:ring-blue-400 focus:outline-none"
-          ></textarea>
-        </div>
-
-        {/* 멤버 초대 섹션 */}
-        <div className="mb-6">
-          <label className="mb-2 block text-sm font-medium text-gray-700">
-            멤버 초대
-          </label>
-
-          {/* 검색 인풋 */}
-          <div className="relative mb-3">
+        <div className="p-6">
+          {/* 팀 이름 */}
+          <div className="mb-5">
+            <label className="mb-1.5 block text-sm font-semibold text-gray-700">
+              팀 이름 <span className="text-red-500">*</span>
+            </label>
             <input
               type="text"
-              placeholder="이메일 또는 이름으로 검색"
-              className="w-full rounded-lg border border-gray-300 px-3 py-2.5 pr-10 text-sm transition focus:ring-2 focus:ring-blue-400 focus:outline-none"
+              value={name}
+              onChange={(e) => setName(e.target.value)}
+              placeholder="팀 이름을 입력하세요"
+              className="w-full rounded-lg border border-gray-300 px-4 py-2.5 text-sm transition focus:border-blue-500 focus:ring-2 focus:ring-blue-100 focus:outline-none"
+              autoFocus
             />
+          </div>
 
-            {/* 돋보기 아이콘 */}
-            <svg
-              className="absolute top-2.5 right-3 h-5 w-5 text-gray-400"
-              fill="none"
-              stroke="currentColor"
-              viewBox="0 0 24 24"
+          {/* 설명 */}
+          <div className="mb-6">
+            <label className="mb-1.5 block text-sm font-semibold text-gray-700">
+              설명{' '}
+              <span className="text-xs font-normal text-gray-400">(선택)</span>
+            </label>
+            <textarea
+              rows={3}
+              value={description}
+              onChange={(e) => setDescription(e.target.value)}
+              placeholder="팀의 목표나 특징을 간단히 적어주세요."
+              className="w-full resize-none rounded-lg border border-gray-300 px-4 py-2.5 text-sm transition focus:border-blue-500 focus:ring-2 focus:ring-blue-100 focus:outline-none"
+            ></textarea>
+          </div>
+
+          {/* 하단 버튼 */}
+          <div className="flex items-center justify-end gap-3 pt-2">
+            <button
+              onClick={onClose}
+              className="rounded-lg px-5 py-2.5 text-sm font-medium text-gray-600 transition hover:bg-gray-100"
             >
-              <path
-                strokeWidth="2"
-                d="m21 21-3.5-3.5M17 10a7 7 0 1 1-14 0 7 7 0 0 1 14 0Z"
-              />
-            </svg>
+              취소
+            </button>
+            <button
+              onClick={handleSubmit}
+              disabled={!name.trim() || isLoading}
+              className={`rounded-lg px-6 py-2.5 text-sm font-medium text-white shadow-sm transition ${
+                !name.trim() || isLoading
+                  ? 'cursor-not-allowed bg-blue-300'
+                  : 'bg-blue-600 hover:bg-blue-700'
+              }`}
+            >
+              {isLoading ? '생성 중...' : '생성하기'}
+            </button>
           </div>
-
-          {/* 초대된 멤버 리스트 */}
-          <div className="h-28 overflow-y-auto rounded-lg border border-gray-200 bg-gray-200 p-3 text-sm text-gray-600">
-            <p className="text-gray-400">초대한 멤버가 없습니다.</p>
-          </div>
-        </div>
-
-        {/* 버튼 */}
-        <div className="flex justify-end gap-2">
-          <button
-            className="rounded-lg bg-gray-200 px-10 py-2 text-sm transition hover:bg-gray-300"
-            onClick={onClose}
-          >
-            취소
-          </button>
-          <button className="rounded-lg bg-blue-600 px-10 py-2 text-sm text-white transition hover:bg-blue-700">
-            생성
-          </button>
         </div>
       </div>
     </div>
