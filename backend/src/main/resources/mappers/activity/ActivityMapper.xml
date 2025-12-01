@@ -1,0 +1,98 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.nullpointer.domain.activity.mapper.ActivityMapper">
+
+    <!-- 공통 WHERE 절 -->
+    <sql id="searchCriteria">
+        <where>
+            <if test="userId != null">AND l.user_id = #{userId}</if>
+            <if test="teamId != null">AND l.team_id = #{teamId}</if>
+            <if test="boardId != null">AND l.board_id = #{boardId}</if>
+            <if test="keyword != null">
+                AND (l.description LIKE CONCAT('%', #{keyword}, '%')
+                OR l.target_name LIKE CONCAT('%', #{keyword}, '%'))
+            </if>
+            <if test="type != null">AND l.type = #{type}</if>
+            <if test="startDate != null">AND l.created_at &gt;= #{startDate}</if>
+            <if test="endDate != null">AND l.created_at &lt;= #{endDate}</if>
+        </where>
+    </sql>
+
+    <!-- 통계 조회 -->
+    <select id="getStats" resultType="ActivityStatsResponse">
+        SELECT
+        (SELECT COUNT(*) FROM activity_log l
+        <include refid="searchCriteria"/>
+        AND type = 'CREATE_CARD' AND created_at >= DATE_SUB(NOW(), INTERVAL 7 DAY)) AS createdCards7,
+
+        (SELECT COUNT(*) FROM activity_log l
+        <include refid="searchCriteria"/>
+        AND type = 'COMPLETE_CARD' AND created_at >= DATE_SUB(NOW(), INTERVAL 7 DAY)) AS completedTasks7,
+
+        (SELECT COUNT(*) FROM activity_log l
+        <include refid="searchCriteria"/>
+        AND type = 'CREATE_COMMENT' AND created_at >= DATE_SUB(NOW(), INTERVAL 7 DAY)) AS comments7
+    </select>
+
+    <!-- 인기 보드 조회 -->
+    <select id="findTopActiveBoards" resultType="TopBoardResponse">
+        SELECT b.id,
+        b.title,
+        b.description,
+        b.created_at,
+        COUNT(l.id) as activity_count
+        FROM board b
+        JOIN board_member bm ON b.id = bm.board_id
+        LEFT JOIN activity_log l ON b.id = l.board_id
+        AND l.created_at >= DATE_SUB(NOW(), INTERVAL 30 DAY)
+        <where>
+            b.deleted_at IS NULL AND bm.deleted_at IS NULL
+            <!-- 유저 기준 인기보드 -->
+            <if test="userId != null">AND bm.user_id = #{userId}</if>
+            <!-- 팀 기준 인기보드 -->
+            <if test="teamId != null">AND b.team_id = #{teamId}</if>
+        </where>
+        GROUP BY b.id
+        ORDER BY activity_count DESC, b.created_at DESC
+        LIMIT 3
+    </select>
+
+    <!-- 로그 조회 -->
+    <select id="searchActivities" resultType="ActivityLogResponse">
+        SELECT l.id,
+        l.type,
+        l.target_name,
+        l.description,
+        l.created_at,
+        u.nickname AS actor_name,
+        b.title AS board_title
+        FROM activity_log l
+        JOIN user u ON l.user_id = u.id
+        LEFT JOIN board b ON l.board_id = b.id
+        <include refid="searchCriteria"/>
+        ORDER BY l.created_at DESC
+    </select>
+
+    <!-- 로그 저장 -->
+    <insert id="saveLog">
+        INSERT INTO activity_log (user_id,
+                                  team_id,
+                                  board_id,
+                                  type,
+                                  target_id,
+                                  target_name,
+                                  description,
+                                  created_at)
+        VALUES (#{userId},
+                #{teamId},
+                #{boardId},
+                #{type},
+                #{targetId},
+                #{targetName},
+                #{description},
+                NOW())
+    </insert>
+
+</mapper>

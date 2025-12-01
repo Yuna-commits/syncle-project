@@ -1,18 +1,19 @@
 package com.nullpointer.domain.board.controller;
 
+import com.nullpointer.domain.activity.dto.request.ActivityConditionRequest;
+import com.nullpointer.domain.activity.dto.response.ActivityLogResponse;
+import com.nullpointer.domain.activity.dto.response.ActivityStatsResponse;
+import com.nullpointer.domain.activity.service.ActivityService;
+import com.nullpointer.domain.board.dto.request.CreateBoardRequest;
 import com.nullpointer.domain.board.dto.request.UpdateBoardRequest;
 import com.nullpointer.domain.board.dto.response.BoardDetailResponse;
 import com.nullpointer.domain.board.dto.response.BoardResponse;
-import com.nullpointer.domain.board.dto.request.CreateBoardRequest;
 import com.nullpointer.domain.board.dto.response.MemberBoardResponse;
 import com.nullpointer.domain.board.service.BoardService;
-import com.nullpointer.domain.board.vo.BoardVo;
 import com.nullpointer.global.common.ApiResponse;
 import com.nullpointer.global.common.annotation.LoginUser;
-import com.nullpointer.global.security.jwt.CustomUserDetails;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
-import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -20,10 +21,10 @@ import java.util.List;
 @RestController
 @RequestMapping("/api")
 @RequiredArgsConstructor
-
 public class BoardController {
 
     private final BoardService boardService;
+    private final ActivityService activityService;
 
     // 보드 생성
     @PostMapping("/teams/{teamId}/boards")
@@ -77,4 +78,33 @@ public class BoardController {
                                                                   @LoginUser Long userId) {
         return ApiResponse.success(boardService.getMemberBoards(teamId, memberId, userId));
     }
+
+    // 보드 활동 통계 조회
+    @GetMapping("/boards/{boardId}/activities/stats")
+    public ApiResponse<ActivityStatsResponse> getMyStats(@PathVariable Long boardId) {
+        ActivityStatsResponse response
+                = activityService.getStats(getCondition(boardId));
+        return ApiResponse.success(response);
+    }
+
+    // 보드 활동 타임라인 조회
+    @GetMapping("/boards/{boardId}/activities")
+    public ApiResponse<List<ActivityLogResponse>> getMyActivities(
+            @PathVariable Long boardId, @ModelAttribute ActivityConditionRequest condition) {
+        condition.setBoardId(boardId);
+        condition.setUserId(null);
+        condition.setTeamId(null);
+
+        List<ActivityLogResponse> response
+                = activityService.getActivities(condition);
+
+        return ApiResponse.success(response);
+    }
+
+    // 조회 조건 설정
+    private ActivityConditionRequest getCondition(Long boardId) {
+        return ActivityConditionRequest.builder()
+                .boardId(boardId).build();
+    }
+
 }

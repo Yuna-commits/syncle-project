@@ -1,16 +1,19 @@
 package com.nullpointer.domain.team.controller;
 
+import com.nullpointer.domain.activity.dto.request.ActivityConditionRequest;
+import com.nullpointer.domain.activity.dto.response.ActivityLogResponse;
+import com.nullpointer.domain.activity.dto.response.ActivityStatsResponse;
+import com.nullpointer.domain.activity.dto.response.TopBoardResponse;
+import com.nullpointer.domain.activity.service.ActivityService;
 import com.nullpointer.domain.team.dto.request.CreateTeamRequest;
+import com.nullpointer.domain.team.dto.request.UpdateTeamRequest;
 import com.nullpointer.domain.team.dto.response.TeamDetailResponse;
 import com.nullpointer.domain.team.dto.response.TeamResponse;
-import com.nullpointer.domain.team.dto.request.UpdateTeamRequest;
 import com.nullpointer.domain.team.service.TeamService;
 import com.nullpointer.global.common.ApiResponse;
 import com.nullpointer.global.common.annotation.LoginUser;
-import com.nullpointer.global.security.jwt.CustomUserDetails;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
-import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -22,6 +25,7 @@ import java.util.List;
 public class TeamController {
 
     private final TeamService teamService;
+    private final ActivityService activityService;
 
     // 팀 생성
     @PostMapping("")
@@ -60,4 +64,41 @@ public class TeamController {
         teamService.deleteTeam(teamId, userId);
         return ApiResponse.success("팀 삭제 성공");
     }
+
+    // 팀 활동 통계 조회
+    @GetMapping("/{teamId}/activities/stats")
+    public ApiResponse<ActivityStatsResponse> getTeamStats(@PathVariable Long teamId) {
+        ActivityStatsResponse response
+                = activityService.getStats(getCondition(teamId));
+        return ApiResponse.success(response);
+    }
+
+    // 팀 내 인기 보드 조회
+    @GetMapping("/{teamId}/activities/top-boards")
+    public ApiResponse<List<TopBoardResponse>> getTeamTopBoards(@PathVariable Long teamId) {
+        List<TopBoardResponse> response
+                = activityService.getTopBoard(getCondition(teamId));
+        return ApiResponse.success(response);
+    }
+
+    // 팀 활동 타임라인 조회
+    @GetMapping("/{teamId}/activities")
+    public ApiResponse<List<ActivityLogResponse>> getTeamActivities(
+            @PathVariable Long teamId, @ModelAttribute ActivityConditionRequest condition) {
+        condition.setTeamId(teamId); // 다른 조건 초기화
+        condition.setUserId(null);
+        condition.setBoardId(null);
+
+        List<ActivityLogResponse> response
+                = activityService.getActivities(condition);
+
+        return ApiResponse.success(response);
+    }
+
+    // 조회 조건 설정
+    private ActivityConditionRequest getCondition(Long teamId) {
+        return ActivityConditionRequest.builder()
+                .teamId(teamId).build();
+    }
+
 }

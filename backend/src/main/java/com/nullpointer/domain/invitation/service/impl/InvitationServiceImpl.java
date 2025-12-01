@@ -1,5 +1,8 @@
 package com.nullpointer.domain.invitation.service.impl;
 
+import com.nullpointer.domain.activity.dto.request.ActivitySaveRequest;
+import com.nullpointer.domain.activity.service.ActivityService;
+import com.nullpointer.domain.activity.vo.enums.ActivityType;
 import com.nullpointer.domain.invitation.dto.MyInvitationResponse;
 import com.nullpointer.domain.invitation.dto.TeamInvitationResponse;
 import com.nullpointer.domain.invitation.dto.TeamInviteRequest;
@@ -40,6 +43,7 @@ public class InvitationServiceImpl implements InvitationService {
     private final UserMapper userMapper;
     private final RedisUtil redisUtil;
     private final MemberValidator memberValidator;
+    private final ActivityService activityService;
 
     @Value("${app.domain.frontend}")
     private String frontendUrl;
@@ -153,6 +157,9 @@ public class InvitationServiceImpl implements InvitationService {
         // 5. 실제 멤버로 등록
         teamMemberService.addMember(invitation.getTeamId(), loginUserId, Role.MEMBER);
 
+        // 팀 멤버 초대 로그 저장
+        inviteMemberLog(invitation.getTeamId(), loginUserId);
+
         // 6. Redis 정리
         redisUtil.deleteData(RedisKeyType.INVITATION.getKey(token));
     }
@@ -200,5 +207,22 @@ public class InvitationServiceImpl implements InvitationService {
     @Transactional(readOnly = true)
     public List<MyInvitationResponse> getMyInvitations(Long userId) {
         return invitationMapper.findAllByUserId(userId);
+    }
+
+    // 팀 멤버 초대 로그
+    private void inviteMemberLog(Long teamId, Long userId) {
+        UserVo user = userMapper.findById(userId)
+                .orElseThrow(() -> new BusinessException(ErrorCode.USER_NOT_FOUND));
+
+        activityService.saveLog(
+                ActivitySaveRequest.builder()
+                        .userId(userId)
+                        .teamId(teamId)
+                        .boardId(null)
+                        .type(ActivityType.INVITE_MEMBER)
+                        .targetId(userId)
+                        .targetName(user.getNickname())
+                        .description(user.getNickname() + "님을 팀에 초대했습니다.")
+                        .build());
     }
 }
