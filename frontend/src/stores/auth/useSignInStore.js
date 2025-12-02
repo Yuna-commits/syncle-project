@@ -56,9 +56,17 @@ const useSignInStore = create((set, get) => ({
         localStorage.removeItem('refreshToken')
       }
 
-      // 4) 메인 페이지(대시보드)로 이동
+      // 성공 시 메인 페이지(대시보드)로 이동
+      navigate(targetPath, { replace: true })
+    }
+
+    try {
+      // 백엔드 API 호출
+      // LoginResponse { status: "SUCCESS", data: {accessToken: {...}, refreshToken: {...}}}
+      const response = await api.post('/auth/login', formData)
+
+      handleLoginSuccess(response.data.data)
       alert('로그인 성공!')
-      navigate('/dashboard')
     } catch (error) {
       // 5) 에러 처리
       const response = error.response?.data
@@ -93,6 +101,7 @@ const useSignInStore = create((set, get) => ({
       set({ isLoading: false })
     }
   },
+
   // 구글 로그인
   googleLogin: async (
     credentialResponse,
