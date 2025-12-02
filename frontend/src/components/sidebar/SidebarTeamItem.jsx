@@ -6,6 +6,9 @@ function SidebarTeamItem({ team, isSelected, onToggle }) {
   const tId = team.id
   const tName = team.name
 
+  // 팀 Owner 확인
+  const isOwner = team.role === 'OWNER'
+
   // 현재 URL이 이 팀의 경로에 속해 있는지 확인
   const isTeamActive = location.pathname.startsWith(`/teams/${tId}`)
 
@@ -67,18 +70,22 @@ function SidebarTeamItem({ team, isSelected, onToggle }) {
           >
             - 팀 멤버
           </Link>
-          <Link
-            to={`/teams/${tId}/invitations`}
-            className={`block rounded-md px-2 py-1.5 text-sm ${isActive('/teams/' + tId + '/invitations')}`}
-          >
-            - 초대 목록
-          </Link>
-          <Link
-            to={`/teams/${tId}/settings`}
-            className={`block rounded-md px-2 py-1.5 text-sm ${isActive('/teams/' + tId + '/settings')}`}
-          >
-            - 설정
-          </Link>
+          {isOwner && (
+            <>
+              <Link
+                to={`/teams/${tId}/invitations`}
+                className={`block rounded-md px-2 py-1.5 text-sm ${isActive('/teams/' + tId + '/invitations')}`}
+              >
+                - 초대 목록
+              </Link>
+              <Link
+                to={`/teams/${tId}/settings`}
+                className={`block rounded-md px-2 py-1.5 text-sm ${isActive('/teams/' + tId + '/settings')}`}
+              >
+                - 설정
+              </Link>
+            </>
+          )}
         </div>
       )}
     </div>

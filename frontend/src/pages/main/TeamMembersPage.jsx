@@ -187,8 +187,8 @@ export default function TeamMembersPage() {
                               className="h-full w-full rounded-full object-cover"
                             />
                             {isMe && (
-                              <span className="absolute -top-2 -right-2 flex h-5 w-5 items-center justify-center text-[15px] font-bold text-yellow-400">
-                                Me
+                              <span className="absolute -right-2 -bottom-2 flex h-5 w-5 items-center justify-center text-[15px] font-bold text-yellow-400">
+                                나
                               </span>
                             )}
                           </div>

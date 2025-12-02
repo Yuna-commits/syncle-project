@@ -102,7 +102,14 @@
           AND (b.visibility = 'TEAM' OR bm.user_id IS NOT NULL)
     </select>
 
-    <!-- 보드 즐겨찾기 유무 확인 -->
+    <!-- 보드 즐겨찾기 갯수 확인 -->
+    <select id="countFavorite" resultType="int">
+        SELECT COUNT(*)
+        FROM board_favorite
+        WHERE user_id = #{userId}
+    </select>
+
+    <!-- 보드 유무 확인 -->
     <select id="existsFavorite" resultType="boolean">
         SELECT COUNT(*) > 0
         FROM board_favorite

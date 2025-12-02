@@ -66,7 +66,10 @@ public enum ErrorCode {
     CANNOT_INVITE_SELF(HttpStatus.BAD_REQUEST, "I005", "본인에게는 초대장을 보낼 수 없습니다."),
     INVITATION_MISMATCH(HttpStatus.BAD_REQUEST, "I006", "초대받은 사용자 정보와 일치하지 않습니다."),
     INVITATION_EXPIRED(HttpStatus.BAD_REQUEST, "I007", "유효 기간이 만료된 초대장입니다."),
-    INVITATION_ALREADY_PROCESSED(HttpStatus.CONFLICT, "I008", "이미 처리된(수락/거절) 초대장입니다.");
+    INVITATION_ALREADY_PROCESSED(HttpStatus.CONFLICT, "I008", "이미 처리된(수락/거절) 초대장입니다."),
+
+    // 즐겨찾기
+    FAVORITE_LIMIT_EXCEEDED(HttpStatus.BAD_REQUEST, "B007", "즐겨찾기 가능한 개수를 초과했습니다.");
 
     private final HttpStatus status;
     private final String code;

@@ -99,19 +99,24 @@ public class BoardServiceImpl implements BoardService {
         listMapper.insertList(createDefaultList(boardId, "In Progress", 2));
         listMapper.insertList(createDefaultList(boardId, "Done", 3));
     }
-
+    
+    // 내 보드 조회
     @Override
     public List<BoardResponse> getMyBoards(Long userId) {
         List<BoardVo> boards = boardMapper.findBoardByUserId(userId);
         return boards.stream().map(BoardResponse::from).toList();
     }
-
+    
+    // 특정 팀 보드 조회
     @Override
-    public List<BoardResponse> getTeamBoards(Long teamId) {
+    public List<BoardResponse> getTeamBoards(Long teamId, Long userId) {
+        // 1. 권한 체크 (OWNER)
+        memberVal.validateTeamOwner(teamId, userId, ErrorCode.TEAM_ACCESS_DENIED);
         List<BoardVo> boards = boardMapper.findBoardByTeamId(teamId);
         return boards.stream().map(BoardResponse::from).toList();
     }
 
+    // 보드 상세 조회
     @Override
     @Transactional(readOnly = true)
     public BoardDetailResponse getBoardDetail(Long boardId) {
@@ -128,7 +133,7 @@ public class BoardServiceImpl implements BoardService {
         BoardVo boardVo = boardVal.getValidBoard(boardId);
 
         // 2. 권한 체크 (OWNER)
-        memberVal.validateTeamOwner(boardId, userId, ErrorCode.BOARD_UPDATE_FORBIDDEN);
+        memberVal.validateBoardOwner(boardId, userId, ErrorCode.BOARD_UPDATE_FORBIDDEN);
 
         // 3. 업데이트 진행
         if (req.getTitle() != null) {
@@ -157,7 +162,7 @@ public class BoardServiceImpl implements BoardService {
         String boardTitle = boardVo.getTitle();
 
         // 2. 권한 체크 (OWNER)
-        memberVal.validateTeamOwner(boardId, userId, ErrorCode.BOARD_DELETE_FORBIDDEN);
+        memberVal.validateBoardOwner(boardId, userId, ErrorCode.BOARD_DELETE_FORBIDDEN);
 
         // 3. 삭제 진행
         boardMapper.deleteBoard(boardId);
@@ -176,12 +181,9 @@ public class BoardServiceImpl implements BoardService {
         return list;
     }
 
-    //소속 멤버 보드 조회
+    // 멤버 보드 조회
     @Override
     public List<MemberBoardResponse> getMemberBoards(Long teamId, Long memberId, Long userId) {
-
-        // 1. 권한 체크 (OWNER)
-        memberVal.validateTeamOwner(teamId, userId, ErrorCode.TEAM_ACCESS_DENIED);
         List<BoardVo> boards = boardMapper.findMemberBoard(teamId, memberId);
         return boards.stream().map(MemberBoardResponse::from).toList();
     }
@@ -230,8 +232,6 @@ public class BoardServiceImpl implements BoardService {
     }
 
     // 즐겨찾기 토글
-
-
     @Override
     @Transactional
     public void toggleFavorite(Long boardId, Long userId) {
@@ -242,9 +242,15 @@ public class BoardServiceImpl implements BoardService {
         // 이미 즐겨찾기 되어있는지 확인
         boolean exists = boardMapper.existsFavorite(boardId, userId);
 
+        // 즐겨찾기 갯수 확인
+        int count = boardMapper.countFavorite(userId);
+
         // 상태에 따라 추가 삭제
         if (exists) {
             boardMapper.deleteFavorite(boardId, userId);
+            // 즐겨찾기 4개 이상일 경우 에러발생
+        } else if (count >= 4) {
+            throw new BusinessException(ErrorCode.FAVORITE_LIMIT_EXCEEDED);
         } else {
             boardMapper.insertFavorite(boardId, userId);
         }

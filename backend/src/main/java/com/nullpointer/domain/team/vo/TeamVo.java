@@ -1,5 +1,6 @@
 package com.nullpointer.domain.team.vo;
 
+import com.nullpointer.domain.member.vo.enums.Role;
 import lombok.*;
 
 import java.time.LocalDateTime;
@@ -18,4 +19,6 @@ public class TeamVo {
     private LocalDateTime createdAt;
     private LocalDateTime updatedAt;
     private LocalDateTime deletedAt;
+
+    private Role role;
 }

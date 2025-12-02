@@ -129,14 +129,12 @@ export default function TeamInvitationsPage() {
                       {new Date(invitation.createdAt).toLocaleDateString()}
                     </td>
                     <td className="px-6 py-4 text-sm whitespace-nowrap">
-                      {invitation.status === 'PENDING' && (
-                        <button
-                          onClick={() => handleCancel(invitation.id)}
-                          className="text-red-600 hover:text-red-900 hover:underline"
-                        >
-                          취소
-                        </button>
-                      )}
+                      <button
+                        onClick={() => handleCancel(invitation.id)}
+                        className="text-red-600 hover:text-red-900 hover:underline"
+                      >
+                        취소
+                      </button>
                     </td>
                   </tr>
                 ))

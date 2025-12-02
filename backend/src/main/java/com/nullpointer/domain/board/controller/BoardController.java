@@ -45,7 +45,7 @@ public class BoardController {
     @GetMapping("/teams/{teamId}/boards")
     public ApiResponse<List<BoardResponse>> getTeamBoards(@PathVariable Long teamId,
                                                           @LoginUser Long userId) {
-        return ApiResponse.success(boardService.getTeamBoards(teamId));
+        return ApiResponse.success(boardService.getTeamBoards(teamId, userId));
     }
 
     // 보드 상세 조회

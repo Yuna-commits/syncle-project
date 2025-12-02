@@ -22,7 +22,7 @@
         SELECT *
         FROM invitation
         WHERE id = #{id}
-        AND status != 'ACCEPTED'
+          AND status != 'ACCEPTED'
     </select>
 
     <!-- 상태 변경 -->
@@ -35,43 +35,44 @@
 
     <!-- 중복 초대 방지 -->
     <select id="existsByTeamIdAndInviteeIdAndStatus" resultType="boolean">
-        SELECT EXISTS(
-                       SELECT 1
-                       FROM invitation
-                       WHERE team_id = #{teamId}
-                         AND invitee_id = #{inviteeId}
-                         AND status = #{status}
-                   )
+        SELECT EXISTS(SELECT 1
+                      FROM invitation
+                      WHERE team_id = #{teamId}
+                        AND invitee_id = #{inviteeId}
+                        AND status = #{status})
     </select>
 
-    <!-- 팀의 초대 목록 -->
-    <select id="findAllByTeamId" parameterType="long" resultType="com.nullpointer.domain.invitation.dto.TeamInvitationResponse">
+    <!-- 팀원 초대 목록 -->
+    <select id="findAllByTeamId" parameterType="long"
+            resultType="com.nullpointer.domain.invitation.dto.TeamInvitationResponse">
         SELECT i.id,
                i.team_id,
                i.invitee_id,
                i.status,
                i.created_at,
                i.responded_at,
-               u.email        AS inviteeEmail,
-               u.nickname     AS inviteeName,
-               u.profile_img  AS inviteeProfile_img
+               u.email       AS inviteeEmail,
+               u.nickname    AS inviteeName,
+               u.profile_img AS inviteeProfile_img
         FROM invitation i
                  JOIN user u ON i.invitee_id = u.id
         WHERE i.team_id = #{teamId}
+          AND i.status != 'ACCEPTED'
         ORDER BY i.created_at DESC
     </select>
 
     <!-- 내 초대 목록 -->
-    <select id="findAllByUserId" parameterType="long" resultType="com.nullpointer.domain.invitation.dto.MyInvitationResponse">
+    <select id="findAllByUserId" parameterType="long"
+            resultType="com.nullpointer.domain.invitation.dto.MyInvitationResponse">
         SELECT i.id,
                i.team_id,
                i.inviter_id,
                i.status,
                i.created_at,
-               t.name         AS teamName,
-               u.email        AS inviterEmail,
-               u.nickname     AS inviterName,
-               u.profile_img  AS inviterProfile_img
+               t.name        AS teamName,
+               u.email       AS inviterEmail,
+               u.nickname    AS inviterName,
+               u.profile_img AS inviterProfile_img
         FROM invitation i
                  JOIN team t ON i.team_id = t.id
                  JOIN user u ON i.inviter_id = u.id
@@ -92,6 +93,6 @@
         UPDATE invitation
         SET status = 'EXPIRED'
         WHERE status = 'PENDING'
-        AND expired_at &lt; NOW();
+          AND expired_at &lt; NOW();
     </update>
 </mapper>

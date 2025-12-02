@@ -33,6 +33,7 @@ public interface BoardMapper {
     List<BoardVo> findMemberBoard(@Param("teamId") Long teamId, @Param("userId") Long memberId);
 
     // 즐겨찾기 관련 메서드
+    int countFavorite(Long userId);
     boolean existsFavorite(@Param("boardId") Long boardId, @Param("userId") Long userId);
     void insertFavorite(@Param("boardId") Long boardId, @Param("userId") Long userId);
     void deleteFavorite(@Param("boardId") Long boardId, @Param("userId") Long userId);

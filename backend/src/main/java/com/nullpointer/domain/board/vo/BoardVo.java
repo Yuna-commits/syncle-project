@@ -25,6 +25,6 @@ public class BoardVo {
     private LocalDateTime updatedAt;
     private LocalDateTime deletedAt;
 
-    private boolean isFavorite;
+    private Boolean isFavorite;
 }
 

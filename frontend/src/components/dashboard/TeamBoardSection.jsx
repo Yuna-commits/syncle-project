@@ -26,7 +26,8 @@ function TeamBoardSection({ team, onBoardCreated }) {
             id={board.id}
             imageUrl="https://picsum.photos/400/200"
             title={board.title}
-            isFavorite={board.isFaborite}
+            isFavorite={board.isFavorite}
+            onToggleFavorite={onBoardCreated}
           />
         ))}
 

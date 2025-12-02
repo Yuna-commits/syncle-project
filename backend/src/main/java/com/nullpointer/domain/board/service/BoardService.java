@@ -20,7 +20,7 @@ public interface BoardService {
     List<BoardResponse> getMyBoards(Long userId);
 
     // 팀 보드 조회
-    List<BoardResponse> getTeamBoards(Long teamId);
+    List<BoardResponse> getTeamBoards(Long teamId, Long userId);
 
     // 보드 상세 조회
     BoardDetailResponse getBoardDetail(Long boardId);

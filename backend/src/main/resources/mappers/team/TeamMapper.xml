@@ -15,7 +15,8 @@
     <!-- 본인 소속 팀 전체 조회 -->
     <select id="findTeamByUserId" parameterType="Long" resultType="TeamVo">
         SELECT a.id,
-               a.name
+               a.name,
+               b.role
         FROM team a,
              team_member b
         WHERE a.id = b.team_id
