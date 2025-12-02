@@ -2,6 +2,7 @@ import React, { useCallback, useEffect, useState } from 'react'
 import BoardCard from '../../components/common/BoardCard'
 import api from '../../api/AxiosInterceptor'
 import TeamBoardSection from '../../components/dashboard/TeamBoardSection'
+import { motion, AnimatePresence } from 'framer-motion'
 
 function DashboardPage() {
   const [teams, setTeams] = useState([])
@@ -16,6 +17,7 @@ function DashboardPage() {
       // 즐겨찾기 목록 필터링
       const favBoards = rawData
         .filter((board) => board.isFavorite)
+        .sort((a, b) => new Date(a.createdAt) - new Date(b.createdAt)) // 최신순 정렬
         .map((board) => ({
           id: board.id,
           title: board.title,
@@ -72,14 +74,27 @@ function DashboardPage() {
           <div className="grid grid-cols-4 gap-4">
             {favoriteBoards.length > 0 ? (
               favoriteBoards.map((board) => (
-                <BoardCard
+                <motion.div
                   key={board.id}
-                  id={board.id}
-                  imageUrl="https://picsum.photos/400/200"
-                  title={board.title}
-                  isFavorite={board.isFavorite}
-                  onToggleFavorite={fetchDashboardData}
-                />
+                  layout // [핵심] 아이템이 빠진 자리를 다른 아이템이 자연스럽게 채움
+                  initial={{ opacity: 0, scale: 0.8 }} // 나타날 때 초기값
+                  animate={{ opacity: 1, scale: 1 }} // 나타날 때 최종값
+                  exit={{
+                    opacity: 0,
+                    scale: 0.5,
+                    transition: { duration: 0.2 },
+                  }} // 사라질 때 효과
+                  transition={{ duration: 0.2 }}
+                >
+                  <BoardCard
+                    key={board.id}
+                    id={board.id}
+                    imageUrl="https://picsum.photos/400/200"
+                    title={board.title}
+                    isFavorite={board.isFavorite}
+                    onToggleFavorite={fetchDashboardData}
+                  />
+                </motion.div>
               ))
             ) : (
               <div className="text-gray-500">즐겨찾기한 보드가 없습니다.</div>
