@@ -1,9 +1,10 @@
 import React, { useEffect, useState } from 'react'
 import { format } from 'date-fns'
-import SummaryItem from '../../components/profile/SummaryItem'
-import BoardCard from '../../components/profile/BoardCard'
+import SummaryItem from '../../components/activity_log/SummaryItem'
+import BoardCard from '../../components/activity_log/BoardCard'
 import DateRangePickerMenu from '../../components/modals/DateRangePickerMenu'
 import useActivityStore from '../../stores/useActivityStore'
+import ActivityLogItem from '../../components/activity_log/ActivityLogItem'
 
 export default function ActivityPage() {
   const {
@@ -210,39 +211,20 @@ export default function ActivityPage() {
               logs.map((group) => (
                 <div
                   key={group.date}
-                  className="relative border-l-2 border-gray-200 pl-4"
+                  className="relative border-l-2 border-gray-200 pl-4.5"
                 >
+                  {/* 날짜 헤더 */}
                   <div className="mb-4 flex items-center">
-                    <div className="mr-4 -ml-[21px] h-3 w-3 rounded-full border border-gray-100 bg-gray-300 ring-4 ring-white"></div>
+                    <div className="mr-4 -ml-[25px] h-3 w-3 rounded-full border border-gray-100 bg-gray-300 ring-4 ring-white"></div>
                     <h4 className="text-sm font-bold text-gray-500">
                       {group.date}
                     </h4>
                   </div>
 
+                  {/* 로그 아이템 */}
                   <div className="space-y-3">
                     {group.logs.map((item) => (
-                      <div
-                        key={item.id}
-                        className="group relative flex flex-col gap-1 rounded-xl border border-gray-200 bg-gray-100 p-4 shadow-sm transition hover:border-blue-200 hover:bg-blue-50"
-                      >
-                        <div className="flex items-center justify-between">
-                          <span className="text-sm font-semibold text-gray-800">
-                            {item.targetName}
-                            <span className="ml-2 text-xs font-normal text-gray-500">
-                              in {item.boardTitle}
-                            </span>
-                          </span>
-                          <span className="font-mono text-xs text-gray-400">
-                            {new Date(item.createdAt).toLocaleTimeString([], {
-                              hour: '2-digit',
-                              minute: '2-digit',
-                            })}
-                          </span>
-                        </div>
-                        <p className="text-sm text-gray-600">
-                          {item.description}
-                        </p>
-                      </div>
+                      <ActivityLogItem key={item.id} log={item} />
                     ))}
                   </div>
                 </div>
