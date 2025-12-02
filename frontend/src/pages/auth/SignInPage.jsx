@@ -1,5 +1,5 @@
 import React, { useEffect } from 'react'
-import { Link, useNavigate } from 'react-router-dom'
+import { Link, useLocation, useNavigate } from 'react-router-dom'
 import FormInput from '../../components/common/FormInput'
 import useSignInStore from '../../stores/useSignInStore'
 import FormButton from '../../components/common/FormButton'
@@ -7,6 +7,12 @@ import { GoogleLogin } from '@react-oauth/google'
 
 export default function SignIn() {
   const navigate = useNavigate()
+  const location = useLocation() // 위치 정보 가져오기
+
+  // ProtectedRoute에서 넘겨준 이전 경로(from)가 있으면 그곳으로, 없으면 /dashboard로
+  const from =
+    location.state?.from?.pathname + location.state?.from?.search ||
+    '/dashboard'
 
   // Zustand Store에서 상태와 액션 꺼내기
   const {
@@ -33,7 +39,7 @@ export default function SignIn() {
   // 제출 핸들러
   const handleSubmit = async (e) => {
     e.preventDefault()
-    await login(navigate)
+    await login(navigate, from)
   }
 
   return (
@@ -49,7 +55,7 @@ export default function SignIn() {
       <GoogleLogin
         onSuccess={(credentialResponse) => {
           // 로그인 성공 시 Store 액션 호출
-          googleLogin(credentialResponse, navigate)
+          googleLogin(credentialResponse, navigate, from)
         }}
         onError={() => {
           alert('로그인에 실패했습니다.')

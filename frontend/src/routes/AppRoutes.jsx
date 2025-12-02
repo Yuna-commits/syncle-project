@@ -10,6 +10,7 @@ import PublicRoute from './PublicRoute'
 import ProtectedRoute from './ProtectedRoute'
 import TeamRoutes from './TeamRoutes'
 import DashboardPage from '../pages/main/DashboardPage'
+import InviteAcceptPage from '../pages/auth/InviteAcceptPage'
 
 export default function AppRoutes() {
   return (
@@ -41,6 +42,8 @@ export default function AppRoutes() {
         <Route path="/profile/*" element={<ProfileRoutes />} />
         {/* 팀보드 */}
         <Route path="/board/*" element={<BoardRoutes />} />
+        {/* 팀 초대 */}
+        <Route path="/invite/accept" element={<InviteAcceptPage />} />
       </Route>
     </Routes>
   )

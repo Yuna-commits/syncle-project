@@ -31,4 +31,9 @@ public interface BoardMapper {
 
     //소속 멤버 보드 조회
     List<BoardVo> findMemberBoard(@Param("teamId") Long teamId, @Param("userId") Long memberId);
+
+    // 즐겨찾기 관련 메서드
+    boolean existsFavorite(@Param("boardId") Long boardId, @Param("userId") Long userId);
+    void insertFavorite(@Param("boardId") Long boardId, @Param("userId") Long userId);
+    void deleteFavorite(@Param("boardId") Long boardId, @Param("userId") Long userId);
 }

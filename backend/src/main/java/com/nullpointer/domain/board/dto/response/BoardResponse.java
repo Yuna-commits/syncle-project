@@ -14,7 +14,7 @@ public class BoardResponse {
     private String title;
     private String description;
     private Visibility visibility;
-
+    private boolean isFavorite;
 
     public static BoardResponse from(BoardVo vo) {
         return BoardResponse.builder()
@@ -24,6 +24,7 @@ public class BoardResponse {
                 .title(vo.getTitle())
                 .description(vo.getDescription())
                 .visibility(vo.getVisibility())
+                .isFavorite(vo.isFavorite())
                 .build();
     }
 }

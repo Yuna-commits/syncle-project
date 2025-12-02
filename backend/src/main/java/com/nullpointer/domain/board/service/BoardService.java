@@ -33,4 +33,7 @@ public interface BoardService {
 
     //소속 멤버 보드 조회
     List<MemberBoardResponse> getMemberBoards(Long teamId, Long memberId, Long userId);
+    
+    // 즐겨찾기 토글
+    void toggleFavorite(Long boardId, Long userId);
 }
