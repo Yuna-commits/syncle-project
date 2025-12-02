@@ -1,5 +1,5 @@
 import React, { useEffect } from 'react'
-import useResetPasswordStore from '../../../stores/useResetPasswordStore'
+import useResetPasswordStore from '../../../stores/auth/useResetPasswordStore'
 import FormInput from '../../../components/common/FormInput'
 import FormButton from '../../../components/common/FormButton'
 

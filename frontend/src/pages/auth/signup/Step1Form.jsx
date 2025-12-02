@@ -1,10 +1,10 @@
 import React from 'react'
 import FormInput from '../../../components/common/FormInput'
 import FormButton from '../../../components/common/FormButton'
-import useSignUpStore from '../../../stores/useSignUpStore'
+import useSignUpStore from '../../../stores/auth/useSignUpStore'
 import { useNavigate } from 'react-router-dom'
 import { GoogleLogin } from '@react-oauth/google'
-import useSignInStore from '../../../stores/useSignInStore'
+import useSignInStore from '../../../stores/auth/useSignInStore'
 
 export default function Step1Form() {
   const navigate = useNavigate()

@@ -1,6 +1,6 @@
 import React, { useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
-import useSignUpStore from '../../../stores/useSignUpStore'
+import useSignUpStore from '../../../stores/auth/useSignUpStore'
 import FormInput from '../../../components/common/FormInput'
 import FormButton from '../../../components/common/FormButton'
 

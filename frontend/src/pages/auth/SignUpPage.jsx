@@ -1,6 +1,6 @@
 import React, { useEffect } from 'react'
 import { Link } from 'react-router-dom'
-import useSignUpStore from '../../stores/useSignUpStore'
+import useSignUpStore from '../../stores/auth/useSignUpStore'
 import Step1Form from './signup/Step1Form'
 import Step2Form from './signup/Step2Form'
 

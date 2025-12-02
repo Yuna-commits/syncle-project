@@ -1,6 +1,6 @@
 import React, { useEffect } from 'react'
 import { Link } from 'react-router-dom'
-import useResetPasswordStore from '../../stores/useResetPasswordStore'
+import useResetPasswordStore from '../../stores/auth/useResetPasswordStore'
 import Step1Email from './reset-password/Step1Email'
 import Step2Verify from './reset-password/Step2Verify'
 import Step3NewPassword from './reset-password/Step3NewPassword'

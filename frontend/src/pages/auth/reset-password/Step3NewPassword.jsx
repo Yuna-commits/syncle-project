@@ -1,6 +1,6 @@
 import React from 'react'
 import { useNavigate } from 'react-router-dom'
-import useResetPasswordStore from '../../../stores/useResetPasswordStore'
+import useResetPasswordStore from '../../../stores/auth/useResetPasswordStore'
 import FormInput from '../../../components/common/FormInput'
 import FormButton from '../../../components/common/FormButton'
 

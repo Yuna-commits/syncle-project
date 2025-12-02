@@ -1,5 +1,5 @@
 import { create } from 'zustand'
-import api from '../api/AxiosInterceptor'
+import api from '../../api/AxiosInterceptor'
 
 const useSignInStore = create((set, get) => ({
   // ==========================================

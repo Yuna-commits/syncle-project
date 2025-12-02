@@ -1,7 +1,7 @@
 import React, { useEffect } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import FormInput from '../../components/common/FormInput'
-import useSignInStore from '../../stores/useSignInStore'
+import useSignInStore from '../../stores/auth/useSignInStore'
 import FormButton from '../../components/common/FormButton'
 import { GoogleLogin } from '@react-oauth/google'
 
