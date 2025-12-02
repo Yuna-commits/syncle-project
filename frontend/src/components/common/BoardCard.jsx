@@ -1,8 +1,9 @@
-import React from 'react'
+import React, { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 
-function BoardCard({ id, imageUrl, title }) {
+function BoardCard({ id, imageUrl, title, isFavorite: initialIsFavorite }) {
   const navigate = useNavigate()
+  const [isFavorite, setIsFavorite] = useState(initialIsFavorite)
 
   const handleClick = () => {
     // 해당 보드 상세 페이지로 이동

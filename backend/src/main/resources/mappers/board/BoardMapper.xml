@@ -33,7 +33,9 @@
                b.id,
                b.title,
                b.description,
-               b.visibility
+               b.visibility,
+               EXISTS(SELECT 1 FROM board_favorite bf WHERE bf.board_id = b.id AND bf.user_id = #{id}) AS isFavorite
+
         FROM team t
                  INNER JOIN team_member tm ON t.id = tm.team_id
                  LEFT JOIN board b ON t.id = b.team_id AND b.deleted_at IS NULL
@@ -99,4 +101,28 @@
           AND b.deleted_at IS NULL
           AND (b.visibility = 'TEAM' OR bm.user_id IS NOT NULL)
     </select>
+
+    <!-- 보드 즐겨찾기 유무 확인 -->
+    <select id="existsFavorite" resultType="boolean">
+        SELECT COUNT(*) > 0
+        FROM board_favorite
+        WHERE board_id = #{boardId} AND user_id = #{userId}
+    </select>
+
+    <!-- 보드 즐겨찾기 추가 -->
+    <insert id="insertFavorite">
+        INSERT INTO board_favorite (board_id,
+                                    user_id,
+                                    created_at)
+        VALUES (#{boardId},
+                #{userId},
+                NOW())
+    </insert>
+
+    <!-- 보드 즐겨찾기 삭제 -->
+    <delete id="deleteFavorite">
+        DELETE FROM board_favorite
+        WHERE board_id = #{boardId} AND user_id = #{userId}
+    </delete>
+
 </mapper>

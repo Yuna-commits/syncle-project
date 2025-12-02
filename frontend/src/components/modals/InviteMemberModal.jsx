@@ -110,8 +110,8 @@ function InviteMemberModal({ teamId, currentMembers = [], onClose }) {
       })
 
       alert('초대되었습니다.')
-      onClose() // 모달 닫기
-      navigate(`/dashboard/teams/${teamId}/invitations`)
+      onClose()
+      navigate(`/teams/${teamId}/invitations`)
     } catch (error) {
       console.error('초대 실패:', error)
       alert(error.response?.data?.message || '초대에 실패했습니다.')

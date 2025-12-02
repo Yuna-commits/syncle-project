@@ -229,4 +229,24 @@ public class BoardServiceImpl implements BoardService {
                 .build());
     }
 
+    // 즐겨찾기 토글
+
+
+    @Override
+    @Transactional
+    public void toggleFavorite(Long boardId, Long userId) {
+
+        // 보드 존재 확인
+        boardVal.getValidBoard(boardId);
+
+        // 이미 즐겨찾기 되어있는지 확인
+        boolean exists = boardMapper.existsFavorite(boardId, userId);
+
+        // 상태에 따라 추가 삭제
+        if (exists) {
+            boardMapper.deleteFavorite(boardId, userId);
+        } else {
+            boardMapper.insertFavorite(boardId, userId);
+        }
+    }
 }

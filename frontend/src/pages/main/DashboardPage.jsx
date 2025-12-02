@@ -28,11 +28,12 @@ function DashboardPage() {
             id: cur.id,
             title: cur.title,
             imageUrl: cur.imageUrl,
+            isFaborite: cur.isFavorite,
           })
         }
         return acc
       }, {})
-
+      console.log('그룹화된 데이터:', groupedMap)
       setTeams(Object.values(groupedMap))
     } catch (error) {
       console.error('대시보드 조회 실패:', error)

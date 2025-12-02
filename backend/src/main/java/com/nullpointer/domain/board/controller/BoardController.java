@@ -107,4 +107,12 @@ public class BoardController {
                 .boardId(boardId).build();
     }
 
+    // 즐겨찾기 토글
+    @PostMapping("/boards/{boardId}/favorite")
+    public ApiResponse<String> toggleFavorite(@PathVariable Long boardId,
+                                              @LoginUser Long userId) {
+        boardService.toggleFavorite(boardId, userId);
+        return ApiResponse.success("즐겨찾기 상태 변경 완료");
+    }
+
 }
