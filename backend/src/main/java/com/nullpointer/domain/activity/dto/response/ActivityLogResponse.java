@@ -14,10 +14,10 @@ public class ActivityLogResponse {
      */
     private Long id;
     private String type;
-    private String title;
     private String description;
-    private String target;
+    private String targetName;
     private String boardTitle;
+    private String actorName;
     private LocalDateTime createdAt;
 
 }

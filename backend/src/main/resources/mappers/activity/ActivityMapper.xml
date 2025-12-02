@@ -63,11 +63,11 @@
     <select id="searchActivities" resultType="ActivityLogResponse">
         SELECT l.id,
         l.type,
-        l.target_name,
+        l.target_name AS targetName,
         l.description,
-        l.created_at,
-        u.nickname AS actor_name,
-        b.title AS board_title
+        l.created_at AS createdAt,
+        u.nickname AS actorName,
+        b.title AS boardTitle
         FROM activity_log l
         JOIN user u ON l.user_id = u.id
         LEFT JOIN board b ON l.board_id = b.id
