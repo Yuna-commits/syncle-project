@@ -38,6 +38,7 @@
                  INNER JOIN team_member tm ON t.id = tm.team_id
                  LEFT JOIN board b ON t.id = b.team_id AND b.deleted_at IS NULL
         WHERE tm.user_id = #{id}
+        AND t.deleted_at IS NULL
     </select>
 
     <!-- 특정 팀 보드 목록 조회 -->

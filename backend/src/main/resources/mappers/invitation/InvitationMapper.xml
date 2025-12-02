@@ -92,6 +92,6 @@
         UPDATE invitation
         SET status = 'EXPIRED'
         WHERE status = 'PENDING'
-        AND expried_at &lt; NOW();
+        AND expired_at &lt; NOW();
     </update>
 </mapper>

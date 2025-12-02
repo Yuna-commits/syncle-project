@@ -41,7 +41,7 @@
     </update>
 
     <!-- 팀 삭제 -->
-    <update id="DeleteTeam">
+    <update id="deleteTeam">
         UPDATE team
         SET deleted_at = NOW()
         WHERE id = #{id}

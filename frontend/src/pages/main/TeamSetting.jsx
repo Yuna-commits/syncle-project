@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
 import api from '../../api/AxiosInterceptor'
+import useTeamStore from '../../stores/useTeamStore'
 
 export default function TeamSetting() {
   const { teamId } = useParams()
@@ -9,6 +10,9 @@ export default function TeamSetting() {
   // 폼 데이터 상태
   const [teamName, setTeamName] = useState('')
   const [description, setDescription] = useState('')
+
+  // useTeamStore에서 팀 정보 불러오기
+  const { fetchTeams } = useTeamStore()
 
   // 권한 설정 상태 (초기값은 API에서 받아오거나 기본값 사용)
   const [boardCreatePermission, setBoardCreatePermission] = useState('member')
@@ -23,7 +27,6 @@ export default function TeamSetting() {
         // 받아온 데이터로 상태 초기화
         setTeamName(data.name)
         setDescription(data.description || '')
-        // 권한 설정 데이터가 있다면 여기서 set...
       } catch (error) {
         console.error('설정 불러오기 실패', error)
       }
@@ -34,26 +37,27 @@ export default function TeamSetting() {
   // 팀 정보 수정 핸들러
   const handleUpdateTeam = async () => {
     try {
-      await api.patch(`/teams/${teamId}`, {
+      await api.put(`/teams/${teamId}`, {
         name: teamName,
         description: description,
-        // permission settings...
       })
       alert('팀 정보가 수정되었습니다.')
+      fetchTeams() // 팀 목록 갱신
     } catch (error) {
-      alert('수정 실패')
+      alert(error.response?.data?.message || '팀 정보 수정 실패')
     }
   }
 
   // 팀 삭제 핸들러
   const handleDeleteTeam = async () => {
-    if (window.confirm('정말 이 팀을 삭제하시겠습니까? 복구할 수 없습니다.')) {
+    if (window.confirm('정말 이 팀을 삭제하시겠습니까?')) {
       try {
         await api.delete(`/teams/${teamId}`)
         alert('팀이 삭제되었습니다.')
+        fetchTeams() // 팀 목록 갱신
         navigate('/dashboard') // 삭제 후 대시보드로 이동
       } catch (error) {
-        alert('팀 삭제 실패')
+        alert(error.response?.data?.message || '팀 삭제 실패')
       }
     }
   }

@@ -6,12 +6,26 @@ function SidebarTeamItem({ team, isSelected, onToggle }) {
   const tId = team.id
   const tName = team.name
 
+  // 현재 URL이 이 팀의 경로에 속해 있는지 확인
+  const isTeamActive = location.pathname.startsWith(`/teams/${tId}`)
+
+  const teamHeaderClass =
+    !isSelected && isTeamActive
+      ? 'bg-blue-50 text-blue-700 font-semibold'
+      : 'text-gray-500 hover:bg-gray-50 hover:text-gray-900'
+
+  const isActive = (path) => {
+    return window.location.pathname.startsWith(path)
+      ? 'bg-blue-50 text-blue-700 font-semibold' // 활성화 스타일
+      : 'text-gray-500 hover:bg-gray-50 hover:text-gray-900' // 비활성화 스타일
+  }
+
   return (
     <div>
       {/* 팀 헤더 버튼 */}
       <button
         onClick={() => onToggle(tId)}
-        className="flex w-full items-center justify-between rounded-md px-3 py-2 text-gray-700 transition-colors hover:bg-gray-100"
+        className={`flex w-full items-center justify-between rounded-md px-3 py-2 text-gray-700 transition-colors ${teamHeaderClass}`}
       >
         <div className="flex items-center gap-2 overflow-hidden">
           <span className="flex h-5 w-5 shrink-0 items-center justify-center rounded bg-indigo-500 text-[10px] font-bold text-white">
@@ -42,26 +56,26 @@ function SidebarTeamItem({ team, isSelected, onToggle }) {
       {isSelected && (
         <div className="mt-1 ml-9 space-y-1">
           <Link
-            to={`/dashboard/teams/${tId}/boards`}
-            className="block rounded-md px-2 py-1.5 text-sm text-gray-500 hover:bg-gray-50 hover:text-gray-900"
+            to={`/teams/${tId}/boards`}
+            className={`block rounded-md px-2 py-1.5 text-sm ${isActive('/teams/' + tId + '/boards')}`}
           >
             - 보드
           </Link>
           <Link
-            to={`/dashboard/teams/${tId}/members`}
-            className="block rounded-md px-2 py-1.5 text-sm text-gray-500 hover:bg-gray-50 hover:text-gray-900"
+            to={`/teams/${tId}/members`}
+            className={`block rounded-md px-2 py-1.5 text-sm ${isActive('/teams/' + tId + '/members')}`}
           >
             - 팀 멤버
           </Link>
           <Link
-            to={`/dashboard/teams/${tId}/invitations`}
-            className="block rounded-md px-2 py-1.5 text-sm text-gray-500 hover:bg-gray-50 hover:text-gray-900"
+            to={`/teams/${tId}/invitations`}
+            className={`block rounded-md px-2 py-1.5 text-sm ${isActive('/teams/' + tId + '/invitations')}`}
           >
             - 초대 목록
           </Link>
           <Link
-            to={`/dashboard/teams/${tId}/settings`}
-            className="block rounded-md px-2 py-1.5 text-sm text-gray-500 hover:bg-gray-50 hover:text-gray-900"
+            to={`/teams/${tId}/settings`}
+            className={`block rounded-md px-2 py-1.5 text-sm ${isActive('/teams/' + tId + '/settings')}`}
           >
             - 설정
           </Link>

@@ -1,32 +1,17 @@
 import React, { useEffect, useState } from 'react'
 import { Link, useLocation } from 'react-router-dom'
-import api from '../../api/AxiosInterceptor'
 import SidebarTeamItem from '../sidebar/SidebarTeamItem'
+import useTeamStore from '../../stores/useTeamStore'
 
 function Sidebar() {
   const location = useLocation()
-  const [teams, setTeams] = useState([])
-  const [selectedTeam, setSelectedTeam] = useState(null)
+  const { teams, fetchTeams } = useTeamStore()
+  const [selectedTeam, setSelectedTeam] = useState({})
 
   // 팀 목록 불러오기
   useEffect(() => {
-    const fetchTeams = async () => {
-      try {
-        const response = await api.get('/teams')
-        const data = response.data.data
-        console.log('팀 목록:', data)
-        setTeams(data)
-
-        if (data.length > 0) {
-          setSelectedTeam(data[0])
-        }
-      } catch (error) {
-        console.error('팀 조회 실패', error)
-      }
-    }
-
     fetchTeams()
-  }, [])
+  }, [fetchTeams])
 
   // 팀 메뉴 토글
   const toggleTeam = (teamId) => {

@@ -4,11 +4,12 @@ import AuthRoutes from './AuthRoutes'
 import ProfileRoutes from './ProfileRoutes'
 import NotificationPage from '../pages/main/NotificationPage'
 import MainLayout from '../layouts/MainLayout'
-import DashboardRoutes from './DashboardRoutes'
 import BoardRoutes from './BoardRoutes'
 import CalendarPage from '../pages/main/CalendarPage'
 import PublicRoute from './PublicRoute'
 import ProtectedRoute from './ProtectedRoute'
+import TeamRoutes from './TeamRoutes'
+import DashboardPage from '../pages/main/DashboardPage'
 
 export default function AppRoutes() {
   return (
@@ -29,9 +30,12 @@ export default function AppRoutes() {
         <Route path="/" element={<Navigate to="/dashboard" replace />} />
         {/* 메인(대시보드) */}
         <Route element={<MainLayout />}>
-          <Route path="/dashboard/*" element={<DashboardRoutes />} />
+          <Route path="/dashboard/*" element={<DashboardPage />} />
           <Route path="/notifications/*" element={<NotificationPage />} />
           <Route path="/calendar/*" element={<CalendarPage />} />
+
+          {/* 팀 관련 라우트 */}
+          <Route path="/teams/*" element={<TeamRoutes />} />
         </Route>
         {/* 프로필 */}
         <Route path="/profile/*" element={<ProfileRoutes />} />
