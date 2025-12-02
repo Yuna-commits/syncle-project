@@ -5,6 +5,8 @@ import com.nullpointer.domain.board.vo.enums.Visibility;
 import lombok.Builder;
 import lombok.Getter;
 
+import java.time.LocalDateTime;
+
 @Getter
 @Builder
 public class BoardResponse {
@@ -15,6 +17,7 @@ public class BoardResponse {
     private String description;
     private Visibility visibility;
     private Boolean isFavorite;
+    private LocalDateTime favoritedAt;
 
     public static BoardResponse from(BoardVo vo) {
         return BoardResponse.builder()
@@ -25,6 +28,7 @@ public class BoardResponse {
                 .description(vo.getDescription())
                 .visibility(vo.getVisibility())
                 .isFavorite(vo.getIsFavorite())
+                .favoritedAt(vo.getFavoritedAt())
                 .build();
     }
 }

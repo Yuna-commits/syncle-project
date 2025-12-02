@@ -17,7 +17,7 @@ function DashboardPage() {
       // 즐겨찾기 목록 필터링
       const favBoards = rawData
         .filter((board) => board.isFavorite)
-        .sort((a, b) => new Date(a.createdAt) - new Date(b.createdAt)) // 최신순 정렬
+        .sort((a, b) => new Date(a.favoritedAt) - new Date(b.favoritedAt)) // 최신순 정렬
         .map((board) => ({
           id: board.id,
           title: board.title,
