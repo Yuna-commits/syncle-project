@@ -118,7 +118,7 @@ public class BoardController {
 
     // 보드 (리스트+카드) 뷰 조회
     @GetMapping("/boards/{boardId}/view")
-    public ApiResponse<BoardViewResponse> getBoardView(@PathVariable Long boardId) {
-        return ApiResponse.success(boardService.getBoardView(boardId));
+    public ApiResponse<BoardViewResponse> getBoardView(@PathVariable Long boardId, @LoginUser Long userId) {
+        return ApiResponse.success(boardService.getBoardView(boardId, userId));
     }
 }

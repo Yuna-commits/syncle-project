@@ -244,7 +244,7 @@ public class BoardServiceImpl implements BoardService {
     // 보드(리스트 + 카드) 조회
     @Override
     @Transactional(readOnly = true)
-    public BoardViewResponse getBoardView(Long boardId) {
+    public BoardViewResponse getBoardView(Long boardId, Long userId) {
         // 보드 정보 조회
         BoardVo boardVo = boardVal.getValidBoard(boardId);
 
@@ -265,6 +265,10 @@ public class BoardServiceImpl implements BoardService {
 
         // 팀 멤버 조회
         List<TeamMemberResponse> teamMembers = teamMemberMapper.findMembersByTeamId(boardVo.getTeamId());
-        return BoardViewResponse.of(boardVo, listResponse, boardMembers, teamMembers);
+
+        // 현재 유저가 이 보드를 즐겨찾기 했는지 확인
+        boolean isFavorite = boardMapper.existsFavorite(boardId, userId);
+
+        return BoardViewResponse.of(boardVo, listResponse, boardMembers, teamMembers, isFavorite);
     }
 }

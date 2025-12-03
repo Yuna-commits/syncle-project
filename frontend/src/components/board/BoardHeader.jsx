@@ -3,7 +3,7 @@ import useBoardStore from '../../stores/useBoardStore'
 import { Link } from 'react-router-dom'
 
 function BoardHeader({ board }) {
-  const { toggleSettings } = useBoardStore()
+  const { toggleSettings, toggleFavorite } = useBoardStore()
 
   const teamName = board.teamName
   const teamInitial = teamName.substring(0, 1).toUpperCase()
@@ -14,7 +14,7 @@ function BoardHeader({ board }) {
       <div className="flex items-center gap-4">
         {/* 팀 아이콘 클릭 시 팀 페이지로 이동 */}
         <Link
-          to={`/teams/${board.teamId}/board`}
+          to={`/teams/${board.teamId}/boards`}
           className="group flex items-center gap-2 rounded-md transition-opacity hover:opacity-80"
           title={`${teamName} 팀 페이지로 이동`}
         >
@@ -27,14 +27,23 @@ function BoardHeader({ board }) {
         <div className="flex items-center gap-2">
           <h1 className="text-lg font-bold text-gray-800">{board.name}</h1>
 
-          <button className="text-gray-400 hover:text-yellow-400 focus:outline-none">
+          <button
+            onClick={toggleFavorite}
+            className={`transition-colors hover:cursor-pointer focus:outline-none ${
+              board.isFavorite
+                ? 'text-yellow-500 hover:text-yellow-600' // 활성화: 노란색
+                : 'text-gray-300 hover:text-yellow-500' // 비활성화: 회색 -> 호버 시 노랑
+            }`}
+            title={board.isFavorite ? '즐겨찾기 해제' : '즐겨찾기 추가'}
+          >
             <svg
               xmlns="http://www.w3.org/2000/svg"
-              fill="none"
+              // isFavorite이면 속 채우기(fill), 아니면 선만(none)
+              fill={board.isFavorite ? 'currentColor' : 'none'}
               viewBox="0 0 24 24"
               strokeWidth={1.5}
               stroke="currentColor"
-              className="h-5 w-5"
+              className="h-6 w-6"
             >
               <path
                 strokeLinecap="round"

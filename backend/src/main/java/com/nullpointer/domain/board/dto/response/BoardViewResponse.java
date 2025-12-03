@@ -30,10 +30,14 @@ public class BoardViewResponse {
     private List<BoardMemberResponse> boardMembers;
     private List<TeamMemberResponse> teamMembers;
 
+    // 로그인한 사용자의 즐겨찾기 여부
+    private Boolean isFavorite;
+
     public static BoardViewResponse of(BoardVo board,
                                        List<ListWithCardsResponse> lists,
                                        List<BoardMemberResponse> boardMembers,
-                                       List<TeamMemberResponse> teamMembers) {
+                                       List<TeamMemberResponse> teamMembers,
+                                       boolean isFavorite) {
         return BoardViewResponse.builder()
                 .id(board.getId())
                 .title(board.getTitle())
@@ -44,6 +48,7 @@ public class BoardViewResponse {
                 .lists(lists != null ? lists : new ArrayList<>())
                 .boardMembers(boardMembers)
                 .teamMembers(teamMembers)
+                .isFavorite(isFavorite)
                 .build();
     }
 }

@@ -49,6 +49,29 @@ const useBoardStore = create((set, get) => ({
    * === API 액션 ===
    */
 
+  // 즐겨찾기 토글
+  toggleFavorite: async () => {
+    const { activeBoard } = get()
+    if (!activeBoard) return
+
+    // 낙관적 업데이트 : API 응답 기다리지 않고 UI 먼저 변경
+    const previousState = activeBoard.isFavorite
+    set({
+      activeBoard: { ...activeBoard, isFavorite: !previousState },
+    })
+
+    try {
+      // API 호출 /boards/{boardId}/favorite
+      await api.post(`/boards/${activeBoard.id}/favorite`)
+    } catch (error) {
+      // 실패 시 롤백
+      set({ activeBoard: { ...activeBoard, isFavorite: previousState } })
+      if (error.response?.data?.errorCode === 'FAVORITE_LIMIT_EXCEEDED') {
+        alert('즐겨찾기는 최대 4개까지만 가능합니다.')
+      }
+    }
+  },
+
   // 보드 상세 정보 가져오기
   fetchBoard: async (boardId) => {
     set({ isLoading: true, error: null })
@@ -228,6 +251,7 @@ const normalizeBoardData = (dto) => {
   return {
     id: dto.id,
     name: dto.title, // title -> name
+    isFavorite: dto.isFavorite,
     description: dto.description,
     visibility: dto.visibility, // "PUBLIC" or "TEAM"
 
