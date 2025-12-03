@@ -38,6 +38,6 @@ public interface BoardService {
     // 즐겨찾기 토글
     void toggleFavorite(Long boardId, Long userId);
 
-    // 보드(리스트 + 카드) 조회
+    // 보드(리스트 + 카드 + 멤버) 조회
     BoardViewResponse getBoardView(Long boardId);
 }
