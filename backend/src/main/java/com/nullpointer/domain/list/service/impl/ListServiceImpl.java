@@ -25,18 +25,6 @@ public class ListServiceImpl implements ListService {
         this.listMapper = listMapper;
     }
 
-    // ---------------------- 공통 유틸 ----------------------
-
-    /**
-     * role 값이 OWNER 또는 MEMBER 인지 검증.
-     * 아니면 IllegalArgumentException 던짐.
-     */
-    private void validateRole(String role) {
-        if (role == null || (!"OWNER".equals(role) && !"MEMBER".equals(role))) {
-            throw new IllegalArgumentException("role 은 OWNER 또는 MEMBER 만 가능합니다.");
-        }
-    }
-
     // ---------------------- 생성 ----------------------
 
     @Override
@@ -99,8 +87,6 @@ public class ListServiceImpl implements ListService {
     @Override
     @Transactional
     public void updateList(Long listId, UpdateListRequest request) {
-        // role 이 OWNER 또는 MEMBER 인지 검증
-        validateRole(request.getRole());
 
         ListVo vo = new ListVo();
         vo.setId(listId);

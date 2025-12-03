@@ -2,6 +2,7 @@ package com.nullpointer.domain.list.controller;
 
 import com.nullpointer.domain.list.dto.UpdateListRequest;
 import com.nullpointer.domain.list.service.ListService;
+import com.nullpointer.global.common.ApiResponse;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
@@ -24,20 +25,20 @@ public class ListManageController {
 
     // 리스트 정보 수정
     @PutMapping("/api/lists/{listId}")
-    public ResponseEntity<Void> updateList(
+    public ApiResponse<String> updateList(
             @PathVariable("listId") Long listId,
             @RequestBody UpdateListRequest request
     ) {
         listService.updateList(listId, request);
-        return ResponseEntity.noContent().build();
+        return ApiResponse.success("리스트 수정 성공");
     }
 
     // 리스트 삭제 (soft delete)
     @DeleteMapping("/api/lists/{listId}")
-    public ResponseEntity<Void> deleteList(
+    public ApiResponse<String> deleteList(
             @PathVariable("listId") Long listId
     ) {
         listService.deleteList(listId);
-        return ResponseEntity.noContent().build();
+        return ApiResponse.success("리스트 삭제 성공");
     }
 }
