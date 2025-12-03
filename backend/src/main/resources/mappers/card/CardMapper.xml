@@ -22,14 +22,13 @@
         - order_index 오름차순
     -->
     <select id="findByListId"
-            parameterType="long"
+            parameterType="Long"
             resultType="com.nullpointer.domain.card.vo.CardVo">
-        SELECT
-            id,
-            list_id,
-            title,
-            description,
-            order_index AS orderIndex
+        SELECT id,
+               list_id,
+               title,
+               description,
+               order_index AS orderIndex
         FROM card
         WHERE list_id = #{listId}
           AND deleted_at IS NULL
