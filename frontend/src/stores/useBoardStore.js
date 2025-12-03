@@ -192,23 +192,22 @@ const useBoardStore = create((set, get) => ({
     }))
   },
 
-  /**
-   * TODO) 카드 상세 정보 수정
-   */
+  // 카드 상세 정보 수정
   updateCardDescription: (description) => {
+    // 현재 표시된 보드와 선택된 카드 정보, 위치 가져오기
     const { boards, activeBoardId, selectedCard, selectedCardColumnId } = get()
     if (!selectedCard) return
 
     const board = boards[activeBoardId]
-    const column = board.columns[selectedCardColumnId]
+    const column = board.columns[selectedCardColumnId] // 선택된 카드가 위치한 리스트
     const tasks = column.tasks.map((t) =>
       t.id === selectedCard.id ? { ...t, description } : t,
-    )
+    ) // 수정한 내용이 반영된 새로운 카드 목록
 
     const newColumns = {
       ...board.columns,
       [selectedCardColumnId]: { ...column, tasks },
-    }
+    } // 수정된 리스트가 포함된 전체 리스트
 
     set({
       boards: { ...boards, [activeBoardId]: { ...board, columns: newColumns } },
@@ -258,6 +257,7 @@ const useBoardStore = create((set, get) => ({
      */
   },
 
+  // 5. 카드 상세 정보에서 리스트 이동
   moveCardFromModal: (newColumnId) => {
     const {
       selectedCard,
@@ -266,6 +266,7 @@ const useBoardStore = create((set, get) => ({
       boards,
       activeBoardId,
     } = get()
+
     if (!selectedCard || newColumnId === selectedCardColumnId) return
 
     const board = boards[activeBoardId]
@@ -347,8 +348,10 @@ const useBoardStore = create((set, get) => ({
   // 아카이브에서 카드 삭제
   deleteArchivedCard: (cardId) => {
     if (!window.confirm('영구 삭제하시겠습니까?')) return
+
     const { boards, activeBoardId } = get()
     const board = boards[activeBoardId]
+    // 삭제할 카드를 제외한 나머지 카드 목록
     const newCards = board.archive.cards.filter((c) => c.id !== cardId)
 
     set({
@@ -424,7 +427,7 @@ const useBoardStore = create((set, get) => ({
     if (!selectedCard) return
 
     const lists = cardChecklists[selectedCard.id] || []
-    if (lists.length === 0) return // 체크리스트가 없으면 추가 불가
+    if (lists.length === 0) return // 리스트가 없으면 추가 불가
 
     const newItem = { id: `item-${Date.now()}`, text, done: false }
     const updatedLists = [...lists]

@@ -77,6 +77,7 @@ function BoardList({ column, innerRef }) {
               }
             }}
           />
+
           <div className="mt-1 flex items-center gap-2">
             <button
               type="submit"

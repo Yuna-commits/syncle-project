@@ -1,10 +1,10 @@
 import React, { useEffect, useRef } from 'react'
 import Sortable from 'sortablejs'
 import useBoardStore from '../../stores/useBoardStore'
-import BoardHeader from './BoardHeader'
-import BoardCanvas from './BoardCanvas'
-import BoardSettings from './BoardSettings'
-import CardDetailModal from './CardDetailModal'
+import BoardHeader from '../../components/board/BoardHeader'
+import BoardCanvas from '../../components/board/BoardCanvas'
+import BoardSettings from '../../components/modals/BoardSettings'
+import CardDetailModal from '../../components/modals/CardDetailModal'
 
 /**
  * 보드 데이터 로딩,

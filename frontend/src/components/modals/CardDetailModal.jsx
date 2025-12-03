@@ -17,7 +17,7 @@ export default function CardDetailModal() {
     selectedCardColumnId,
     boards,
     activeBoardId,
-  } = useBoardStore
+  } = useBoardStore()
 
   const [commentText, setCommentText] = useState('')
   const [checklistText, setChecklistText] = useState('')
