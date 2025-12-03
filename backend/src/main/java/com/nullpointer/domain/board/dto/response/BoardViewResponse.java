@@ -3,6 +3,8 @@ package com.nullpointer.domain.board.dto.response;
 import com.nullpointer.domain.board.vo.BoardVo;
 import com.nullpointer.domain.board.vo.enums.Visibility;
 import com.nullpointer.domain.list.dto.ListWithCardsResponse;
+import com.nullpointer.domain.member.dto.board.BoardMemberResponse;
+import com.nullpointer.domain.member.dto.team.TeamMemberResponse;
 import lombok.Builder;
 import lombok.Getter;
 
@@ -19,13 +21,22 @@ public class BoardViewResponse {
     // 리스트 목록 (카드 포함)
     private List<ListWithCardsResponse> lists;
 
-    public static BoardViewResponse of(BoardVo board, List<ListWithCardsResponse> lists) {
+    // 멤버 정보
+    private List<BoardMemberResponse> boardMembers;
+    private List<TeamMemberResponse> teamMembers;
+
+    public static BoardViewResponse of(BoardVo board,
+                                       List<ListWithCardsResponse> lists,
+                                       List<BoardMemberResponse> boardMembers,
+                                       List<TeamMemberResponse> teamMembers) {
         return BoardViewResponse.builder()
                 .id(board.getId())
                 .title(board.getTitle())
                 .description(board.getDescription())
                 .visibility(board.getVisibility())
                 .lists(lists)
+                .boardMembers(boardMembers)
+                .teamMembers(teamMembers)
                 .build();
     }
 }

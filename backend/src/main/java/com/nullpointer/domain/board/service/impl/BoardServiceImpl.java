@@ -19,7 +19,10 @@ import com.nullpointer.domain.card.vo.CardVo;
 import com.nullpointer.domain.list.dto.ListWithCardsResponse;
 import com.nullpointer.domain.list.mapper.ListMapper;
 import com.nullpointer.domain.list.vo.ListVo;
+import com.nullpointer.domain.member.dto.board.BoardMemberResponse;
+import com.nullpointer.domain.member.dto.team.TeamMemberResponse;
 import com.nullpointer.domain.member.mapper.BoardMemberMapper;
+import com.nullpointer.domain.member.mapper.TeamMemberMapper;
 import com.nullpointer.domain.member.vo.BoardMemberVo;
 import com.nullpointer.domain.member.vo.enums.Role;
 import com.nullpointer.global.common.enums.ErrorCode;
@@ -47,6 +50,7 @@ public class BoardServiceImpl implements BoardService {
     private final ListMapper listMapper;
     private final ActivityService activityService;
     private final CardMapper cardMapper;
+    private final TeamMemberMapper teamMemberMapper;
 
     @Override
     @Transactional
@@ -259,6 +263,12 @@ public class BoardServiceImpl implements BoardService {
             return ListWithCardsResponse.of(list, cardResponses);
 
         }).toList();
-        return BoardViewResponse.of(boardVo, listResponse);
+
+        // 보드 멤버 조회
+        List<BoardMemberResponse> boardMembers = boardMemberMapper.findMembersByBoardId(boardId);
+
+        // 팀 멤버 조회
+        List<TeamMemberResponse> teamMembers = teamMemberMapper.findMembersByTeamId(boardVo.getTeamId());
+        return BoardViewResponse.of(boardVo, listResponse, boardMembers, teamMembers);
     }
 }
