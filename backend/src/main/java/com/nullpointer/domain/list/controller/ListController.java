@@ -4,6 +4,7 @@ import com.nullpointer.domain.list.dto.CreateListRequest;
 import com.nullpointer.domain.list.dto.ListResponse;
 import com.nullpointer.domain.list.dto.UpdateListOrderRequest;
 import com.nullpointer.domain.list.service.ListService;
+import com.nullpointer.global.common.ApiResponse;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -29,30 +30,29 @@ public class ListController {
 
     // 리스트 생성
     @PostMapping
-    public ResponseEntity<ListResponse> createList(
+    public ApiResponse<String> createList(
             @PathVariable("boardId") Long boardId,
             @RequestBody CreateListRequest request
     ) {
-        ListResponse response = listService.createList(boardId, request);
-        return ResponseEntity.status(HttpStatus.CREATED).body(response);
+        listService.createList(boardId, request);
+        return ApiResponse.success("리스트 생성 성공");
     }
 
     // 리스트 목록 조회
     @GetMapping
-    public ResponseEntity<List<ListResponse>> getLists(
+    public ApiResponse<List<ListResponse>> getLists(
             @PathVariable("boardId") Long boardId
     ) {
-        List<ListResponse> lists = listService.getLists(boardId);
-        return ResponseEntity.ok(lists);
+        return ApiResponse.success(listService.getLists(boardId));
     }
 
     // 여러 리스트 순서 변경
     @PutMapping("/order")
-    public ResponseEntity<Void> updateListOrders(
+    public ApiResponse<String> updateListOrders(
             @PathVariable("boardId") Long boardId,
             @RequestBody UpdateListOrderRequest request
     ) {
         listService.updateListOrders(boardId, request);
-        return ResponseEntity.noContent().build();
+        return ApiResponse.success("리스트 순서 변경");
     }
 }
