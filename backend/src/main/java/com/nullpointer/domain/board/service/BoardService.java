@@ -4,6 +4,7 @@ import com.nullpointer.domain.board.dto.request.CreateBoardRequest;
 import com.nullpointer.domain.board.dto.request.UpdateBoardRequest;
 import com.nullpointer.domain.board.dto.response.BoardDetailResponse;
 import com.nullpointer.domain.board.dto.response.BoardResponse;
+import com.nullpointer.domain.board.dto.response.BoardViewResponse;
 import com.nullpointer.domain.board.dto.response.MemberBoardResponse;
 
 import java.util.List;
@@ -36,4 +37,7 @@ public interface BoardService {
     
     // 즐겨찾기 토글
     void toggleFavorite(Long boardId, Long userId);
+
+    // 보드(리스트 + 카드) 조회
+    BoardViewResponse getBoardView(Long boardId);
 }

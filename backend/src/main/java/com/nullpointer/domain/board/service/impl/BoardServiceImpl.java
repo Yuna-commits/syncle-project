@@ -7,11 +7,16 @@ import com.nullpointer.domain.board.dto.request.CreateBoardRequest;
 import com.nullpointer.domain.board.dto.request.UpdateBoardRequest;
 import com.nullpointer.domain.board.dto.response.BoardDetailResponse;
 import com.nullpointer.domain.board.dto.response.BoardResponse;
+import com.nullpointer.domain.board.dto.response.BoardViewResponse;
 import com.nullpointer.domain.board.dto.response.MemberBoardResponse;
 import com.nullpointer.domain.board.mapper.BoardMapper;
 import com.nullpointer.domain.board.service.BoardService;
 import com.nullpointer.domain.board.vo.BoardVo;
 import com.nullpointer.domain.board.vo.enums.Visibility;
+import com.nullpointer.domain.card.dto.CardResponse;
+import com.nullpointer.domain.card.mapper.CardMapper;
+import com.nullpointer.domain.card.vo.CardVo;
+import com.nullpointer.domain.list.dto.ListWithCardsResponse;
 import com.nullpointer.domain.list.mapper.ListMapper;
 import com.nullpointer.domain.list.vo.ListVo;
 import com.nullpointer.domain.member.mapper.BoardMemberMapper;
@@ -41,6 +46,7 @@ public class BoardServiceImpl implements BoardService {
     private final BoardValidator boardVal;
     private final ListMapper listMapper;
     private final ActivityService activityService;
+    private final CardMapper cardMapper;
 
     @Override
     @Transactional
@@ -99,14 +105,14 @@ public class BoardServiceImpl implements BoardService {
         listMapper.insertList(createDefaultList(boardId, "In Progress", 2));
         listMapper.insertList(createDefaultList(boardId, "Done", 3));
     }
-    
+
     // 내 보드 조회
     @Override
     public List<BoardResponse> getMyBoards(Long userId) {
         List<BoardVo> boards = boardMapper.findBoardByUserId(userId);
         return boards.stream().map(BoardResponse::from).toList();
     }
-    
+
     // 특정 팀 보드 조회
     @Override
     public List<BoardResponse> getTeamBoards(Long teamId, Long userId) {
@@ -194,41 +200,17 @@ public class BoardServiceImpl implements BoardService {
 
     // 보드 생성 로그
     private void createBoardLog(Long userId, Long teamId, BoardVo board) {
-        activityService.saveLog(ActivitySaveRequest.builder()
-                .userId(userId)
-                .teamId(teamId)
-                .boardId(board.getId())
-                .type(ActivityType.CREATE_BOARD)
-                .targetId(board.getId())
-                .targetName(board.getTitle())
-                .description("보드가 생성되었습니다.")
-                .build());
+        activityService.saveLog(ActivitySaveRequest.builder().userId(userId).teamId(teamId).boardId(board.getId()).type(ActivityType.CREATE_BOARD).targetId(board.getId()).targetName(board.getTitle()).description("보드가 생성되었습니다.").build());
     }
 
     // 보드 수정 로그
     private void updateBoardLog(Long userId, Long teamId, BoardVo board) {
-        activityService.saveLog(ActivitySaveRequest.builder()
-                .userId(userId)
-                .teamId(teamId)
-                .boardId(board.getId())
-                .type(ActivityType.UPDATE_BOARD)
-                .targetId(board.getId())
-                .targetName(board.getTitle())
-                .description("보드 설정을 변경했습니다.")
-                .build());
+        activityService.saveLog(ActivitySaveRequest.builder().userId(userId).teamId(teamId).boardId(board.getId()).type(ActivityType.UPDATE_BOARD).targetId(board.getId()).targetName(board.getTitle()).description("보드 설정을 변경했습니다.").build());
     }
 
     // 보드 삭제 로그
     private void deleteBoardLog(Long userId, Long teamId, Long boardId, String boardTitle) {
-        activityService.saveLog(ActivitySaveRequest.builder()
-                .userId(userId)
-                .teamId(teamId)
-                .boardId(boardId)
-                .type(ActivityType.DELETE_BOARD)
-                .targetId(boardId)
-                .targetName(boardTitle)
-                .description("보드를 삭제했습니다.")
-                .build());
+        activityService.saveLog(ActivitySaveRequest.builder().userId(userId).teamId(teamId).boardId(boardId).type(ActivityType.DELETE_BOARD).targetId(boardId).targetName(boardTitle).description("보드를 삭제했습니다.").build());
     }
 
     // 즐겨찾기 토글
@@ -254,5 +236,29 @@ public class BoardServiceImpl implements BoardService {
         } else {
             boardMapper.insertFavorite(boardId, userId);
         }
+    }
+
+    // 보드(리스트 + 카드) 조회
+    @Override
+    @Transactional(readOnly = true)
+    public BoardViewResponse getBoardView(Long boardId) {
+        // 보드 정보 조회
+        BoardVo boardVo = boardVal.getValidBoard(boardId);
+
+        // 리스트 목록 조회
+        List<ListVo> lists = listMapper.findByBoardId(boardId);
+
+        // 리스트 별 카드 조회
+        List<ListWithCardsResponse> listResponse = lists.stream().map(list -> {
+            List<CardVo> cards = cardMapper.findByListId(list.getId());
+
+            // CardVo -> CardResponse 변환
+            List<CardResponse> cardResponses = cards.stream().map(CardResponse::from).toList();
+
+            // ListVo + CardResponses -> ListWithCardsResponse 변환
+            return ListWithCardsResponse.of(list, cardResponses);
+
+        }).toList();
+        return BoardViewResponse.of(boardVo, listResponse);
     }
 }

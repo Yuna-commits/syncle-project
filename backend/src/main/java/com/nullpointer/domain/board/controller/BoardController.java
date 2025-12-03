@@ -8,6 +8,7 @@ import com.nullpointer.domain.board.dto.request.CreateBoardRequest;
 import com.nullpointer.domain.board.dto.request.UpdateBoardRequest;
 import com.nullpointer.domain.board.dto.response.BoardDetailResponse;
 import com.nullpointer.domain.board.dto.response.BoardResponse;
+import com.nullpointer.domain.board.dto.response.BoardViewResponse;
 import com.nullpointer.domain.board.dto.response.MemberBoardResponse;
 import com.nullpointer.domain.board.service.BoardService;
 import com.nullpointer.global.common.ApiResponse;
@@ -115,4 +116,9 @@ public class BoardController {
         return ApiResponse.success("즐겨찾기 상태 변경 완료");
     }
 
+    // 보드 (리스트+카드) 뷰 조회
+    @GetMapping("/boards/{boardId}/view")
+    public ApiResponse<BoardViewResponse> getBoardView(@PathVariable Long boardId) {
+        return ApiResponse.success(boardService.getBoardView(boardId));
+    }
 }
