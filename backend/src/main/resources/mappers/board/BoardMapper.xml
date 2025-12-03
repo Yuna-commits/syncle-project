@@ -28,8 +28,8 @@
 
     <!-- 내 보드 목록 조회-->
     <select id="findBoardByUserId" parameterType="Long" resultType="BoardVo">
-        SELECT t.id   AS teamId,
-               t.name AS teamName,
+        SELECT t.id                      AS teamId,
+               t.name                    AS teamName,
                b.id,
                b.title,
                b.description,
@@ -58,14 +58,16 @@
 
     <!-- 보드 상세 조회 -->
     <select id="findBoardByBoardId" parameterType="Long" resultType="BoardVo">
-        SELECT id,
-               team_id,
-               title,
-               description,
-               visibility
-        FROM board
-        WHERE id = #{id}
-          AND deleted_at IS NULL
+        SELECT b.id,
+               b.team_id AS teamId,
+               t.name    AS teamName,
+               b.title,
+               b.description,
+               b.visibility
+        FROM board b
+                 LEFT JOIN team t ON b.team_id = t.id
+        WHERE b.id = #{id}
+          AND b.deleted_at IS NULL
     </select>
 
     <!-- 보드 정보 수정 -->
@@ -116,7 +118,8 @@
     <select id="existsFavorite" resultType="boolean">
         SELECT COUNT(*) > 0
         FROM board_favorite
-        WHERE board_id = #{boardId} AND user_id = #{userId}
+        WHERE board_id = #{boardId}
+          AND user_id = #{userId}
     </select>
 
     <!-- 보드 즐겨찾기 추가 -->
@@ -131,8 +134,10 @@
 
     <!-- 보드 즐겨찾기 삭제 -->
     <delete id="deleteFavorite">
-        DELETE FROM board_favorite
-        WHERE board_id = #{boardId} AND user_id = #{userId}
+        DELETE
+        FROM board_favorite
+        WHERE board_id = #{boardId}
+          AND user_id = #{userId}
     </delete>
 
 </mapper>

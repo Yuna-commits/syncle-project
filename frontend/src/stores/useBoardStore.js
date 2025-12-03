@@ -64,6 +64,8 @@ const useBoardStore = create((set, get) => ({
       // 백엔드 데이터를 프론트엔드 구조로 변환
       const formattedData = normalizeBoardData(serverData)
 
+      console.log('보드 데이터: ', formattedData)
+
       // 3. 상태 업데이트
       set({ activeBoard: formattedData })
     } catch (error) {
@@ -82,63 +84,71 @@ const useBoardStore = create((set, get) => ({
 // 백엔드: List<ListWithCardsResponse> -> 프론트: columns { id: { ... } }
 const normalizeBoardData = (dto) => {
   if (!dto) {
-    console.error('dto is null or undefined')
     return null
   }
 
   const columns = {}
 
-  if (dto.lists && Array.isArray(dto.lists)) {
-    dto.lists.forEach((list) => {
-      columns[list.id] = {
-        id: list.id,
-        title: list.title,
-        order: list.orderIndex, // (백엔드에 순서 필드가 있다면)
+  const serverLists = dto.lists || []
 
-        // 2. 카드(Card) 매핑
-        tasks: (list.cards || []).map((card) => ({
-          id: card.id,
-          title: card.title,
-          description: card.description,
-          variant: 'solid',
-          assignee: card.assigneeName || '이름없음',
-          dueDate: card.dueDate,
-          commentCount: card.commentCount || 0,
-        })),
-      }
-    })
-  }
+  serverLists.forEach((list) => {
+    columns[list.id] = {
+      id: list.id,
+      title: list.title,
+      order: list.orderIndex,
 
-  // 최종 보드 객체 반환
+      // 카드 매핑 (CardResponse -> UI Card Object)
+      tasks: (list.cards || []).map((card) => ({
+        id: card.id,
+        listId: list.id, // 부모 리스트 ID 역참조 용
+        title: card.title,
+        description: card.description,
+        order: card.orderIndex,
+        dueDate: card.dueDate,
+        // 댓글 수
+        commentCount: card.commentCount || 0,
+        // 담당자 객체 (Assignee)
+        assignee: card.assigneeId
+          ? {
+              id: card.assigneeId,
+              name: card.assigneeName,
+              profileImg: card.assigneeProfileImg,
+            }
+          : null,
+
+        // 프론트 UI 전용 속성 (필요시)
+        variant: 'solid',
+      })),
+    }
+  })
+
+  // 2. 멤버 매핑 (MemberResponse -> UI Member Object)
+  const mapMember = (m) => ({
+    id: m.userId, // ★ 중요: 백엔드(userId) -> 프론트(id)로 매핑
+    name: m.nickname,
+    email: m.email,
+    profileImg: m.profileImg,
+    role: m.role, // "OWNER", "MEMBER" 등 Enum String
+    position: m.position,
+  })
+
+  // 3. 최종 보드 객체 반환
   return {
     id: dto.id,
-    name: dto.title, // 백엔드(title) -> 프론트(name)
+    name: dto.title, // title -> name
     description: dto.description,
-    visibility: dto.visibility,
+    visibility: dto.visibility, // "PUBLIC" or "TEAM"
 
-    // 멤버 정보 매핑 (헤더 표시용)
-    members: dto.boardMembers
-      ? dto.boardMembers.map((m) => ({
-          id: m.userId,
-          name: m.nickname,
-          profileImg: m.profileImg,
-          role: m.role,
-        }))
-      : [],
+    // 팀 네비게이션 정보
+    teamId: dto.teamId,
+    teamName: dto.teamName,
 
-    // 초대 모달에서 쓸 팀 멤버 전체 목록
-    teamMembers: dto.teamMembers
-      ? dto.teamMembers.map((m) => ({
-          id: m.userId,
-          name: m.nickname,
-          email: m.email,
-          role: m.role,
-          profileImg: m.profileImg,
-        }))
-      : [],
+    // 멤버 리스트 변환
+    members: (dto.boardMembers || []).map(mapMember), // 보드 헤더 표시용
+    teamMembers: (dto.teamMembers || []).map(mapMember), // 초대 모달 등 사용
 
-    columns: columns, // 위에서 변환한 컬럼 객체
-    archive: { cards: [] }, // 아카이브는 별도 API로 가져오거나 빈 값 초기화
+    columns: columns, // 변환된 컬럼 객체
+    columnOrder: serverLists.map((l) => l.id), // 리스트 순서 배열 (필요시 사용)
   }
 }
 

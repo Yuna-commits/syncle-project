@@ -8,6 +8,7 @@ import com.nullpointer.domain.member.dto.team.TeamMemberResponse;
 import lombok.Builder;
 import lombok.Getter;
 
+import java.util.ArrayList;
 import java.util.List;
 
 @Getter
@@ -17,6 +18,10 @@ public class BoardViewResponse {
     private String title;
     private String description;
     private Visibility visibility;
+
+    // 네비게이션 용 팀 정보
+    private Long teamId;
+    private String teamName;
 
     // 리스트 목록 (카드 포함)
     private List<ListWithCardsResponse> lists;
@@ -34,7 +39,9 @@ public class BoardViewResponse {
                 .title(board.getTitle())
                 .description(board.getDescription())
                 .visibility(board.getVisibility())
-                .lists(lists)
+                .teamId(board.getTeamId())
+                .teamName(board.getTeamName())
+                .lists(lists != null ? lists : new ArrayList<>())
                 .boardMembers(boardMembers)
                 .teamMembers(teamMembers)
                 .build();

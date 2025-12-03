@@ -1,9 +1,15 @@
 package com.nullpointer.domain.member.dto.team;
 
 import com.nullpointer.domain.member.vo.enums.Role;
+import lombok.AllArgsConstructor;
+import lombok.Builder;
 import lombok.Getter;
+import lombok.NoArgsConstructor;
 
 @Getter
+@Builder
+@AllArgsConstructor
+@NoArgsConstructor
 public class TeamMemberResponse {
 
     // 기존 필드

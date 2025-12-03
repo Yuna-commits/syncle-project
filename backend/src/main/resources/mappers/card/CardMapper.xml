@@ -21,18 +21,27 @@
         - deleted_at IS NULL
         - order_index 오름차순
     -->
-    <select id="findByListId"
+    <select id="findCardsWithDetailsByListId"
             parameterType="Long"
-            resultType="com.nullpointer.domain.card.vo.CardVo">
-        SELECT id,
-               list_id,
-               title,
-               description,
-               order_index AS orderIndex
-        FROM card
-        WHERE list_id = #{listId}
-          AND deleted_at IS NULL
-        ORDER BY order_index ASC
+            resultType="CardResponse">
+        SELECT c.id,
+               c.list_id                     AS listId,
+               c.title,
+               c.description,
+               c.order_index                 AS orderIndex,
+               c.due_date                    AS dueDate,
+               c.assignee_id                 AS assigneeId,
+               u.nickname                    As assigneeName,
+               u.profile_img                 As assigneeProfileImg,
+               (SELECT COUNT(*)
+                FROM comment cm
+                WHERE cm.card_id = c.id
+                  AND cm.deleted_at IS NULL) AS commentCount
+        FROM card c
+                 LEFT JOIN user u ON c.assignee_id = u.id
+        WHERE c.list_id = #{listId}
+          AND c.deleted_at IS NULL
+        ORDER BY c.order_index ASC
     </select>
 
 </mapper>

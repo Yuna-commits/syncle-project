@@ -8,7 +8,6 @@ import com.nullpointer.domain.card.vo.CardVo;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.util.ArrayList;
 import java.util.List;
 
 @Service
@@ -43,19 +42,6 @@ public class CardServiceImpl implements CardService {
     @Override
     @Transactional(readOnly = true)
     public List<CardResponse> getCards(Long listId) {
-        List<CardVo> voList = cardMapper.findByListId(listId);
-
-        List<CardResponse> responseList = new ArrayList<>();
-        for (CardVo vo : voList) {
-            CardResponse res = new CardResponse();
-            res.setId(vo.getId());
-            res.setListId(vo.getListId());
-            res.setTitle(vo.getTitle());
-            res.setDescription(vo.getDescription());
-            res.setOrderIndex(vo.getOrderIndex());
-            responseList.add(res);
-        }
-
-        return responseList;
+        return cardMapper.findCardsWithDetailsByListId(listId);
     }
 }

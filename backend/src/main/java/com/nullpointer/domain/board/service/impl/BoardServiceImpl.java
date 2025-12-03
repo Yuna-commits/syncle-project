@@ -15,7 +15,6 @@ import com.nullpointer.domain.board.vo.BoardVo;
 import com.nullpointer.domain.board.vo.enums.Visibility;
 import com.nullpointer.domain.card.dto.CardResponse;
 import com.nullpointer.domain.card.mapper.CardMapper;
-import com.nullpointer.domain.card.vo.CardVo;
 import com.nullpointer.domain.list.dto.ListWithCardsResponse;
 import com.nullpointer.domain.list.mapper.ListMapper;
 import com.nullpointer.domain.list.vo.ListVo;
@@ -254,13 +253,10 @@ public class BoardServiceImpl implements BoardService {
 
         // 리스트 별 카드 조회
         List<ListWithCardsResponse> listResponse = lists.stream().map(list -> {
-            List<CardVo> cards = cardMapper.findByListId(list.getId());
+            List<CardResponse> cards = cardMapper.findCardsWithDetailsByListId(list.getId());
 
-            // CardVo -> CardResponse 변환
-            List<CardResponse> cardResponses = cards.stream().map(CardResponse::from).toList();
-
-            // ListVo + CardResponses -> ListWithCardsResponse 변환
-            return ListWithCardsResponse.of(list, cardResponses);
+            // ListVo + List<CardResponse> -> ListWithCardsResponse 변환
+            return ListWithCardsResponse.of(list, cards);
 
         }).toList();
 
