@@ -1,6 +1,8 @@
 import React, { useEffect, useRef } from 'react'
+import { useParams } from 'react-router-dom'
 import Sortable from 'sortablejs'
 import useBoardStore from '../../stores/useBoardStore'
+import useListStore from '../../stores/useListStore'
 import BoardHeader from '../../components/board/BoardHeader'
 import BoardCanvas from '../../components/board/BoardCanvas'
 import BoardSettings from '../../components/modals/BoardSettings'
@@ -11,19 +13,29 @@ import CardDetailModal from '../../components/modals/CardDetailModal'
  * 각 컴포넌트 배치 및 보드 데이터 전달
  */
 function BoardPage() {
-  const { boards, activeBoardId, moveCard, selectedCard, isSettingsOpen } =
-    useBoardStore()
+  const { boardId } = useParams()
+
+  const { activeBoardId, selectedCard } = useBoardStore()
+
+  const { boards, fetchBoard, moveCard, isSettingsOpen } = useListStore()
 
   // 현재 화면에 표시할 보드
-  const activeBoard = boards[activeBoardId]
+  const activeBoard = boards[boardId]
 
   // 각 리스트(컬럼)의 DOM 요소를 참조하기 위한 Ref 객체
-  // {key: columnId, value: HTMLDiveElement}
   const columnRefs = useRef({})
+
+  // 컴포넌트 마운트 시 보드 데이터 불러오기
+  useEffect(() => {
+    if (boardId) {
+      fetchBoard(boardId)
+    }
+    console.log('activeBoardId', activeBoardId)
+  }, [boardId, fetchBoard])
 
   // SortableJS 초기화 (드래그 앤 드롭)
   useEffect(() => {
-    if (!activeBoard) return
+    if (!activeBoard || !activeBoard.columns) return
 
     const sortables = []
     const columns = activeBoard.columns
@@ -59,7 +71,13 @@ function BoardPage() {
     return () => sortables.forEach((s) => s.destroy())
   }, [activeBoard, moveCard])
 
-  if (!activeBoard) return <div>Loading...</div>
+  if (!activeBoard) {
+    return (
+      <div className="flex h-screen w-full items-center justify-center bg-white">
+        <div className="h-8 w-8 animate-spin rounded-full border-4 border-blue-500 border-t-transparent"></div>
+      </div>
+    )
+  }
 
   return (
     <div className="relative flex h-screen flex-col bg-white">
