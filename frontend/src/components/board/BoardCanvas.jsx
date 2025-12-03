@@ -1,6 +1,6 @@
 import React, { useState } from 'react'
-import useBoardStore from '../../stores/useBoardStore'
 import BoardList from './BoardList'
+import useBoardStore from '../../stores/useBoardStore'
 
 /**
  * N개의 리스트를 담을 하나의 캔버스 공간

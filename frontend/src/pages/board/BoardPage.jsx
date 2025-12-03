@@ -1,8 +1,7 @@
 import React, { useEffect, useRef } from 'react'
 import { useParams } from 'react-router-dom'
 import Sortable from 'sortablejs'
-import useBoardStore from '../../stores/useBoardStore'
-import useListStore from '../../stores/useListStore'
+import useBoardStore from '../../stores/sample'
 import BoardHeader from '../../components/board/BoardHeader'
 import BoardCanvas from '../../components/board/BoardCanvas'
 import BoardSettings from '../../components/modals/BoardSettings'
@@ -13,14 +12,19 @@ import CardDetailModal from '../../components/modals/CardDetailModal'
  * 각 컴포넌트 배치 및 보드 데이터 전달
  */
 function BoardPage() {
+  // URL 파라미터 (/boards/{boardId})
   const { boardId } = useParams()
 
-  const { activeBoardId, selectedCard } = useBoardStore()
-
-  const { boards, fetchBoard, moveCard, isSettingsOpen } = useListStore()
-
-  // 현재 화면에 표시할 보드
-  const activeBoard = boards[boardId]
+  const {
+    activeBoard,
+    fetchBoard,
+    moveCard,
+    selectedCard,
+    isSettingsOpen,
+    resetBoard,
+    isLoading,
+    error,
+  } = useBoardStore()
 
   // 각 리스트(컬럼)의 DOM 요소를 참조하기 위한 Ref 객체
   const columnRefs = useRef({})
@@ -30,15 +34,14 @@ function BoardPage() {
     if (boardId) {
       fetchBoard(boardId)
     }
-    console.log('activeBoardId', activeBoardId)
-  }, [boardId, fetchBoard])
+  }, [boardId, fetchBoard, resetBoard])
 
   // SortableJS 초기화 (드래그 앤 드롭)
   useEffect(() => {
-    if (!activeBoard || !activeBoard.columns) return
+    if (!activeBoard) return
 
     const sortables = []
-    const columns = activeBoard.columns
+    const columns = activeBoard.columns || {}
 
     Object.keys(columns).forEach((colId) => {
       const el = columnRefs.current[colId]
@@ -60,7 +63,7 @@ function BoardPage() {
             newIndex !== undefined
           ) {
             // 카드 이동
-            moveCard(fromId, toId, oldIndex, newIndex)
+            //moveCard(fromId, toId, oldIndex, newIndex)
           }
         },
       })
@@ -70,6 +73,21 @@ function BoardPage() {
 
     return () => sortables.forEach((s) => s.destroy())
   }, [activeBoard, moveCard])
+
+  // 로딩 및 에러 처리
+  if (isLoading)
+    return (
+      <div className="flex h-screen items-center justify-center">
+        Loading board...
+      </div>
+    )
+
+  if (error)
+    return (
+      <div className="flex h-screen items-center justify-center text-red-500">
+        {error}
+      </div>
+    )
 
   if (!activeBoard) {
     return (
