@@ -1,5 +1,5 @@
 import React, { useState } from 'react'
-import useBoardStore from '../../stores/useBoardStore'
+import useBoardStore from '../../stores/sample'
 
 export default function CardDetailModal() {
   const {
