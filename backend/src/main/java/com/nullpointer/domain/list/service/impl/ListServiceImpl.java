@@ -33,7 +33,7 @@ public class ListServiceImpl implements ListService {
         ListVo listVo = new ListVo();
         listVo.setBoardId(boardId);
         listVo.setTitle(request.getTitle());
-        listVo.setOrderIndex(0); // 처음 생성 시 0 (나중에 정렬 로직 추가 가능)
+        listVo.setOrderIndex(9999);
 
         listMapper.insertList(listVo);
 
@@ -70,15 +70,19 @@ public class ListServiceImpl implements ListService {
 
     @Override
     @Transactional
-    public void updateListOrders(Long boardId, UpdateListOrderRequest request) {
-        // 여러 리스트를 한 트랜잭션 안에서 업데이트
-        for (UpdateListOrderRequest.ListOrderItem item : request.getLists()) {
-            ListVo vo = new ListVo();
-            vo.setId(item.getListId());
-            vo.setBoardId(boardId);
-            vo.setOrderIndex(item.getOrderIndex());
+    public void updateListOrders(Long boardId, List<UpdateListOrderRequest> request) {
+        // 요청한 데이터를 변환
+        List<ListVo> updateList = request.stream()
+                .map(item -> ListVo.builder()
+                        .id(item.getListId())
+                        .boardId(boardId)
+                        .orderIndex(item.getOrderIndex())
+                        .build())
+                .toList();
 
-            listMapper.updateOrderIndex(vo);
+        // 빈 리스트가 아닐 경우에만 업데이트 수행
+        if (!updateList.isEmpty()) {
+            listMapper.updateListOrdersBulk(updateList);
         }
     }
 

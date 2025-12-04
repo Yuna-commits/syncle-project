@@ -19,7 +19,7 @@ public interface ListService {
     List<ListResponse> getLists(Long boardId);
 
     // 여러 리스트 순서 변경
-    void updateListOrders(Long boardId, UpdateListOrderRequest request);
+    void updateListOrders(Long boardId, List<UpdateListOrderRequest> request);
 
     // 리스트 정보 수정
     void updateList(Long listId, UpdateListRequest request);

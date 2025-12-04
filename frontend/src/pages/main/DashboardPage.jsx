@@ -68,33 +68,41 @@ function DashboardPage() {
           <h2 className="mb-3 text-lg font-semibold">즐겨찾기</h2>
 
           <div className="grid grid-cols-4 gap-4">
-            {favoriteBoards.length > 0 ? (
-              favoriteBoards.map((board) => (
-                <motion.div
-                  key={board.id}
-                  layout // [핵심] 아이템이 빠진 자리를 다른 아이템이 자연스럽게 채움
-                  initial={{ opacity: 0, scale: 0.8 }} // 나타날 때 초기값
-                  animate={{ opacity: 1, scale: 1 }} // 나타날 때 최종값
-                  exit={{
-                    opacity: 0,
-                    scale: 0.5,
-                    transition: { duration: 0.2 },
-                  }} // 사라질 때 효과
-                  transition={{ duration: 0.2 }}
-                >
-                  <BoardCard
+            <AnimatePresence mode="popLayout">
+              {favoriteBoards.length > 0 ? (
+                favoriteBoards.map((board) => (
+                  <motion.div
                     key={board.id}
-                    id={board.id}
-                    imageUrl="https://picsum.photos/400/200"
-                    title={board.title}
-                    isFavorite={board.isFavorite}
-                    onToggleFavorite={fetchDashboardData}
-                  />
+                    layout // [핵심] 아이템이 빠진 자리를 다른 아이템이 자연스럽게 채움
+                    initial={{ opacity: 0, scale: 0.8 }} // 나타날 때 초기값
+                    animate={{ opacity: 1, scale: 1 }} // 나타날 때 최종값
+                    exit={{
+                      opacity: 0,
+                      scale: 0.5,
+                      transition: { duration: 0.2 },
+                    }} // 사라질 때 효과
+                    transition={{ duration: 0.2 }}
+                  >
+                    <BoardCard
+                      key={board.id}
+                      id={board.id}
+                      imageUrl="https://picsum.photos/400/200"
+                      title={board.title}
+                      isFavorite={board.isFavorite}
+                      onToggleFavorite={fetchDashboardData}
+                    />
+                  </motion.div>
+                ))
+              ) : (
+                <motion.div
+                  initial={{ opacity: 0 }}
+                  animate={{ opacity: 1 }}
+                  className="col-span-4 rounded-lg border border-dashed border-gray-300 bg-gray-50 py-8 text-center text-sm text-gray-500"
+                >
+                  즐겨찾기한 보드가 없습니다.
                 </motion.div>
-              ))
-            ) : (
-              <div className="text-gray-500">즐겨찾기한 보드가 없습니다.</div>
-            )}
+              )}
+            </AnimatePresence>
           </div>
         </section>
         <section className="space-y-10">

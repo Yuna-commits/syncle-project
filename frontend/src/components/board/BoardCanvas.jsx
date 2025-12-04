@@ -1,21 +1,16 @@
+// frontend/src/components/board/BoardCanvas.jsx
+
 import React, { useState } from 'react'
 import BoardList from './BoardList'
 import useBoardStore from '../../stores/useBoardStore'
 
-/**
- * N개의 리스트를 담을 하나의 캔버스 공간
- * -> 보드에 표시될 데이터 렌더링
- */
-function BoardCanvas({ board, columnRefs }) {
+function BoardCanvas({ board, columnRefs, listContainerRef }) {
   const { addList } = useBoardStore()
-  const [isAdding, setIsAdding] = useState(false) // 추가 리스트 존재 여부
+  const [isAdding, setIsAdding] = useState(false)
   const [title, setTitle] = useState('')
 
-  // 리스트 추가 핸들러
   const handleAddList = (e) => {
     e.preventDefault()
-
-    // 리스트 제목이 있는 경우
     if (title.trim()) {
       addList(title)
       setTitle('')
@@ -23,19 +18,23 @@ function BoardCanvas({ board, columnRefs }) {
     }
   }
 
+  const orderedColumns = board.columnOrder
+    ? board.columnOrder.map((id) => board.columns[id])
+    : Object.values(board.columns)
+
   return (
     <div className="h-full w-full overflow-x-auto overflow-y-hidden bg-gray-100/50 p-6">
       <div className="flex h-full items-start gap-6">
-        {/* 보드에 속한 리스트들 하나씩 렌더링 */}
-        {Object.values(board.columns).map((column) => (
-          <BoardList
-            key={column.id}
-            column={column}
-            innerRef={(el) => (columnRefs.current[column.id] = el)}
-          />
-        ))}
+        <div ref={listContainerRef} className="flex h-full items-start gap-6">
+          {orderedColumns.map((column) => (
+            <BoardList
+              key={column.id}
+              column={column}
+              innerRef={(el) => (columnRefs.current[column.id] = el)}
+            />
+          ))}
+        </div>
 
-        {/* 리스트 추가 버튼 */}
         <div className="w-72 shrink-0">
           {isAdding ? (
             <form
@@ -48,6 +47,8 @@ function BoardCanvas({ board, columnRefs }) {
                 onChange={(e) => setTitle(e.target.value)}
                 placeholder="리스트 제목 입력..."
                 className="mb-2 w-full rounded-md border border-gray-300 p-2 text-sm focus:border-blue-500 focus:ring-1 focus:ring-blue-500 focus:outline-none"
+                // 입력 중 드래그 방지
+                onMouseDown={(e) => e.stopPropagation()}
               />
               <div className="flex items-center gap-2">
                 <button

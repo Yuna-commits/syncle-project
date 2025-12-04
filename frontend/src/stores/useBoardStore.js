@@ -181,7 +181,7 @@ const useBoardStore = create((set, get) => ({
         title,
       })
 
-      const newList = response.data
+      const newList = response.data.data
       // 프론트엔드 상태 업데이트
       const updatedColumns = {
         ...activeBoard.columns,
@@ -192,7 +192,16 @@ const useBoardStore = create((set, get) => ({
           tasks: [],
         },
       }
-      set({ activeBoard: { ...activeBoard, columns: updatedColumns } })
+      const updatedColumnOrder = [...activeBoard.columnOrder, newList.id]
+
+      // 3. 상태 일괄 적용
+      set({
+        activeBoard: {
+          ...activeBoard,
+          columns: updatedColumns,
+          columnOrder: updatedColumnOrder,
+        },
+      })
     } catch (error) {
       console.error('리스트 추가 실패:', error)
     }
@@ -250,15 +259,52 @@ const useBoardStore = create((set, get) => ({
       const newColumns = { ...activeBoard.columns }
       delete newColumns[listId] // 객체에서 해당 리스트 ID 키를 삭제
 
+      // 순서 배열(columnOrder)에서도 해당 ID 제거
+      const newColumnOrder = activeBoard.columnOrder.filter(
+        (id) => id !== listId,
+      )
+
       set({
         activeBoard: {
           ...activeBoard,
           columns: newColumns,
+          columnOrder: newColumnOrder,
         },
       })
     } catch (error) {
       console.error('리스트 삭제 실패:', error)
       alert('리스트 삭제 중 오류가 발생했습니다.')
+    }
+  },
+
+  // 리스트 이동(드래그 앤 드롭)
+  moveList: async (oldIndex, newIndex) => {
+    const { activeBoard } = get()
+    if (!activeBoard) return
+
+    // 낙관적 업데이트 (Optimistic Update)
+    const newColumnOrder = [...activeBoard.columnOrder]
+    const [movedListId] = newColumnOrder.splice(oldIndex, 1)
+    newColumnOrder.splice(newIndex, 0, movedListId)
+
+    set({
+      activeBoard: {
+        ...activeBoard,
+        columnOrder: newColumnOrder,
+      },
+    })
+
+    // 백엔드 api 호출
+    try {
+      const payload = newColumnOrder.map((id, index) => ({
+        listId: id,
+        orderIndex: index,
+      }))
+      await api.patch(`/boards/${activeBoard.id}/lists/order`, payload)
+    } catch (error) {
+      console.error('리스트 이동 실패:', error)
+      // 실패 시 롤백
+      get().fetchBoard(activeBoard.id)
     }
   },
 

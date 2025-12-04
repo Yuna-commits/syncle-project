@@ -18,8 +18,8 @@ public interface ListMapper {
     // 특정 보드의 리스트 목록 조회
     List<ListVo> findByBoardId(@Param("boardId") Long boardId);
 
-    // 리스트 한 개의 order_index 수정
-    void updateOrderIndex(ListVo listVo);
+    // 리스트 순서 일괄 업데이트 (Bulk Update)
+    void updateListOrdersBulk(List<ListVo> list);
 
     // 리스트 정보(title) 수정
     void updateListInfo(ListVo listVo);

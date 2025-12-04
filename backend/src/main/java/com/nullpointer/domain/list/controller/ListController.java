@@ -5,6 +5,7 @@ import com.nullpointer.domain.list.dto.ListResponse;
 import com.nullpointer.domain.list.dto.UpdateListOrderRequest;
 import com.nullpointer.domain.list.service.ListService;
 import com.nullpointer.global.common.ApiResponse;
+import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -13,29 +14,25 @@ import java.util.List;
 
 /**
  * 보드 기준 리스트 API
- *
+ * <p>
  * POST /api/boards/{boardId}/lists       - 리스트 생성
  * GET  /api/boards/{boardId}/lists       - 리스트 목록 조회
  * PUT  /api/boards/{boardId}/lists/order - 리스트 순서 변경
  */
 @RestController
 @RequestMapping("/api/boards/{boardId}/lists")
+@RequiredArgsConstructor
 public class ListController {
 
     private final ListService listService;
 
-    public ListController(ListService listService) {
-        this.listService = listService;
-    }
-
     // 리스트 생성
     @PostMapping
-    public ApiResponse<String> createList(
+    public ApiResponse<ListResponse> createList(
             @PathVariable("boardId") Long boardId,
             @RequestBody CreateListRequest request
     ) {
-        listService.createList(boardId, request);
-        return ApiResponse.success("리스트 생성 성공");
+        return ApiResponse.success(listService.createList(boardId, request));
     }
 
     // 리스트 목록 조회
@@ -46,11 +43,11 @@ public class ListController {
         return ApiResponse.success(listService.getLists(boardId));
     }
 
-    // 여러 리스트 순서 변경
-    @PutMapping("/order")
+    // 리스트 순서 변경
+    @PatchMapping("/order")
     public ApiResponse<String> updateListOrders(
             @PathVariable("boardId") Long boardId,
-            @RequestBody UpdateListOrderRequest request
+            @RequestBody List<UpdateListOrderRequest> request
     ) {
         listService.updateListOrders(boardId, request);
         return ApiResponse.success("리스트 순서 변경");
