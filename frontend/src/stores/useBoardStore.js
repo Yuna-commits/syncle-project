@@ -277,6 +277,7 @@ const useBoardStore = create((set, get) => ({
       alert('카드 이동에 실패했습니다.')
       get().fetchBoard(activeBoard.id) // 보드 데이터 재로딩
     }
+    console.log('이동 성공')
   },
 
   // 보드 데이터 초기화 (페이지 나갈 때 사용)

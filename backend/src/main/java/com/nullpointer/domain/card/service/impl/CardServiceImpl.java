@@ -46,7 +46,7 @@ public class CardServiceImpl implements CardService {
     public void moveCard(Long cardId, MoveCardRequest req, Long userId) {
         // 1. 이동할 카드 조회
         CardVo card = cardMapper.findById(cardId)
-                .orElseThrow(() -> new BusinessException(ErrorCode.CARD_NOT_FOUND)); // 적절한 에러코드 사용
+                .orElseThrow(() -> new BusinessException(ErrorCode.CARD_NOT_FOUND));
 
         Long oldListId = card.getListId();
         Integer oldOrder = card.getOrderIndex();

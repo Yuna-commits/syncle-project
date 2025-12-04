@@ -54,17 +54,16 @@ function BoardPage() {
         onEnd: (evt) => {
           const fromId = evt.from.dataset.columnId
           const toId = evt.to.dataset.columnId
-          const { oldIndex, newIndex } = evt
-          const cardId = evt.item.dataset.id
+          const { newIndex } = evt
+          const cardId = Number(evt.item.dataset.id)
 
-          if (
-            fromId &&
-            toId &&
-            oldIndex !== undefined &&
-            newIndex !== undefined &&
-            cardId
-          ) {
-            // 카드 이동
+          if (fromId && toId && cardId) {
+            // 리스트 간 이동 시 DOM 충돌 방지
+            if (evt.from !== evt.to) {
+              evt.from.appendChild(evt.item)
+            }
+
+            // React 상태 업데이트
             moveCard(cardId, fromId, toId, newIndex)
           }
         },
