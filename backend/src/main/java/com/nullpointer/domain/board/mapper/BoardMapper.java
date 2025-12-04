@@ -41,4 +41,5 @@ public interface BoardMapper {
     void insertFavorite(@Param("boardId") Long boardId, @Param("userId") Long userId);
 
     void deleteFavorite(@Param("boardId") Long boardId, @Param("userId") Long userId);
+
 }

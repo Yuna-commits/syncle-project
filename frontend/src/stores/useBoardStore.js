@@ -74,7 +74,7 @@ const useBoardStore = create((set, get) => ({
   },
 
   // 보드 상세 정보 가져오기
-  fetchBoard: async (boardId, showLoading = true) => {
+  fetchBoard: async (boardId, navigate, showLoading = true) => {
     set({ error: null })
     try {
       if (showLoading) {
@@ -95,6 +95,10 @@ const useBoardStore = create((set, get) => ({
       // 3. 상태 업데이트
       set({ activeBoard: formattedData })
     } catch (error) {
+      if (error.response.status === 403) {
+        alert('해당 보드에 접근할 권한이 없습니다 🚫')
+        navigate('/dashboard') // 메인화면으로 강제 이동
+      }
       console.error('보드 로드 실패:', error)
       set({ error: '보드 정보를 불러오지 못했습니다.' })
     } finally {

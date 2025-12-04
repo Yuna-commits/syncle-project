@@ -148,9 +148,11 @@ public class BoardServiceImpl implements BoardService {
         if (req.getTitle() != null && !req.getTitle().isBlank()) {
             boardVo.setTitle(req.getTitle());
         }
+
         if (req.getDescription() != null) {
             boardVo.setDescription(req.getDescription());
         }
+
         if (boardVo.getVisibility() != req.getVisibility()) {
             boardVo.setVisibility(req.getVisibility());
         }
@@ -245,6 +247,14 @@ public class BoardServiceImpl implements BoardService {
     @Override
     @Transactional(readOnly = true)
     public BoardViewResponse getBoardView(Long boardId, Long userId) {
+
+        // 권한 체크
+        boolean hasAccess = boardMemberMapper.hasAccessToBoard(boardId, userId);
+
+        if (!hasAccess) {
+            throw new BusinessException(ErrorCode.BOARD_ACCESS_DENIED);
+        }
+
         // 보드 정보 조회
         BoardVo boardVo = boardVal.getValidBoard(boardId);
 

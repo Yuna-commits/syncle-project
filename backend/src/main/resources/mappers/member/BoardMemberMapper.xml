@@ -63,12 +63,12 @@
     </update>
 
     <!-- 보드 멤버로 이미 등록되어 있는지 확인 -->
-    <select id="existsByBoardIdAndUserId">
-        SELECT COUNT(*) > 0
-        FROM board_member
-        WHERE board_id = #{boardId}
-          AND user_id = #{userId}
-          AND deleted_at IS NULL
+    <select id="existsByBoardIdAndUserId" resultType="boolean">
+        SELECT EXISTS (SELECT 1
+                       FROM board_member
+                       WHERE board_id = #{boardId}
+                         AND user_id = #{userId}
+                         AND deleted_at IS NULL)
     </select>
 
     <!-- 권한 확인용 조회 -->
@@ -78,5 +78,22 @@
         WHERE board_id = #{boardId}
           AND user_id = #{userId}
           AND deleted_at IS NULL
+    </select>
+
+    <!-- 보드 접근 권한 조회 -->
+    <select id="hasAccessToBoard" resultType="boolean">
+        SELECT EXISTS (SELECT 1
+                       FROM board b
+                                LEFT JOIN board_member bm
+                                          ON b.id = bm.board_id
+                                              AND bm.user_id = #{userId}
+                                LEFT JOIN team_member tm
+                                          ON b.team_id = tm.team_id
+                                              AND tm.user_id = #{userId}
+                       WHERE b.id = #{boardId}
+                         AND (
+                           bm.user_id IS NOT NULL
+                               OR (b.team_id IS NOT NULL AND tm.user_id IS NOT NULL AND b.visibility = 'TEAM')
+                           ))
     </select>
 </mapper>

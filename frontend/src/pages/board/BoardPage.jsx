@@ -1,5 +1,5 @@
 import React, { useEffect, useRef } from 'react'
-import { useParams } from 'react-router-dom'
+import { useNavigate, useParams } from 'react-router-dom'
 import Sortable from 'sortablejs'
 import useBoardStore from '../../stores/useBoardStore'
 import BoardHeader from '../../components/board/BoardHeader'
@@ -27,6 +27,8 @@ function BoardPage() {
     error,
   } = useBoardStore()
 
+  const navigate = useNavigate()
+
   // 각 리스트(컬럼)의 DOM 요소를 참조하기 위한 Ref 객체
   const columnRefs = useRef({})
 
@@ -36,7 +38,7 @@ function BoardPage() {
   // 컴포넌트 마운트 시 보드 데이터 불러오기
   useEffect(() => {
     if (boardId) {
-      fetchBoard(boardId)
+      fetchBoard(boardId, navigate)
     }
   }, [boardId, fetchBoard, resetBoard])
 
@@ -148,7 +150,7 @@ function BoardPage() {
       </main>
 
       {isSettingsOpen && <BoardSettings board={activeBoard} />}
-      {selectedCard && <CardDetailModal />}
+      {selectedCard && <CardDetailModal board={activeBoard} />}
     </div>
   )
 }

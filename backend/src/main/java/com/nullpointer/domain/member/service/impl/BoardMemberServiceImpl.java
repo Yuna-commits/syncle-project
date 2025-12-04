@@ -81,7 +81,7 @@ public class BoardMemberServiceImpl implements BoardMemberService {
         memberVal.validateBoardOwner(boardId, userId, ErrorCode.MEMBER_UPDATE_FORBIDDEN);
 
         // 2. 멤버 존재 확인
-        if (!boardMemberMapper.existsByBoardIdAndUserId(boardId, memberId)) {
+        if (boardMemberMapper.existsByBoardIdAndUserId(boardId, memberId)) {
             throw new BusinessException(ErrorCode.MEMBER_NOT_FOUND);
         }
         BoardMemberVo vo = req.toVo(boardId, memberId);
@@ -98,7 +98,7 @@ public class BoardMemberServiceImpl implements BoardMemberService {
         Long ownerId = null;
 
         // 1. 멤버 존재 확인
-        if (!boardMemberMapper.existsByBoardIdAndUserId(boardId, memberId)) {
+        if (boardMemberMapper.existsByBoardIdAndUserId(boardId, memberId)) {
             throw new BusinessException(ErrorCode.MEMBER_NOT_FOUND);
         }
 

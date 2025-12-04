@@ -44,7 +44,7 @@ public class MemberValidator {
      * 보드 멤버인지 확인 (접근 권한)
      */
     public void validateBoardMember(Long boardId, Long userId) {
-        if (!boardMemberMapper.existsByBoardIdAndUserId(boardId, userId)) {
+        if (boardMemberMapper.existsByBoardIdAndUserId(boardId, userId)) {
             throw new BusinessException(ErrorCode.BOARD_ACCESS_DENIED);
         }
     }

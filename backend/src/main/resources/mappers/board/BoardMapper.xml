@@ -40,9 +40,11 @@
         FROM team t
                  INNER JOIN team_member tm ON t.id = tm.team_id
                  LEFT JOIN board b ON t.id = b.team_id AND b.deleted_at IS NULL
+                 LEFT JOIN board_member bm ON b.id = bm.board_id
                  LEFT JOIN board_favorite bf ON b.id = bf.board_id AND bf.user_id = #{id}
         WHERE tm.user_id = #{id}
           AND t.deleted_at IS NULL
+          AND (b.visibility = 'TEAM' OR b.visibility = 'PRIVATE' AND bm.user_id IS NOT NULL)
     </select>
 
     <!-- 특정 팀 보드 목록 (+즐겨찾기) 조회 -->
@@ -53,12 +55,14 @@
                b.visibility,
                IF(bf.board_id IS NOT NULL, true, false) AS isFavorite
         FROM board b
+                 LEFT JOIN board_member bm ON b.id = bm.board_id
                  LEFT JOIN board_favorite bf
                            ON b.id = bf.board_id
                                AND bf.user_id = #{userId}
         WHERE b.team_id = #{teamId}
-          AND deleted_at IS NULL
-        ORDER BY b.created_at DESC
+          AND b.deleted_at IS NULL
+          AND (b.visibility = 'TEAM' OR b.visibility = 'PRIVATE' AND bm.user_id IS NOT NULL)
+--         ORDER BY b.created_at DESC
     </select>
 
     <!-- 보드 상세 조회 -->
