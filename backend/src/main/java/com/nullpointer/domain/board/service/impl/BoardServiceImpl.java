@@ -145,7 +145,7 @@ public class BoardServiceImpl implements BoardService {
         memberVal.validateBoardOwner(boardId, userId, ErrorCode.BOARD_UPDATE_FORBIDDEN);
 
         // 3. 업데이트 진행
-        if (req.getTitle() != null) {
+        if (req.getTitle() != null && !req.getTitle().isBlank()) {
             boardVo.setTitle(req.getTitle());
         }
         if (req.getDescription() != null) {

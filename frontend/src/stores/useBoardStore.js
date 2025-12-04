@@ -1,5 +1,6 @@
 import { create } from 'zustand'
 import api from '../api/AxiosInterceptor'
+import { ReceiptRussianRuble } from 'lucide-react'
 
 const useBoardStore = create((set, get) => ({
   // 현재 보고 있는 보드의 상세 데이터
@@ -96,6 +97,74 @@ const useBoardStore = create((set, get) => ({
       set({ error: '보드 정보를 불러오지 못했습니다.' })
     } finally {
       set({ isLoading: false })
+    }
+  },
+
+  // 보드 정보 수정 (이름, 설명, 공개범위)
+  updateBoard: async (boardId, updateData) => {
+    if (!updateData) {
+      ReceiptRussianRuble
+    }
+    // UI 먼저 변경사항 반영
+    const prevBoard = get().activeBoard
+    set({ activeBoard: { ...prevBoard, ...updateData } })
+
+    try {
+      await api.patch(`/boards/${boardId}`, updateData)
+    } catch (error) {
+      console.error('보드 수정 실패:', error)
+      set({ activeBoard: prevBoard }) // 롤백
+      alert('보드 정보 수정에 실패했습니다.')
+    }
+  },
+
+  // 보드 삭제
+  deleteBoard: async (boardId) => {
+    const teamId = get().teamId
+    try {
+      await api.delete(`/boards/${boardId}`)
+      window.location.href = `/teams/${teamId}/boards` // 삭제 후 이동
+    } catch (error) {
+      console.error('보드 삭제 실패:', error)
+      alert('보드 삭제에 실패했습니다.')
+    }
+  },
+
+  // 보드 권한 수정
+  updatePermissions: async () => {},
+
+  // 보드 멤버 역할 변경
+  changeMemberRole: async (boardId, userId, newRole) => {
+    const { activeBoard } = get()
+    // UI 먼저 변경사항 반영 - 실패 시 롤백
+    const updateMembers = activeBoard.members.map((m) =>
+      m.id === userId ? { ...m, role: newRole } : m,
+    )
+    set({ activeBoard: { ...activeBoard, members: updateMembers } })
+
+    try {
+      await api.patch(`/boards/${boardId}/members/${userId}`, { role: newRole })
+    } catch (error) {
+      console.error('권한 변경 실패:', error)
+      // 롤백 (원래대로)
+      await get().fetchBoard(boardId)
+      alert('권한 변경에 실패했습니다.')
+    }
+  },
+
+  // 보드 멤버 탈퇴
+  removeMember: async (boardId, userId) => {
+    const { activeBoard } = get()
+    // UI 먼저 변경사항 반영
+    const filteredMembers = activeBoard.members.filter((m) => m.id !== userId)
+    set({ activeBoard: { ...activeBoard, members: filteredMembers } })
+
+    try {
+      await api.delete(`/boards/${boardId}/members/${userId}`)
+    } catch (error) {
+      console.error('멤버 추방 실패:', error)
+      await get().fetchBoard(boardId)
+      alert('멤버 추방에 실패했습니다.')
     }
   },
 
@@ -289,10 +358,11 @@ const normalizeBoardData = (dto) => {
   // 3. 최종 보드 객체 반환
   return {
     id: dto.id,
-    name: dto.title, // title -> name
+    title: dto.title,
     isFavorite: dto.isFavorite,
     description: dto.description,
     visibility: dto.visibility, // "PUBLIC" or "TEAM"
+    ownerId: dto.ownerId,
 
     // 팀 네비게이션 정보
     teamId: dto.teamId,

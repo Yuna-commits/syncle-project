@@ -4,7 +4,7 @@ import Sortable from 'sortablejs'
 import useBoardStore from '../../stores/useBoardStore'
 import BoardHeader from '../../components/board/BoardHeader'
 import BoardCanvas from '../../components/board/BoardCanvas'
-import BoardSettings from '../../components/modals/BoardSettings'
+import BoardSettings from '../../components/board/BoardSettings'
 import CardDetailModal from '../../components/modals/CardDetailModal'
 
 /**
@@ -105,10 +105,9 @@ function BoardPage() {
       {/* 보드 랜더링 */}
       <main className="relative flex-1 overflow-hidden">
         <BoardCanvas board={activeBoard} columnRefs={columnRefs} />
-
-        {isSettingsOpen && <BoardSettings board={activeBoard} />}
       </main>
 
+      {isSettingsOpen && <BoardSettings board={activeBoard} />}
       {selectedCard && <CardDetailModal />}
     </div>
   )

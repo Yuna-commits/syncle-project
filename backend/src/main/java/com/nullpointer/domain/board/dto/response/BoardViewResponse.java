@@ -5,6 +5,7 @@ import com.nullpointer.domain.board.vo.enums.Visibility;
 import com.nullpointer.domain.list.dto.ListWithCardsResponse;
 import com.nullpointer.domain.member.dto.board.BoardMemberResponse;
 import com.nullpointer.domain.member.dto.team.TeamMemberResponse;
+import com.nullpointer.domain.member.vo.enums.Role;
 import lombok.Builder;
 import lombok.Getter;
 
@@ -18,6 +19,7 @@ public class BoardViewResponse {
     private String title;
     private String description;
     private Visibility visibility;
+    private Long ownerId;
 
     // 네비게이션 용 팀 정보
     private Long teamId;
@@ -38,11 +40,18 @@ public class BoardViewResponse {
                                        List<BoardMemberResponse> boardMembers,
                                        List<TeamMemberResponse> teamMembers,
                                        boolean isFavorite) {
+        Long ownerId = boardMembers.stream()
+                .filter(m -> m.getRole() == Role.OWNER)
+                .map(BoardMemberResponse::getUserId)
+                .findFirst()
+                .orElse(null);
+
         return BoardViewResponse.builder()
                 .id(board.getId())
                 .title(board.getTitle())
                 .description(board.getDescription())
                 .visibility(board.getVisibility())
+                .ownerId(ownerId)
                 .teamId(board.getTeamId())
                 .teamName(board.getTeamName())
                 .lists(lists != null ? lists : new ArrayList<>())

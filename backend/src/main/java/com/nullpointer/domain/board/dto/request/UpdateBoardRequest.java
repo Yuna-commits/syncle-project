@@ -2,15 +2,18 @@ package com.nullpointer.domain.board.dto.request;
 
 import com.nullpointer.domain.board.vo.BoardVo;
 import com.nullpointer.domain.board.vo.enums.Visibility;
-import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Size;
+import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Getter;
+import lombok.NoArgsConstructor;
 
 @Getter
 @Builder
+@NoArgsConstructor
+@AllArgsConstructor
 public class UpdateBoardRequest {
-    @NotBlank(message = "보드 제목은 필수 입력 값입니다.")
+
     @Size(max = 30, message = "보드 이름은 최대 30자까지 가능합니다.")
     private String title;
 

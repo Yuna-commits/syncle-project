@@ -38,7 +38,7 @@ function BoardHeader({ board }) {
 
           {/* 보드 이름 & 즐겨찾기 */}
           <div className="flex items-center gap-2">
-            <h1 className="text-lg font-bold text-gray-800">{board.name}</h1>
+            <h1 className="text-lg font-bold text-gray-800">{board.title}</h1>
 
             <button
               onClick={toggleFavorite}
@@ -154,7 +154,8 @@ function BoardHeader({ board }) {
           {/* 더보기 메뉴 */}
           <button
             onClick={toggleSettings}
-            className="rounded-md p-1.5 text-gray-500 hover:bg-gray-100 focus:outline-none"
+            onMouseDown={(e) => e.stopPropagation()}
+            className="rounded-md p-1.5 text-gray-500 hover:cursor-pointer hover:bg-gray-100 focus:outline-none"
             title="메뉴 열기"
           >
             <svg
