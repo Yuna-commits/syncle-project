@@ -36,7 +36,25 @@ const clearTokens = () => {
 }
 
 // =====================================================
-// 2. Axios 인스턴스 생성
+// 2. 토큰 재발급 대기열 관리 변수 (동시성 제어)
+// =====================================================
+
+let isRefreshing = false // 현재 재발급 API가 호출 중인지 확인
+let refreshSubscribers = []
+
+// 재발급 완료 후 대기 중이던 요청들을 재실행
+const onRefreshed = (accessToken) => {
+  refreshSubscribers.map((callback) => callback(accessToken))
+  refreshSubscribers = []
+}
+
+// 재발급 진행 중에 들어온 요청들을 대기열에 추가
+const addRefreshSubscriber = (callback) => {
+  refreshSubscribers.push(callback)
+}
+
+// =====================================================
+// 3. Axios 인스턴스 생성
 // =====================================================
 
 const api = axios.create({
@@ -47,7 +65,7 @@ const api = axios.create({
 })
 
 // =====================================================
-// 3. 요청 인터셉터 (Request Interceptor)
+// 4. 요청 인터셉터 (Request Interceptor)
 // : 요청을 보내기 전에 헤더에 토큰 자동 추가
 // =====================================================
 
@@ -63,9 +81,19 @@ api.interceptors.request.use(
 )
 
 // =====================================================
-// 4. 응답 인터셉터 (Response Interceptor)
+// 5. 응답 인터셉터 (Response Interceptor)
 // : 401 에러 발생 시 토큰 재발급 로직 수행
 // =====================================================
+
+/**
+ * 동작 원리
+ * 1. 401 감지
+ *    - 백엔드에서 JwtAuthenticationFilter가 만료된 토큰을 거르고 401 Unauthorized 응답
+ * 2. 인터셉터가 토큰 재발급 로직 수행
+ *
+ * - 대기열 처리 : 여러 API가 동시에 401을 받아도 재발급 요청은 딱 한 번, 나머지는 대기
+ * - 재시도 : 재발급에 성공하면 onRefreshed를 통해 대기 중이던 모든 요청에 새 토큰을 끼워 전송
+ */
 
 api.interceptors.response.use(
   // 성공 시 반환
@@ -78,7 +106,27 @@ api.interceptors.response.use(
 
     // 401 에러이고, 아직 재시도를 안 한 요청(_retry가 없음/false)인 경우
     if (error.response?.status === 401 && !originalRequest._retry) {
+      // ---------------------------------------------------
+      // Case A: 이미 다른 요청에 의해 재발급이 진행 중인 경우
+      // ---------------------------------------------------
+
+      if (isRefreshing) {
+        // 대기열에 현재 요청 추가, Promise를 반환하여 대기시킴
+        return new Promise((resolve) => {
+          addRefreshSubscriber((token) => {
+            // 새 토큰이 발급되면 헤더를 교체하고 재요청
+            originalRequest.headers['Authorization'] = `Bearer ${token}`
+            resolve(api(originalRequest))
+          })
+        })
+      }
+
+      // ---------------------------------------------------
+      // Case B: 재발급을 처음 시도하는 경우
+      // ---------------------------------------------------
+
       originalRequest._retry = true // 재발급 무한 루프 방지용 플래그
+      isRefreshing = true // 재발급 상태로 변경
 
       try {
         const refreshToken = getRefreshToken()
@@ -95,13 +143,17 @@ api.interceptors.response.use(
 
         const { accessToken: newAccess, refreshToken: newRefresh } = data.data
 
-        // 재발급 받은 토큰 갱신
+        // 1. 재발급 받은 토큰 갱신
         setTokens(newAccess, newRefresh)
 
-        // 원래 요청의 헤더를 갱신된 토큰으로 교체
-        originalRequest.headers['Authorization'] = `Bearer ${newAccess}`
+        // 2. Axios 인스턴스 기본 헤더 갱신 (선택 사항)
+        api.defaults.headers.common['Authorization'] = `Bearer ${newAccess}`
 
-        // 원래 요청 재시도
+        // 3. 대기 중이던 다른 요청들 처리 (Queue 비우기)
+        onRefreshed(newAccess)
+
+        // 4. 현재 실패했던 요청 헤더 갱신 및 재시도
+        originalRequest.headers['Authorization'] = `Bearer ${newAccess}`
         return api(originalRequest)
       } catch (refreshError) {
         // 재발급 실패 시(토큰 만료/위변조) 강제 로그아웃
