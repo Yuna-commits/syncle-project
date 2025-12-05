@@ -3,10 +3,15 @@ package com.nullpointer.domain.member.service.impl;
 import com.nullpointer.domain.activity.dto.request.ActivitySaveRequest;
 import com.nullpointer.domain.activity.service.ActivityService;
 import com.nullpointer.domain.activity.vo.enums.ActivityType;
+import com.nullpointer.domain.board.mapper.BoardMapper;
+import com.nullpointer.domain.board.vo.BoardVo;
+import com.nullpointer.domain.board.vo.enums.Visibility;
 import com.nullpointer.domain.member.dto.team.TeamMemberResponse;
 import com.nullpointer.domain.member.dto.team.TeamRoleUpdateRequest;
+import com.nullpointer.domain.member.mapper.BoardMemberMapper;
 import com.nullpointer.domain.member.mapper.TeamMemberMapper;
 import com.nullpointer.domain.member.service.TeamMemberService;
+import com.nullpointer.domain.member.vo.BoardMemberVo;
 import com.nullpointer.domain.member.vo.TeamMemberVo;
 import com.nullpointer.domain.member.vo.enums.Role;
 import com.nullpointer.domain.user.mapper.UserMapper;
@@ -28,15 +33,17 @@ public class TeamMemberServiceImpl implements TeamMemberService {
     private final UserMapper userMapper;
     private final MemberValidator memberVal;
     private final ActivityService activityService;
+    private final BoardMapper boardMapper;
+    private final BoardMemberMapper boardMemberMapper;
 
     // 멤버 추가 (초대 수락 시 호출됨)
     @Override
     @Transactional
     public void addMember(Long teamId, Long userId, Role role) {
         // 탈퇴한 멤버를 포함해서 기존 이력 조회
-        TeamMemberVo existingMember = teamMemberMapper.findMemberIncludeDeleted(teamId, userId);
+        TeamMemberVo existingTeamMember = teamMemberMapper.findMemberIncludeDeleted(teamId, userId);
 
-        if (existingMember == null) {
+        if (existingTeamMember == null) {
             // 신규 멤버 -> INSERT
             TeamMemberVo newMember = TeamMemberVo.builder()
                     .teamId(teamId)
@@ -45,12 +52,36 @@ public class TeamMemberServiceImpl implements TeamMemberService {
                     .build();
 
             teamMemberMapper.insertTeamMember(newMember);
-        } else if (existingMember.getDeletedAt() != null) {
+        } else if (existingTeamMember.getDeletedAt() != null) {
             // 탈퇴 멤버 -> UPDATE (deleted_at = null)
             teamMemberMapper.restoreMember(teamId, userId, role);
         } else {
             // 이미 활동 중인 멤버 -> 예외처리
             throw new BusinessException(ErrorCode.MEMBER_ALREADY_EXISTS);
+        }
+
+        // 팀의 공개 보드 들에 자동으로 신규 멤버 등록
+        // 1. 해당 팀의 TEAM 공개 보드 조회
+        List<BoardVo> teamBoards = boardMapper.findAllByTeamIdAndVisibility(teamId, Visibility.TEAM);
+
+        // 2. 각 보드에 신규 멤버 추가
+        for (BoardVo board : teamBoards) {
+            // 기존 보드 멤버 이력 확인 (탈퇴자 포함)
+            BoardMemberVo existingBoardMember = boardMemberMapper.findMemberIncludeDeleted(board.getId(), userId);
+
+            if (existingBoardMember == null) {
+                // 신규 멤버 -> INSERT
+                BoardMemberVo newMember = BoardMemberVo.builder()
+                        .boardId(board.getId())
+                        .userId(userId)
+                        .role(Role.MEMBER)
+                        .build();
+
+                boardMemberMapper.insertBoardMember(newMember);
+            } else if (existingBoardMember.getDeletedAt() != null) {
+                // 탈퇴했던 보드 멤버 -> UPDATE
+                boardMemberMapper.restoreMember(board.getId(), userId);
+            }
         }
     }
 
