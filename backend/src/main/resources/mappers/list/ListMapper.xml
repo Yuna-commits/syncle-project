@@ -14,6 +14,16 @@
         VALUES (#{boardId}, #{title}, #{orderIndex}, NOW(), NOW(), NULL)
     </insert>
 
+    <select id="findById" parameterType="long" resultType="ListVo">
+        SELECT id,
+               board_id,
+               title,
+               order_index AS orderIndex
+        FROM list
+        WHERE id = #{listId}
+          AND deleted_at IS NULL
+    </select>
+
     <!-- 리스트 목록 조회
          조건:
            - board_id = ?
@@ -23,11 +33,10 @@
     <select id="findByBoardId"
             parameterType="long"
             resultType="com.nullpointer.domain.list.vo.ListVo">
-        SELECT
-            id,
-            board_id,
-            title,
-            order_index AS orderIndex
+        SELECT id,
+               board_id,
+               title,
+               order_index AS orderIndex
         FROM list
         WHERE board_id = #{boardId}
           AND deleted_at IS NULL
@@ -53,7 +62,7 @@
     <update id="updateListInfo"
             parameterType="com.nullpointer.domain.list.vo.ListVo">
         UPDATE list
-        SET title = #{title},
+        SET title      = #{title},
             updated_at = NOW()
         WHERE id = #{id}
           AND deleted_at IS NULL

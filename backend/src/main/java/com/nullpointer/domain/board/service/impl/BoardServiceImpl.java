@@ -51,6 +51,12 @@ public class BoardServiceImpl implements BoardService {
     private final CardMapper cardMapper;
     private final TeamMemberMapper teamMemberMapper;
 
+    /**
+     * 보드 권한
+     * - 보드 수정/삭제 -> OWNER (Manager)
+     * - 보드 조회 -> VIEWER 이상
+     */
+
     @Override
     @Transactional
     public void createBoard(Long teamId, CreateBoardRequest req, Long userId) {
@@ -63,6 +69,7 @@ public class BoardServiceImpl implements BoardService {
 
         // 보드 개수 제한 체크 (팀당 최대 10개)
         int currentBoardCount = boardMapper.countBoardByTeamId(teamId);
+
         if (currentBoardCount >= MAX_BOARDS_PER_TEAM) {
             throw new BusinessException(ErrorCode.BOARD_LIMIT_EXCEEDED);
         }
@@ -116,20 +123,23 @@ public class BoardServiceImpl implements BoardService {
         return boards.stream().map(BoardResponse::from).toList();
     }
 
-    // 특정 팀 보드 조회
+    // 특정 팀 보드 조회 - 보드 목록 반환
     @Override
     public List<BoardResponse> getTeamBoards(Long teamId, Long userId) {
-        // 1. 권한 체크 (OWNER)
-        memberVal.validateTeamOwner(teamId, userId, ErrorCode.TEAM_ACCESS_DENIED);
+        // 1. 권한 체크 (팀의 멤버면 팀 소속 보드 조회 가능)
+        memberVal.validateTeamMember(teamId, userId);
         // 즐겨찾기 반영된 보드 반환
         return boardMapper.findBoardWithFavoriteStatus(teamId, userId);
     }
 
-    // 보드 상세 조회
+    // 보드 상세 조회 - 보드 설정
     @Override
     @Transactional(readOnly = true)
-    public BoardDetailResponse getBoardDetail(Long boardId) {
-        // 1. 공통 검증 메서드로 보드 조회
+    public BoardDetailResponse getBoardDetail(Long boardId, Long userId) {
+        // 보드 멤버이고 VIEWER 이상이면 조회 가능
+        memberVal.validateBoardViewer(boardId, userId);
+
+        // 보드 유효성 검증
         BoardVo boardVo = boardVal.getValidBoard(boardId);
         return BoardDetailResponse.from(boardVo);
     }
@@ -137,12 +147,11 @@ public class BoardServiceImpl implements BoardService {
     @Override
     @Transactional
     public void updateBoard(Long boardId, UpdateBoardRequest req, Long userId) {
+        // 1. 보드 설정 변경 - 관리자(OWNER)만 가능
+        memberVal.validateBoardManager(boardId, userId);
 
-        // 1. 공통 검증 메서드로 보드 조회
+        // 2. 공통 검증 메서드로 보드 조회
         BoardVo boardVo = boardVal.getValidBoard(boardId);
-
-        // 2. 권한 체크 (OWNER)
-        memberVal.validateBoardOwner(boardId, userId, ErrorCode.BOARD_UPDATE_FORBIDDEN);
 
         // 3. 업데이트 진행
         if (req.getTitle() != null && !req.getTitle().isBlank()) {
@@ -166,14 +175,13 @@ public class BoardServiceImpl implements BoardService {
     @Override
     @Transactional
     public void deleteBoard(Long boardId, Long userId) {
-        // 1. 공통 검증 메서드로 보드 조회
-        BoardVo boardVo = boardVal.getValidBoard(boardId);
+        // 1. 보드 삭제 - 보드 관리자(OWNER)만 가능
+        memberVal.validateBoardManager(boardId, userId);
 
+        // 2. 공통 검증 메서드로 보드 조회
+        BoardVo boardVo = boardVal.getValidBoard(boardId);
         Long teamId = boardVo.getTeamId();
         String boardTitle = boardVo.getTitle();
-
-        // 2. 권한 체크 (OWNER)
-        memberVal.validateBoardOwner(boardId, userId, ErrorCode.BOARD_DELETE_FORBIDDEN);
 
         // 3. 삭제 진행
         boardMapper.deleteBoard(boardId);
@@ -183,13 +191,11 @@ public class BoardServiceImpl implements BoardService {
     }
 
     private ListVo createDefaultList(Long boardId, String title, int orderIndex) {
-        ListVo list = new ListVo();
-
-        list.setBoardId(boardId);
-        list.setTitle(title);
-        list.setOrderIndex(orderIndex);
-
-        return list;
+        return ListVo.builder()
+                .boardId(boardId)
+                .title(title)
+                .orderIndex(orderIndex)
+                .build();
     }
 
     // 멤버 보드 조회
@@ -222,6 +228,8 @@ public class BoardServiceImpl implements BoardService {
     @Override
     @Transactional
     public void toggleFavorite(Long boardId, Long userId) {
+        // 보드 조회 권한이 있어야 즐겨찾기 가능
+        memberVal.validateBoardViewer(boardId, userId);
 
         // 보드 존재 확인
         boardVal.getValidBoard(boardId);
@@ -243,17 +251,13 @@ public class BoardServiceImpl implements BoardService {
         }
     }
 
-    // 보드(리스트 + 카드) 조회
+    // 보드 관련 정보 조회 - 보드 페이지
     @Override
     @Transactional(readOnly = true)
     public BoardViewResponse getBoardView(Long boardId, Long userId) {
-
-        // 권한 체크
-        boolean hasAccess = boardMemberMapper.hasAccessToBoard(boardId, userId);
-
-        if (!hasAccess) {
-            throw new BusinessException(ErrorCode.BOARD_ACCESS_DENIED);
-        }
+        // 조회 권한 확인
+        // - validateBoardViewer 내부 resolveEffectiveBoardRole에서 TEAM/PRIVATE 보드 여부, 권한 모두 체크
+        memberVal.validateBoardViewer(boardId, userId);
 
         // 보드 정보 조회
         BoardVo boardVo = boardVal.getValidBoard(boardId);
@@ -264,10 +268,8 @@ public class BoardServiceImpl implements BoardService {
         // 리스트 별 카드 조회
         List<ListWithCardsResponse> listResponse = lists.stream().map(list -> {
             List<CardResponse> cards = cardMapper.findCardsWithDetailsByListId(list.getId());
-
             // ListVo + List<CardResponse> -> ListWithCardsResponse 변환
             return ListWithCardsResponse.of(list, cards);
-
         }).toList();
 
         // 보드 멤버 조회

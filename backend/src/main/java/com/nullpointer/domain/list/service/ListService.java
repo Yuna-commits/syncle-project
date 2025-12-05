@@ -13,17 +13,17 @@ import java.util.List;
 public interface ListService {
 
     // 리스트 생성
-    ListResponse createList(Long boardId, CreateListRequest request);
+    ListResponse createList(Long boardId, CreateListRequest request, Long userId);
 
     // 리스트 목록 조회
-    List<ListResponse> getLists(Long boardId);
+    List<ListResponse> getLists(Long boardId, Long userId);
 
     // 여러 리스트 순서 변경
-    void updateListOrders(Long boardId, List<UpdateListOrderRequest> request);
+    void updateListOrders(Long boardId, List<UpdateListOrderRequest> request, Long userId);
 
     // 리스트 정보 수정
-    void updateList(Long listId, UpdateListRequest request);
+    void updateList(Long listId, UpdateListRequest request, Long userId);
 
     // 리스트 삭제 (soft delete)
-    void deleteList(Long listId);
+    void deleteList(Long listId, Long userId);
 }

@@ -32,6 +32,7 @@ public interface BoardMemberMapper {
     // 탈퇴 멤버 복구
     void restoreMember(@Param("boardId") Long boardId, @Param("userId") Long userId);
 
-    // 보드 권한 체크
-    boolean hasAccessToBoard(@Param("boardId") Long boardId, @Param("userId") Long userId);
+    // 보드 내 OWNER 수 count
+    long countBoardOwner();
+
 }

@@ -51,8 +51,9 @@ public class BoardController {
 
     // 보드 상세 조회
     @GetMapping("/boards/{boardId}")
-    public ApiResponse<BoardDetailResponse> getBoard(@PathVariable Long boardId) {
-        return ApiResponse.success(boardService.getBoardDetail(boardId));
+    public ApiResponse<BoardDetailResponse> getBoard(@PathVariable Long boardId,
+                                                     @LoginUser Long userId) {
+        return ApiResponse.success(boardService.getBoardDetail(boardId, userId));
     }
 
     // 보드 정보 수정

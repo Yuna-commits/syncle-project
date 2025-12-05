@@ -5,9 +5,8 @@ import com.nullpointer.domain.list.dto.ListResponse;
 import com.nullpointer.domain.list.dto.UpdateListOrderRequest;
 import com.nullpointer.domain.list.service.ListService;
 import com.nullpointer.global.common.ApiResponse;
+import com.nullpointer.global.common.annotation.LoginUser;
 import lombok.RequiredArgsConstructor;
-import org.springframework.http.HttpStatus;
-import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -30,26 +29,29 @@ public class ListController {
     @PostMapping
     public ApiResponse<ListResponse> createList(
             @PathVariable("boardId") Long boardId,
-            @RequestBody CreateListRequest request
+            @RequestBody CreateListRequest request,
+            @LoginUser Long userId
     ) {
-        return ApiResponse.success(listService.createList(boardId, request));
+        return ApiResponse.success(listService.createList(boardId, request, userId));
     }
 
     // 리스트 목록 조회
     @GetMapping
     public ApiResponse<List<ListResponse>> getLists(
-            @PathVariable("boardId") Long boardId
+            @PathVariable("boardId") Long boardId,
+            @LoginUser Long userId
     ) {
-        return ApiResponse.success(listService.getLists(boardId));
+        return ApiResponse.success(listService.getLists(boardId, userId));
     }
 
     // 리스트 순서 변경
     @PatchMapping("/order")
     public ApiResponse<String> updateListOrders(
             @PathVariable("boardId") Long boardId,
-            @RequestBody List<UpdateListOrderRequest> request
+            @RequestBody List<UpdateListOrderRequest> request,
+            @LoginUser Long userId
     ) {
-        listService.updateListOrders(boardId, request);
+        listService.updateListOrders(boardId, request, userId);
         return ApiResponse.success("리스트 순서 변경");
     }
 }

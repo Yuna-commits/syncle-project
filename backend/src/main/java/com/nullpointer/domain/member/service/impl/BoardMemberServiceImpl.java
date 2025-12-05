@@ -32,10 +32,15 @@ public class BoardMemberServiceImpl implements BoardMemberService {
     private final MemberValidator memberVal;
     private final ActivityService activityService;
 
+    /**
+     * 보드 멤버 관리 권한
+     * - 보드 멤버 초대/추방/권한 변경 - OWNER만 가능
+     */
+
     @Override
     public void inviteBoardMember(Long boardId, BoardInviteRequest req, Long userId) {
         // 1. 요청자가 초대 권한(OWNER)이 있는지 확인
-        memberVal.validateBoardOwner(boardId, userId, ErrorCode.MEMBER_INVITE_FORBIDDEN);
+        memberVal.validateBoardManager(boardId, userId);
 
         /**
          * TODO) 로그 로직 수정 필요
@@ -77,8 +82,8 @@ public class BoardMemberServiceImpl implements BoardMemberService {
 
     @Override
     public void changeBoardRole(Long boardId, Long memberId, BoardRoleUpdateRequest req, Long userId) {
-        // 1. 권한 확인
-        memberVal.validateBoardOwner(boardId, userId, ErrorCode.MEMBER_UPDATE_FORBIDDEN);
+        // 1. OWNER 권한 확인
+        memberVal.validateBoardManager(boardId, userId);
 
         // 2. 멤버 존재 확인
         if (boardMemberMapper.existsByBoardIdAndUserId(boardId, memberId)) {
@@ -104,8 +109,19 @@ public class BoardMemberServiceImpl implements BoardMemberService {
 
         // 2. 권한 확인 (본인 탈퇴 or OWNER의 추방)
         if (!userId.equals(memberId)) {
-            memberVal.validateBoardOwner(boardId, userId, ErrorCode.MEMBER_DELETE_FORBIDDEN);
+            // 강퇴시키는 경우 -> OWNER 권한 확인
+            memberVal.validateBoardManager(boardId, userId);
             ownerId = userId;
+        } else { // 본인 탈퇴인 경우 -> 보드에 OWNER 최소 한 명 이상 존재해야 함
+            BoardMemberVo me = boardMemberMapper.findMember(boardId, userId);
+            // 마지막 남은 OWNER인지 확인
+            if (me.getRole() == Role.OWNER) {
+                // 현재 보드의 OWNER 수 count
+                long ownerCount = boardMemberMapper.countBoardOwner();
+                if (ownerCount <= 1) {
+                    throw new BusinessException(ErrorCode.LAST_OWNER_CANNOT_LEAVE);
+                }
+            }
         }
 
         boardMemberMapper.deleteBoardMember(boardId, memberId);

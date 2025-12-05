@@ -6,8 +6,11 @@ import com.nullpointer.domain.card.dto.MoveCardRequest;
 import com.nullpointer.domain.card.mapper.CardMapper;
 import com.nullpointer.domain.card.service.CardService;
 import com.nullpointer.domain.card.vo.CardVo;
+import com.nullpointer.domain.list.mapper.ListMapper;
+import com.nullpointer.domain.list.vo.ListVo;
 import com.nullpointer.global.common.enums.ErrorCode;
 import com.nullpointer.global.exception.BusinessException;
+import com.nullpointer.global.validator.member.MemberValidator;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -19,10 +22,24 @@ import java.util.List;
 public class CardServiceImpl implements CardService {
 
     private final CardMapper cardMapper;
+    private final ListMapper listMapper;
+    private final MemberValidator memberVal;
+
+    /**
+     * 카드 권한
+     * - 카드 생성/수정/이동 -> MEMBER 이상 (Editor)
+     */
 
     @Override
     @Transactional
     public Long createCard(Long listId, CreateCardRequest req, Long userId) {
+        // 1. 리스트가 속한 보드 id 찾기
+        // 리스트가 없으면 보드도 없음
+        ListVo list = listMapper.findById(listId)
+                .orElseThrow(() -> new BusinessException(ErrorCode.BOARD_NOT_FOUND));
+
+        // 보드 작업 권한 확인 -> VIEWER 불가
+        memberVal.validateBoardEditor(list.getBoardId(), userId);
 
         // 1. 카드 VO 생성 (DTO -> VO)
         CardVo cardVo = req.toVo();
@@ -36,7 +53,15 @@ public class CardServiceImpl implements CardService {
 
     @Override
     @Transactional(readOnly = true)
-    public List<CardResponse> getCards(Long listId) {
+    public List<CardResponse> getCards(Long listId, Long userId) {
+        // 1. 리스트가 속한 보드 id 찾기
+        // 리스트가 없으면 보드도 없음
+        ListVo list = listMapper.findById(listId)
+                .orElseThrow(() -> new BusinessException(ErrorCode.BOARD_NOT_FOUND));
+
+        // 보드 작업 권한 확인 -> VIEWER 불가
+        memberVal.validateBoardEditor(list.getBoardId(), userId);
+
         return cardMapper.findCardsWithDetailsByListId(listId);
     }
 
@@ -49,11 +74,20 @@ public class CardServiceImpl implements CardService {
                 .orElseThrow(() -> new BusinessException(ErrorCode.CARD_NOT_FOUND));
 
         Long oldListId = card.getListId();
+
+        // 2. 카드가 속한 리스트 정보로 보드 ID 확인
+        // (카드 -> 리스트 -> 보드)
+        ListVo list = listMapper.findById(oldListId)
+                .orElseThrow(() -> new BusinessException(ErrorCode.BOARD_NOT_FOUND));
+
+        // 보드 작업 권한 확인 -> VIEWER 불가
+        memberVal.validateBoardEditor(list.getBoardId(), userId);
+
+        // 3. 순서 재정렬
         Integer oldOrder = card.getOrderIndex();
         Long newListId = req.getListId();
         Integer newOrder = req.getOrderIndex();
 
-        // 2. 순서 재정렬 로직
         if (oldListId.equals(newListId)) {
             // Case A: 같은 리스트 내 이동
             if (oldOrder < newOrder) {

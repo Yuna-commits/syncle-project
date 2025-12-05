@@ -57,6 +57,7 @@ public enum ErrorCode {
     MEMBER_INVITE_FORBIDDEN(HttpStatus.FORBIDDEN, "M004", "멤버 초대 권한이 없습니다."),
     MEMBER_UPDATE_FORBIDDEN(HttpStatus.FORBIDDEN, "M005", "멤버 정보 수정 권한이 없습니다."),
     MEMBER_DELETE_FORBIDDEN(HttpStatus.FORBIDDEN, "M006", "멤버 추방/탈퇴 권한이 없습니다."),
+    LAST_OWNER_CANNOT_LEAVE(HttpStatus.FORBIDDEN, "M007", "마지막 관리자는 탈퇴할 수 없습니다."),
 
     // 초대
     INVITATION_NOT_FOUND(HttpStatus.NOT_FOUND, "I001", "존재하지 않거나 만료된 초대장입니다."),
@@ -70,10 +71,10 @@ public enum ErrorCode {
 
     // 즐겨찾기
     FAVORITE_LIMIT_EXCEEDED(HttpStatus.BAD_REQUEST, "B007", "즐겨찾기 가능한 개수를 초과했습니다."),
-    
+
     // 카드
     CARD_NOT_FOUND(HttpStatus.NOT_FOUND, "CD001", "존재하지 않는 카드입니다.");
-    
+
     private final HttpStatus status;
     private final String code;
     private final String message;

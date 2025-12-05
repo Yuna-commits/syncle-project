@@ -24,7 +24,7 @@ public interface BoardService {
     List<BoardResponse> getTeamBoards(Long teamId, Long userId);
 
     // 보드 상세 조회
-    BoardDetailResponse getBoardDetail(Long boardId);
+    BoardDetailResponse getBoardDetail(Long boardId, Long userId);
 
     // 보드 정보 수정
     void updateBoard(Long boardId, UpdateBoardRequest req, Long userId);

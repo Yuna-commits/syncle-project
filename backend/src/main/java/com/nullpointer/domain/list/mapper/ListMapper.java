@@ -5,6 +5,7 @@ import org.apache.ibatis.annotations.Mapper;
 import org.apache.ibatis.annotations.Param;
 
 import java.util.List;
+import java.util.Optional;
 
 /**
  * list 테이블과 통신하는 MyBatis Mapper 인터페이스
@@ -14,6 +15,9 @@ public interface ListMapper {
 
     // 리스트 1개 생성
     void insertList(ListVo listVo);
+
+    // 리스트 1개에 담긴 정보 조회
+    Optional<ListVo> findById(Long listId);
 
     // 특정 보드의 리스트 목록 조회
     List<ListVo> findByBoardId(@Param("boardId") Long boardId);

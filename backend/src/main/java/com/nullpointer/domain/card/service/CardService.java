@@ -12,7 +12,7 @@ public interface CardService {
     Long createCard(Long listId, CreateCardRequest request, Long userId);
 
     // 카드 목록 조회
-    List<CardResponse> getCards(Long listId);
+    List<CardResponse> getCards(Long listId, Long userId);
 
     // 카드 이동
     void moveCard(Long cardId, MoveCardRequest req, Long userId);
