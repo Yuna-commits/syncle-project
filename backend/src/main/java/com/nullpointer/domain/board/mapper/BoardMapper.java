@@ -3,7 +3,6 @@ package com.nullpointer.domain.board.mapper;
 
 import com.nullpointer.domain.board.dto.response.BoardResponse;
 import com.nullpointer.domain.board.vo.BoardVo;
-import com.nullpointer.domain.board.vo.enums.Visibility;
 import org.apache.ibatis.annotations.Param;
 
 import java.util.List;
@@ -18,9 +17,6 @@ public interface BoardMapper {
 
     // 특정 팀 보드 목록 조회
     List<BoardResponse> findBoardWithFavoriteStatus(@Param("teamId") Long teamId, @Param("userId") Long userId);
-
-    // 팀 id와 공개 범위로 보드 조회 (팀 멤버 자동 추가 용)
-    List<BoardVo> findAllByTeamIdAndVisibility(@Param("teamId") Long teamId, @Param("visibility") Visibility visibility);
 
     // 보드 상세 조회
     BoardVo findBoardByBoardId(Long boardId);

@@ -12,18 +12,23 @@ import {
 import React from 'react'
 import useBoardStore from '../../../stores/useBoardStore'
 import { useNavigate } from 'react-router-dom'
+import useUserStore from '../../../stores/useUserStore'
 
-function MainMenuView({ board, onChangeView, onDeleteBoard, loginUser }) {
+function MainMenuView({
+  board,
+  onChangeView,
+  onDeleteBoard,
+  isOwner,
+  isExplicitMember,
+}) {
   const navigate = useNavigate()
+  const { user } = useUserStore()
   const { removeMember } = useBoardStore()
-
-  // 로그인 사용자의 role 판단
-  const isOwner = loginUser?.role === 'OWNER'
 
   // 보드 탈퇴 핸들러 (본인이 Owner가 아닐 때 가능)
   const handleLeaveBoard = async () => {
     if (window.confirm(`정말 '${board.title}' 보드에서 탈퇴하시겠습니까?`)) {
-      await removeMember(board.id, loginUser.id)
+      await removeMember(board.id, user.id)
       alert('보드에서 탈퇴하였습니다.')
       navigate('/dashboard')
     }
@@ -31,7 +36,7 @@ function MainMenuView({ board, onChangeView, onDeleteBoard, loginUser }) {
 
   return (
     <div className="space-y-4 py-2">
-      {/* 보드 요약 */}
+      {/* 보드 설정 */}
       <div className="space-y-1">
         <button
           onClick={() => onChangeView('settings_info')}
@@ -71,7 +76,7 @@ function MainMenuView({ board, onChangeView, onDeleteBoard, loginUser }) {
           </span>
         </button>
         <button
-          onClick={''}
+          onClick={() => onChangeView('files')}
           className="flex w-full items-center gap-3 rounded-md px-2 py-2 text-sm font-medium text-gray-700 transition-colors hover:cursor-pointer hover:bg-gray-200"
         >
           <File size={18} className="text-gray-500" />
@@ -93,8 +98,9 @@ function MainMenuView({ board, onChangeView, onDeleteBoard, loginUser }) {
         </button>
       </div>
 
-      {/* 섹션 3: 탈퇴 (Member, Viewer만 가능) */}
-      {!isOwner && (
+      {/* 섹션 3: 탈퇴 (보드 멤버이면서 OWNER가 아닌 경우 가능) */}
+      {/* isExplicitMember: 초대받은 정식 멤버만 탈퇴 가능 -> TEAM 공개 보드에는 멤버 탈퇴 개념이 없음! */}
+      {isExplicitMember && !isOwner && (
         <button
           onClick={handleLeaveBoard}
           className="flex w-full items-center gap-3 rounded-md px-2 py-2 text-sm font-medium text-red-600 transition-colors hover:cursor-pointer hover:bg-red-100"
@@ -104,7 +110,7 @@ function MainMenuView({ board, onChangeView, onDeleteBoard, loginUser }) {
         </button>
       )}
 
-      {/* 섹션 4: 위험 구역 (Owner만 가능) */}
+      {/* 섹션 4: 위험 구역 (관리 권한이 있는 Owner만 가능) */}
       {isOwner && (
         <>
           <div className="h-px bg-gray-200"></div>

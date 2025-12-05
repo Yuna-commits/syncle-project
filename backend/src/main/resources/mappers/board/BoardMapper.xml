@@ -65,15 +65,6 @@
 --         ORDER BY b.created_at DESC
     </select>
 
-    <!-- 팀 id와 공개 범위로 보드 조회 (팀 멤버 자동 추가 용) -->
-    <select id="findAllByTeamIdAndVisibility" resultType="BoardVo">
-        SELECT *
-        FROM board
-        WHERE team_id = #{teamId}
-          AND visibility = #{visibility}
-          AND deleted_at IS NULL
-    </select>
-
     <!-- 보드 상세 조회 -->
     <select id="findBoardByBoardId" parameterType="Long" resultType="BoardVo">
         SELECT b.id,

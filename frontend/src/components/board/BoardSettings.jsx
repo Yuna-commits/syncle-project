@@ -1,5 +1,4 @@
-import React, { useEffect, useMemo, useRef, useState } from 'react'
-import useUserStore from '../../stores/useUserStore'
+import React, { useEffect, useRef, useState } from 'react'
 
 import { ChevronLeft } from 'lucide-react'
 import useBoardStore from '../../stores/useBoardStore'
@@ -9,19 +8,18 @@ import VisibilityView from './view/VisibilityView'
 import PermissionsView from './view/PermissionsView'
 import MembersView from './view/MembersView'
 import ArchiveView from './view/ArchiveView'
+import useBoardPermission from '../../hooks/useBoardPermission'
 
 function BoardSettings({ board }) {
   const { toggleSettings, deleteBoard, isSettingsOpen } = useBoardStore()
-  const { user } = useUserStore()
+
+  // 로그인 사용자의 권한 가져오기
+  const { role, canManage, isExplicitMember } = useBoardPermission(board)
+
   const menuRef = useRef(null)
 
   // 현재 보고 있는 뷰의 상태
   const [currentView, setCurrentView] = useState('root')
-
-  // 현재 로그인한 사용자 정보를 보드 멤버 목록에서 찾기
-  const loginUser = useMemo(() => {
-    return board.members.find((m) => m.id === user?.id)
-  }, [board.members, user?.id])
 
   // 외부 클릭 시 닫기
   useEffect(() => {
@@ -50,6 +48,7 @@ function BoardSettings({ board }) {
     settings_visibility: '공개 범위',
     settings_permissions: '권한 설정',
     members: '멤버 관리',
+    files: '파일 관리',
     archive: '아카이브',
   }
 
@@ -71,7 +70,9 @@ function BoardSettings({ board }) {
     // 하위 콘텐츠에 전달되는 프로퍼티
     const props = {
       board,
-      loginUser,
+      role, // 현재 '나'의 role
+      isOwner: canManage, // 관리 권한
+      isExplicitMember, // 보드 멤버 여부
       onChangeView: setCurrentView,
       onDeleteBoard: deleteBoard,
       boardId: board.id,
@@ -86,7 +87,6 @@ function BoardSettings({ board }) {
         return <VisibilityView {...props} />
       case 'settings_permissions':
         return <PermissionsView {...props} />
-
       case 'members':
         return <MembersView {...props} />
       case 'archive':

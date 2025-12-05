@@ -4,14 +4,11 @@ import com.nullpointer.domain.activity.dto.request.ActivitySaveRequest;
 import com.nullpointer.domain.activity.service.ActivityService;
 import com.nullpointer.domain.activity.vo.enums.ActivityType;
 import com.nullpointer.domain.board.mapper.BoardMapper;
-import com.nullpointer.domain.board.vo.BoardVo;
-import com.nullpointer.domain.board.vo.enums.Visibility;
 import com.nullpointer.domain.member.dto.team.TeamMemberResponse;
 import com.nullpointer.domain.member.dto.team.TeamRoleUpdateRequest;
 import com.nullpointer.domain.member.mapper.BoardMemberMapper;
 import com.nullpointer.domain.member.mapper.TeamMemberMapper;
 import com.nullpointer.domain.member.service.TeamMemberService;
-import com.nullpointer.domain.member.vo.BoardMemberVo;
 import com.nullpointer.domain.member.vo.TeamMemberVo;
 import com.nullpointer.domain.member.vo.enums.Role;
 import com.nullpointer.domain.user.mapper.UserMapper;
@@ -59,30 +56,7 @@ public class TeamMemberServiceImpl implements TeamMemberService {
             // 이미 활동 중인 멤버 -> 예외처리
             throw new BusinessException(ErrorCode.MEMBER_ALREADY_EXISTS);
         }
-
-        // 팀의 공개 보드 들에 자동으로 신규 멤버 등록
-        // 1. 해당 팀의 TEAM 공개 보드 조회
-        List<BoardVo> teamBoards = boardMapper.findAllByTeamIdAndVisibility(teamId, Visibility.TEAM);
-
-        // 2. 각 보드에 신규 멤버 추가
-        for (BoardVo board : teamBoards) {
-            // 기존 보드 멤버 이력 확인 (탈퇴자 포함)
-            BoardMemberVo existingBoardMember = boardMemberMapper.findMemberIncludeDeleted(board.getId(), userId);
-
-            if (existingBoardMember == null) {
-                // 신규 멤버 -> INSERT
-                BoardMemberVo newMember = BoardMemberVo.builder()
-                        .boardId(board.getId())
-                        .userId(userId)
-                        .role(Role.MEMBER)
-                        .build();
-
-                boardMemberMapper.insertBoardMember(newMember);
-            } else if (existingBoardMember.getDeletedAt() != null) {
-                // 탈퇴했던 보드 멤버 -> UPDATE
-                boardMemberMapper.restoreMember(board.getId(), userId);
-            }
-        }
+        
     }
 
     @Override
