@@ -11,13 +11,8 @@ import com.nullpointer.domain.list.mapper.ListMapper;
 import com.nullpointer.domain.list.vo.ListVo;
 import com.nullpointer.global.common.enums.ErrorCode;
 import com.nullpointer.global.exception.BusinessException;
-<<<<<<< Updated upstream
-import com.nullpointer.global.validator.member.MemberValidator;
-=======
-import com.nullpointer.global.validator.BoardValidator;
 import com.nullpointer.global.validator.CardValidatior;
 import com.nullpointer.global.validator.MemberValidator;
->>>>>>> Stashed changes
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -29,18 +24,9 @@ import java.util.List;
 public class CardServiceImpl implements CardService {
 
     private final CardMapper cardMapper;
-<<<<<<< Updated upstream
     private final ListMapper listMapper;
     private final MemberValidator memberVal;
-
-    /**
-     * 카드 권한
-     * - 카드 생성/수정/이동 -> MEMBER 이상 (Editor)
-     */
-=======
     private final CardValidatior cardVal;
-    private final BoardValidator boardVal;
->>>>>>> Stashed changes
 
     @Override
     @Transactional

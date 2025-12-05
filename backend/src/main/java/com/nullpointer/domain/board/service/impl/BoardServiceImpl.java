@@ -255,15 +255,9 @@ public class BoardServiceImpl implements BoardService {
     @Override
     @Transactional(readOnly = true)
     public BoardViewResponse getBoardView(Long boardId, Long userId) {
-<<<<<<< Updated upstream
         // 조회 권한 확인
         // - validateBoardViewer 내부 resolveEffectiveBoardRole에서 TEAM/PRIVATE 보드 여부, 권한 모두 체크
         memberVal.validateBoardViewer(boardId, userId);
-=======
-
-        // 보드 권한 체크
-        boardVal.hasAccess(boardId, userId);
->>>>>>> Stashed changes
 
         // 보드 정보 조회
         BoardVo boardVo = boardVal.getValidBoard(boardId);

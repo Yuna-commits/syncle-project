@@ -73,12 +73,9 @@ public enum ErrorCode {
     FAVORITE_LIMIT_EXCEEDED(HttpStatus.BAD_REQUEST, "B007", "즐겨찾기 가능한 개수를 초과했습니다."),
 
     // 카드
-<<<<<<< Updated upstream
-    CARD_NOT_FOUND(HttpStatus.NOT_FOUND, "CD001", "존재하지 않는 카드입니다.");
-=======
     CARD_NOT_FOUND(HttpStatus.NOT_FOUND, "CD001", "존재하지 않는 카드입니다."),
     CARD_DELETED(HttpStatus.GONE, "CD002", "삭제된 카드입니다.");
->>>>>>> Stashed changes
+
 
     private final HttpStatus status;
     private final String code;

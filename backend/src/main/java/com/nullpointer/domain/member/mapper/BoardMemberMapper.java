@@ -35,4 +35,7 @@ public interface BoardMemberMapper {
     // 보드 내 OWNER 수 count
     long countBoardOwner();
 
+    // 보드 권한 체크
+    boolean hasAccessToBoard(Long boardId, Long userId);
+
 }
