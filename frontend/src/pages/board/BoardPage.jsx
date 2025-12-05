@@ -6,6 +6,7 @@ import BoardHeader from '../../components/board/BoardHeader'
 import BoardCanvas from '../../components/board/BoardCanvas'
 import BoardSettings from '../../components/board/BoardSettings'
 import CardDetailModal from '../../components/modals/CardDetailModal'
+import useBoardPermission from '../../hooks/useBoardPermission'
 
 /**
  * 보드 데이터 로딩,
@@ -28,6 +29,9 @@ function BoardPage() {
   } = useBoardStore()
 
   const navigate = useNavigate()
+
+  // 권한 계산
+  const { canEdit } = useBoardPermission(activeBoard)
 
   // 각 리스트(컬럼)의 DOM 요소를 참조하기 위한 Ref 객체
   const columnRefs = useRef({})
@@ -57,6 +61,7 @@ function BoardPage() {
 
       // 스타일 (필요시 index.css에 정의하여 사용 가능)
       ghostClass: 'opacity-50',
+      disabled: !canEdit, // VIEWER는 리스트 이동 권한이 없음
 
       onEnd: (evt) => {
         const { oldIndex, newIndex } = evt
@@ -71,7 +76,7 @@ function BoardPage() {
     })
 
     return () => listSortable.destroy()
-  }, [activeBoard, moveList])
+  }, [activeBoard, moveList, canEdit])
 
   // 카드 이동 Sortable
   useEffect(() => {
@@ -88,6 +93,8 @@ function BoardPage() {
         group: 'kanban',
         animation: 150,
         ghostClass: 'opacity-50',
+        disabled: !canEdit, // VIEWER는 카드 이동 권한이 없음
+
         onEnd: (evt) => {
           const fromId = evt.from.dataset.columnId
           const toId = evt.to.dataset.columnId
@@ -110,7 +117,7 @@ function BoardPage() {
     })
 
     return () => sortables.forEach((s) => s.destroy())
-  }, [activeBoard, moveCard])
+  }, [activeBoard, moveCard, canEdit])
 
   // 로딩 및 에러 처리
   if (isLoading)

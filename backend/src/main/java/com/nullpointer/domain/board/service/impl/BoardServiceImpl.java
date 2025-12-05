@@ -89,26 +89,6 @@ public class BoardServiceImpl implements BoardService {
         BoardMemberVo boardMemberVo = BoardMemberVo.builder().boardId(createBoardId).userId(userId).role(Role.OWNER).build();
 
         boardMemberMapper.insertBoardMember(boardMemberVo);
-
-        // 보드의 공개 범위가 TEAM이면 기존 팀원들을 자동으로 보드 멤버로 등록
-        if (boardVo.getVisibility() == Visibility.TEAM) {
-            List<TeamMemberResponse> teamMembers = teamMemberMapper.findMembersByTeamId(teamId);
-
-            for (TeamMemberResponse tm : teamMembers) {
-                // 보드 생성자 OWNER는 제외
-                if (!tm.getUserId().equals(userId)) {
-                    BoardMemberVo member = BoardMemberVo.builder()
-                            .boardId(createBoardId)
-                            .userId(tm.getUserId())
-                            // VIEWER가 아닌 팀원은 MEMBER로 등록
-                            .role(tm.getRole() != Role.VIEWER ? Role.MEMBER : Role.VIEWER)
-                            .build();
-
-                    boardMemberMapper.insertBoardMember(member);
-                }
-            }
-        }
-
     }
 
     @Override

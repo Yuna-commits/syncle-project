@@ -1,18 +1,17 @@
 import React, { useEffect, useState } from 'react'
 import useBoardStore from '../../../stores/useBoardStore'
 import { ChevronDown, X } from 'lucide-react'
+import useUserStore from '../../../stores/useUserStore'
 
-function MembersView({ board, loginUser }) {
+function MembersView({ board, isOwner }) {
   const { changeMemberRole, removeMember } = useBoardStore()
+  const { user } = useUserStore()
   const [members, setMembers] = useState(board.members)
 
   // 보드 데이터가 변경되면 로컬 상태도 동기화
   useEffect(() => {
     setMembers(board.members)
   }, [board.members])
-
-  // 로그인 사용자의 role 판단
-  const isOwner = loginUser?.role === 'OWNER'
 
   // role 변경 핸들러 (Owner만 가능)
   const handleRoleChange = async (userId, newRole) => {
@@ -43,16 +42,16 @@ function MembersView({ board, loginUser }) {
       <div className="space-y-2">
         {members.map((member) => {
           // 리스트의 멤버가 '나'인지 확인
-          const isMe = loginUser?.id === member.id
+          const isMe = user?.id === member.id
 
-          // 추방/수정 권한 판단
+          // 작업 권한 판단
           // 내가 Owner이고 나를 제외한 상대가 Owner가 아니어야 함
-          const canManage = isOwner && member.role !== 'OWENR' && !isMe
+          const canAction = isOwner && member.role !== 'OWENR' && !isMe
 
           return (
             <div
               key={member.id}
-              className={`flex items-center justify-between rounded-md px-2 py-2 transition-colors ${canManage && 'hover:cursor-pointer hover:bg-gray-200'} ${
+              className={`flex items-center justify-between rounded-md px-2 py-2 transition-colors ${canAction && 'hover:cursor-pointer hover:bg-gray-200'} ${
                 isMe && 'bg-green-100 ring-1 ring-green-50'
               }`}
             >
@@ -74,7 +73,7 @@ function MembersView({ board, loginUser }) {
               {/* 오른쪽: 조작 */}
               <div className="flex shrink-0 items-center gap-2">
                 {/* 관리 권한이 있는 경우 */}
-                {canManage ? (
+                {canAction ? (
                   <>
                     <div className="relative">
                       <select
@@ -103,7 +102,7 @@ function MembersView({ board, loginUser }) {
                     </button>
                   </>
                 ) : (
-                  // 관리 권한이 없는 경우
+                  // 관리 권한이 없거나 조작 불가능한 경우 (OWNER, 본인)
                   <span
                     className={`rounded px-2.5 py-1 text-xs font-bold ${
                       member.role === 'OWNER'
