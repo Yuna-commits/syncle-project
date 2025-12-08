@@ -20,7 +20,10 @@ import com.nullpointer.global.validator.MemberValidator;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
+import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
+import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
@@ -42,9 +45,6 @@ public class BoardMemberServiceImpl implements BoardMemberService {
         // 1. 요청자가 초대 권한(OWNER)이 있는지 확인
         memberVal.validateBoardManager(boardId, userId);
 
-        /**
-         * TODO) 로그 로직 수정 필요
-         */
         // 로그 저장을 위해 보드가 소속한 팀 id 필요
         BoardVo board = boardMapper.findBoardByBoardId(boardId);
 
@@ -54,24 +54,45 @@ public class BoardMemberServiceImpl implements BoardMemberService {
 
         Long teamId = board.getTeamId();
 
-        for (Long targetUserId : req.getUserIds()) {
-            // 2. 기존 멤버 이력 조회 (탈퇴 멤버 포함)
-            BoardMemberVo existingMember = boardMemberMapper.findMemberIncludeDeleted(boardId, targetUserId);
+        // refactor) for문 안에서 쿼리 사용 -> 한 번만 사용하여 일괄 처리되도록 변경
+        List<Long> targetIds = req.getUserIds();
 
-            if (existingMember == null) {
+        // 기존 맴버 이력 일괄 조회
+        List<BoardMemberVo> histories = boardMemberMapper.findAllByBoardIdAndUserIdsIncludeDeleted(boardId, targetIds);
+
+        // Map 변환
+        Map<Long, BoardMemberVo> historyMap = histories.stream()
+                .collect(Collectors.toMap(BoardMemberVo::getUserId, vo -> vo));
+
+        List<BoardMemberVo> toInsert = new ArrayList<>();
+        List<Long> toRestore = new ArrayList<>();
+
+        // 신규/복구/중복 분류
+        for (Long targetId : targetIds) {
+            BoardMemberVo existing = historyMap.get(targetId);
+
+            if (existing == null) {
                 // 신규 멤버 -> INSERT
-                BoardMemberVo vo = req.toVo(boardId, targetUserId);
-                boardMemberMapper.insertBoardMember(vo);
-            } else if (existingMember.getDeletedAt() != null) {
-                // 탈퇴 멤버 -> UPDATE (deleted_at = null)
-                boardMemberMapper.restoreMember(boardId, targetUserId);
+                toInsert.add(req.toVo(boardId, targetId));
+            } else if (existing.getDeletedAt() != null) {
+                // 탈퇴 멤버 -> UPDATE
+                toRestore.add(targetId);
             } else {
                 // 이미 활동 중인 멤버 -> 예외처리
                 throw new BusinessException(ErrorCode.MEMBER_ALREADY_EXISTS);
             }
 
-            // 팀 멤버 보드 초대 로그 저장
-            inviteMemberLog(targetUserId, userId, boardId, teamId);
+            // 로그 저장
+            inviteMemberLog(targetId, userId, boardId, teamId);
+        }
+
+        // DB 저장/업데이트
+        if (!toInsert.isEmpty()) {
+            boardMemberMapper.insertBoardMembersBulk(toInsert);
+        }
+
+        if (!toRestore.isEmpty()) {
+            boardMemberMapper.restoreMembersBulk(boardId, toRestore);
         }
     }
 

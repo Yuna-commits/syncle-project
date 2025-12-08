@@ -12,6 +12,15 @@
                 #{role})
     </insert>
 
+    <!-- 여러 명의 보드 멤버 일괄 초대 - Param List -->
+    <insert id="insertBoardMembersBulk" parameterType="java.util.List">
+        INSERT INTO board_member (board_id, user_id, role)
+        VALUES
+        <foreach collection="list" item="item" separator=",">
+            (#{item.boardId}, #{item.userId}, #{item.role})
+        </foreach>
+    </insert>
+
     <!-- 보드 멤버 조회 -->
     <select id="findMembersByBoardId" parameterType="Long" resultType="BoardMemberResponse">
         SELECT a.board_id,
@@ -28,22 +37,25 @@
           AND a.deleted_at IS NULL
     </select>
 
-    <!-- 탈퇴 멤버 포함 조회 -->
-    <select id="findMemberIncludeDeleted" resultType="BoardMemberVo">
-        SELECT *
-        FROM board_member
+    <!-- 탈퇴 멤버 포함 모든 멤버 일괄 조회 - Param List -->
+    <select id="findAllByBoardIdAndUserIdsIncludeDeleted" resultType="BoardMemberVo">
+        SELECT * FROM board_member
         WHERE board_id = #{boardId}
-          AND user_id = #{userId}
+        AND user_id IN
+        <foreach collection="userIds" item="id" open="(" separator="," close=")">
+            #{id}
+        </foreach>
     </select>
 
-    <!-- 탈퇴 멤버 복구 -->
-    <update id="restoreMember">
+    <!-- 여러 명의 탈퇴 멤버 복구 - Param List -->
+    <update id="restoreMembersBulk">
         UPDATE board_member
-        SET deleted_at = NULL,
-            role       = 'MEMBER',
-            joined_at  = NOW()
+        SET deleted_at = NULL, role = 'MEMBER', joined_at = NOW()
         WHERE board_id = #{boardId}
-          AND user_id = #{userId}
+        AND user_id IN
+        <foreach collection="userIds" item="id" open="(" separator="," close=")">
+            #{id}
+        </foreach>
     </update>
 
     <!-- 보드 역할 변경 -->

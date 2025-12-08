@@ -4,6 +4,7 @@ import com.nullpointer.domain.user.dto.response.UserProfileResponse;
 import com.nullpointer.domain.user.dto.response.UserSummaryResponse;
 import com.nullpointer.domain.user.vo.UserVo;
 import com.nullpointer.domain.user.vo.enums.VerifyStatus;
+import org.apache.ibatis.annotations.Param;
 
 import java.util.List;
 import java.util.Optional;
@@ -21,6 +22,9 @@ public interface UserMapper {
 
     // Id로 사용자 조회 (이메일 인증)
     Optional<UserVo> findById(Long id);
+
+    // 초대받을 여러 명의 사용자 조회
+    List<UserVo> findAllByIds(@Param("ids") List<Long> ids);
 
     // email로 사용자 조회 (로그인)
     Optional<UserVo> findByEmail(String email);
