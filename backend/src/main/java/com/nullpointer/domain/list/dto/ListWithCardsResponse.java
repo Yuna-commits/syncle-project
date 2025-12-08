@@ -2,13 +2,17 @@ package com.nullpointer.domain.list.dto;
 
 import com.nullpointer.domain.card.dto.CardResponse;
 import com.nullpointer.domain.list.vo.ListVo;
+import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Getter;
+import lombok.NoArgsConstructor;
 
 import java.util.List;
 
 @Getter
 @Builder
+@NoArgsConstructor
+@AllArgsConstructor
 public class ListWithCardsResponse {
     private Long id;
     private String title;

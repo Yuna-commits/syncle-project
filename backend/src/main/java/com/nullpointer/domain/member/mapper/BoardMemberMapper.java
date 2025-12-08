@@ -11,11 +11,14 @@ public interface BoardMemberMapper {
     // 보드 멤버 초대
     void insertBoardMember(BoardMemberVo boardMemberVo);
 
+    // 보드 멤버 일괄 초대
+    void insertBoardMembersBulk(@Param("list") List<BoardMemberVo> boardMemberVos);
+
     // 보드 멤버 조회
     List<BoardMemberResponse> findMembersByBoardId(Long boardId);
 
-    // 보드 멤버 조회(탈퇴 멤버 포함)
-    BoardMemberVo findMemberIncludeDeleted(@Param("boardId") Long boardId, @Param("userId") Long memberId);
+    // 보드 멤버 일괄 조회(탈퇴 멤버 포함)
+    List<BoardMemberVo> findAllByBoardIdAndUserIdsIncludeDeleted(@Param("boardId") Long boardId, @Param("userIds") List<Long> userIds);
 
     // 보드 역할 변경
     void updateBoardRole(BoardMemberVo boardMemberVo);
@@ -29,8 +32,8 @@ public interface BoardMemberMapper {
     // 권한 확인용 조회
     BoardMemberVo findMember(@Param("boardId") Long boardId, @Param("userId") Long userId);
 
-    // 탈퇴 멤버 복구
-    void restoreMember(@Param("boardId") Long boardId, @Param("userId") Long userId);
+    // 탈퇴 멤버 일괄 복구
+    void restoreMembersBulk(@Param("boardId") Long boardId, @Param("userIds") List<Long> userIds);
 
     // 보드 내 OWNER 수 count
     long countBoardOwner();

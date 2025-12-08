@@ -12,22 +12,25 @@ import com.nullpointer.domain.team.dto.response.TeamResponse;
 import com.nullpointer.domain.team.service.TeamService;
 import com.nullpointer.global.common.ApiResponse;
 import com.nullpointer.global.common.annotation.LoginUser;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 
+@Tag(name = "Team", description = "팀 생성 및 관리 API")
 @RestController
 @RequestMapping("/api/teams")
 @RequiredArgsConstructor
-
 public class TeamController {
 
     private final TeamService teamService;
     private final ActivityService activityService;
 
     // 팀 생성
+    @Operation(summary = "팀 생성", description = "새로운 팀을 생성합니다.")
     @PostMapping("")
     public ApiResponse<String> createTeam(@Valid @RequestBody CreateTeamRequest req,
                                           @LoginUser Long userId) {
@@ -36,12 +39,14 @@ public class TeamController {
     }
 
     // 소속팀 조회
+    @Operation(summary = "내 팀 목록 조회", description = "내가 소속된 모든 팀의 목록을 조회합니다.")
     @GetMapping("")
     public ApiResponse<List<TeamResponse>> getTeams(@LoginUser Long userId) {
         return ApiResponse.success(teamService.getTeams(userId));
     }
 
     // 팀 상세 조회
+    @Operation(summary = "팀 상세 조회", description = "특정 팀의 상세 정보, 멤버, 보드 목록을 조회합니다.")
     @GetMapping("/{teamId}")
     public ApiResponse<TeamDetailResponse> getTeamDetail(@PathVariable Long teamId,
                                                          @LoginUser Long userId) {
@@ -49,6 +54,7 @@ public class TeamController {
     }
 
     // 팀 정보 수정
+    @Operation(summary = "팀 정보 수정", description = "팀 이름 및 설명을 수정합니다 (팀장 권한).")
     @PutMapping("/{teamId}")
     public ApiResponse<String> updateTeam(@PathVariable Long teamId,
                                           @Valid @RequestBody UpdateTeamRequest req,
@@ -58,6 +64,7 @@ public class TeamController {
     }
 
     // 팀 삭제
+    @Operation(summary = "팀 삭제", description = "팀을 삭제합니다 (팀장 권한).")
     @DeleteMapping("/{teamId}")
     public ApiResponse<String> deleteTeam(@PathVariable Long teamId,
                                           @LoginUser Long userId) {
@@ -66,6 +73,7 @@ public class TeamController {
     }
 
     // 팀 활동 통계 조회
+    @Operation(summary = "팀 활동 통계 조회", description = "해당 팀의 활동 통계를 조회합니다.")
     @GetMapping("/{teamId}/activities/stats")
     public ApiResponse<ActivityStatsResponse> getTeamStats(@PathVariable Long teamId) {
         ActivityStatsResponse response
@@ -74,6 +82,7 @@ public class TeamController {
     }
 
     // 팀 내 인기 보드 조회
+    @Operation(summary = "팀 인기 보드 조회", description = "팀 내에서 가장 활발한 보드 목록을 조회합니다.")
     @GetMapping("/{teamId}/activities/top-boards")
     public ApiResponse<List<TopBoardResponse>> getTeamTopBoards(@PathVariable Long teamId) {
         List<TopBoardResponse> response
@@ -82,6 +91,7 @@ public class TeamController {
     }
 
     // 팀 활동 타임라인 조회
+    @Operation(summary = "팀 활동 타임라인 조회", description = "팀 전체의 활동 로그를 조회합니다.")
     @GetMapping("/{teamId}/activities")
     public ApiResponse<List<ActivityLogResponse>> getTeamActivities(
             @PathVariable Long teamId, @ModelAttribute ActivityConditionRequest condition) {

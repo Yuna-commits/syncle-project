@@ -12,7 +12,7 @@ export default function SecurityPage() {
   const {
     user,
     isLoading,
-    fetchUserProfile,
+    fetchUser,
     changePassword,
     deactivateUser,
     deleteUser,
@@ -24,8 +24,8 @@ export default function SecurityPage() {
 
   // 마운트될 때마다 프로필 정보 가져오기
   useEffect(() => {
-    fetchUserProfile()
-  }, [fetchUserProfile])
+    fetchUser()
+  }, [fetchUser])
 
   // 정보 조회 성공 여부 표시
   if (isLoading && !user) {

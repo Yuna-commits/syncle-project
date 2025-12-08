@@ -1,9 +1,9 @@
 import React from 'react'
 import { Routes, Route } from 'react-router-dom'
-import TeamBoardPage from '../pages/main/TeamBoardPage'
-import TeamMembersPage from '../pages/main/TeamMembersPage'
-import TeamInvitationsPage from '../pages/main/TeamInvitationsPage'
-import TeamSetting from '../pages/main/TeamSetting'
+import TeamBoardPage from '../pages/team/TeamBoardPage'
+import TeamMembersPage from '../pages/team/TeamMembersPage'
+import TeamInvitationsPage from '../pages/team/TeamInvitationsPage'
+import TeamSetting from '../pages/team/TeamSetting'
 
 export default function TeamRoutes() {
   return (

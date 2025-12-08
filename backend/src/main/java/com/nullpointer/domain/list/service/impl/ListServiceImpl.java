@@ -12,6 +12,7 @@ import com.nullpointer.domain.list.dto.UpdateListRequest;
 import com.nullpointer.domain.list.mapper.ListMapper;
 import com.nullpointer.domain.list.service.ListService;
 import com.nullpointer.domain.list.vo.ListVo;
+import com.nullpointer.global.common.constants.AppConstants;
 import com.nullpointer.global.common.enums.ErrorCode;
 import com.nullpointer.global.exception.BusinessException;
 import com.nullpointer.global.validator.MemberValidator;
@@ -50,7 +51,7 @@ public class ListServiceImpl implements ListService {
         ListVo listVo = new ListVo();
         listVo.setBoardId(boardId);
         listVo.setTitle(request.getTitle());
-        listVo.setOrderIndex(9999);
+        listVo.setOrderIndex(AppConstants.DEFAULT_ORDER_INDEX); // refactor) 하드코딩 대신 상수 클래스 사용
 
         listMapper.insertList(listVo);
 

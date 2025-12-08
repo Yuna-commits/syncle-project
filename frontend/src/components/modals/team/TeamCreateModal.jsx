@@ -1,6 +1,6 @@
 import React, { useState } from 'react'
 import { Users, X } from 'lucide-react'
-import api from '../../api/AxiosInterceptor'
+import api from '../../../api/AxiosInterceptor'
 
 function TeamCreateModal({ onClose }) {
   // 팀 정보 상태

@@ -2,6 +2,7 @@ package com.nullpointer.domain.board.mapper;
 
 
 import com.nullpointer.domain.board.dto.response.BoardResponse;
+import com.nullpointer.domain.board.dto.response.BoardViewResponse;
 import com.nullpointer.domain.board.vo.BoardVo;
 import org.apache.ibatis.annotations.Param;
 
@@ -20,6 +21,9 @@ public interface BoardMapper {
 
     // 보드 상세 조회
     BoardVo findBoardByBoardId(Long boardId);
+
+    // 보드 페이지 조회 - 보드+리스트+카드 일괄 조회
+    BoardViewResponse findBoardWithListsAndCards(@Param("boardId") Long boardId);
 
     // 보드 정보 수정
     void updateBoard(BoardVo boardVo);

@@ -28,10 +28,16 @@ public interface InvitationMapper {
             @Param("inviteeId") Long inviteeId,
             @Param("status") Status status
     );
-    
+
+    // 이미 초대를 받은 사용자 일괄 조회
+    List<Long> findPendingInviteeIds(@Param("teamId") Long teamId, @Param("userIds") List<Long> userIds);
+
+    // 초대장 한 번에 저장
+    void insertInvitationsBulk(List<InvitationVo> invitationsToInsert);
+
     // 팀원 초대 목록
     List<TeamInvitationResponse> findAllByTeamId(Long teamId);
-    
+
     // 내 초대 목록
     List<MyInvitationResponse> findAllByUserId(Long userId);
 

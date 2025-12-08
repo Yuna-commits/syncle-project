@@ -1,5 +1,5 @@
 import React, { useState } from 'react'
-import api from '../../api/AxiosInterceptor'
+import api from '../../../api/AxiosInterceptor'
 
 function CreateBoardMenu({ teamId, onClose, onSuccess }) {
   // 입력 상태 관리

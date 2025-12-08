@@ -1,5 +1,5 @@
 import React from 'react'
-import CreateBoardMenu from '../modals/CreateBoardMenu'
+import CreateBoardMenu from '../modals/board/CreateBoardMenu'
 import useUiStore from '../../stores/useUiStore'
 
 function CreateBoardButton({ teamId, onBoardCreated }) {

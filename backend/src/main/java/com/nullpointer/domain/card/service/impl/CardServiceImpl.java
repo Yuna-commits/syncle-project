@@ -9,6 +9,7 @@ import com.nullpointer.domain.card.service.CardService;
 import com.nullpointer.domain.card.vo.CardVo;
 import com.nullpointer.domain.list.mapper.ListMapper;
 import com.nullpointer.domain.list.vo.ListVo;
+import com.nullpointer.global.common.constants.AppConstants;
 import com.nullpointer.global.common.enums.ErrorCode;
 import com.nullpointer.global.exception.BusinessException;
 import com.nullpointer.global.validator.CardValidator;
@@ -43,7 +44,7 @@ public class CardServiceImpl implements CardService {
         CardVo cardVo = req.toVo();
         cardVo.setListId(listId);
         cardVo.setAssigneeId(userId);
-        cardVo.setOrderIndex(9999);
+        cardVo.setOrderIndex(AppConstants.DEFAULT_ORDER_INDEX); // refactor) 하드코딩 대신 상수 클래스 사용
 
         cardMapper.insertCard(cardVo);
         return cardVo.getId();

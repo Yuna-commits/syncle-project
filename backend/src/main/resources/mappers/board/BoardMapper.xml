@@ -38,13 +38,22 @@
                bf.favorited_at
 
         FROM team t
-                 INNER JOIN team_member tm ON t.id = tm.team_id
-                 LEFT JOIN board b ON t.id = b.team_id AND b.deleted_at IS NULL
-                 LEFT JOIN board_member bm ON b.id = bm.board_id
-                 LEFT JOIN board_favorite bf ON b.id = bf.board_id AND bf.user_id = #{id}
+                 INNER JOIN team_member tm
+                            ON t.id = tm.team_id
+                 LEFT JOIN board b
+                           ON t.id = b.team_id
+                               AND b.deleted_at IS NULL
+                 LEFT JOIN board_member bm
+                           ON b.id = bm.board_id
+                               AND bm.user_id = #{id} -- 중복 보드 조회 방지를 위해 '내' 정보 표시 조건 추가
+                 LEFT JOIN board_favorite bf
+                           ON b.id = bf.board_id
+                               AND bf.user_id = #{id}
         WHERE tm.user_id = #{id}
           AND t.deleted_at IS NULL
-          AND (b.visibility = 'TEAM' OR b.visibility = 'PRIVATE' AND bm.user_id IS NOT NULL)
+          AND (b.visibility = 'TEAM'
+            OR b.visibility = 'PRIVATE'
+                   AND bm.user_id IS NOT NULL)
     </select>
 
     <!-- 특정 팀 보드 목록 (+즐겨찾기) 조회 -->
@@ -55,7 +64,9 @@
                b.visibility,
                IF(bf.board_id IS NOT NULL, true, false) AS isFavorite
         FROM board b
-                 LEFT JOIN board_member bm ON b.id = bm.board_id
+                 LEFT JOIN board_member bm
+                           ON b.id = bm.board_id
+                               AND bm.user_id = #{userId} -- 중복 보드 조회 방지를 위해 '내' 정보 표시 조건 추가
                  LEFT JOIN board_favorite bf
                            ON b.id = bf.board_id
                                AND bf.user_id = #{userId}
@@ -77,6 +88,89 @@
                  LEFT JOIN team t ON b.team_id = t.id
         WHERE b.id = #{id}
           AND b.deleted_at IS NULL
+    </select>
+
+    <!-- 보드 페이지 조회 -->
+    <resultMap id="BoardDetailMap" type="BoardViewResponse">
+        <id property="id" column="board_id"/>
+        <result property="title" column="board_title"/>
+        <result property="description" column="board_desc"/>
+        <result property="visibility" column="board_visibility"/>
+        <result property="teamId" column="team_id"/>
+        <result property="teamName" column="team_name"/>
+
+        <collection property="lists" ofType="ListWithCardsResponse">
+            <id property="id" column="list_id"/>
+            <result property="title" column="list_title"/>
+            <result property="orderIndex" column="list_order"/>
+
+            <collection property="cards" ofType="CardResponse">
+                <id property="id" column="card_id"/>
+                <result property="title" column="card_title"/>
+                <result property="description" column="card_desc"/>
+                <result property="orderIndex" column="card_order"/>
+                <result property="dueDate" column="card_due_date"/>
+                <result property="commentCount" column="card_comment_count"/>
+
+                <result property="assigneeId" column="assignee_id"/>
+                <result property="assigneeName" column="assignee_name"/>
+                <result property="assigneeProfileImg" column="assignee_img"/>
+            </collection>
+        </collection>
+    </resultMap>
+
+    <select id="findBoardWithListsAndCards" resultMap="BoardDetailMap">
+        SELECT b.id          AS board_id,
+               b.title       AS board_title,
+               b.description AS board_desc,
+               b.visibility  AS board_visibility,
+               b.team_id     AS team_id,
+               t.name        AS team_name,
+
+               l.id          AS list_id,
+               l.title       AS list_title,
+               l.order_index AS list_order,
+
+               c.id          AS card_id,
+               c.title       AS card_title,
+               c.description AS card_desc,
+               c.order_index AS card_order,
+               c.due_date    AS card_due_date,
+
+               -- 담당자 정보 (user 테이블 조인)
+               u.id          AS assignee_id,
+               u.nickname    AS assignee_name,
+               u.profile_img AS assignee_img,
+
+               -- 댓글 수 (서브쿼리)
+               (CASE
+                    WHEN c.id IS NULL
+                        THEN NULL
+                    ELSE
+                        (SELECT COUNT(*)
+                         FROM comment cm
+                         WHERE cm.card_id = c.id)
+                   END)      AS card_comment_count
+        FROM board b
+                 JOIN team t
+                      ON b.team_id = t.id
+            -- 리스트가 없어도 보드는 나와야 하므로 LEFT JOIN
+                 LEFT JOIN list l
+                           ON b.id = l.board_id
+                               AND l.deleted_at IS NULL
+            -- 카드가 없어도 리스트는 나와야 하므로 LEFT JOIN
+                 LEFT JOIN card c
+                           ON l.id = c.list_id
+                               AND c.deleted_at IS NULL
+            -- 담당자가 없어도 카드는 나와야 하므로 LEFT JOIN
+                 LEFT JOIN user u
+                           ON c.assignee_id = u.id
+        WHERE b.id = #{boardId}
+          AND b.deleted_at IS NULL
+
+        -- 정렬: 리스트 순서 -> 카드 순서
+        ORDER BY l.order_index ASC,
+                 c.order_index ASC
     </select>
 
     <!-- 보드 정보 수정 -->

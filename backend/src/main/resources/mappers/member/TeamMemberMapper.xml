@@ -28,6 +28,17 @@
           AND a.deleted_at IS NULL
     </select>
 
+    <!-- 여러 명의 팀원들 조회 -->
+    <select id="findExistingMemberUserIds" resultType="long">
+        SELECT user_id FROM team_member
+        WHERE team_id = #{teamId}
+        AND user_id IN
+        <foreach collection="userIds" item="id" open="(" separator="," close=")">
+            #{id}
+        </foreach>
+        AND deleted_at IS NULL
+    </select>
+
     <!-- 탈퇴 포함 팀 멤버 조회 -->
     <select id="findMemberIncludeDeleted" resultType="TeamMemberVo">
         SELECT *

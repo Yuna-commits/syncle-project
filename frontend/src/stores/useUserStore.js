@@ -52,20 +52,6 @@ const useUserStore = create((set, get) => ({
     }
   },
 
-  // 프로필 정보 가져오기
-  fetchUserProfile: async () => {
-    set({ isLoading: true })
-    try {
-      const response = await api.get('/users/me')
-      set({ user: response.data.data })
-    } catch (error) {
-      console.error('프로필 정보 조회 실패: ', error)
-      set({ error: '프로필 정보를 불러오지 못했습니다.' })
-    } finally {
-      set({ isLoading: false })
-    }
-  },
-
   // 프로필 정보 수정
   updateUserProfile: async (updateData) => {
     // [Check] 인증 여부 확인

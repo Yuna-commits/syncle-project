@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react'
 import { Search, UserPlus, X, Users } from 'lucide-react'
-import api from '../../api/AxiosInterceptor'
+import api from '../../../api/AxiosInterceptor'
 import { useNavigate } from 'react-router-dom'
 
 // 더바운싱을 위한 커스텀 훅

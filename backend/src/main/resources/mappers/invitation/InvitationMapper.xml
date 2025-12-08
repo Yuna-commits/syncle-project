@@ -42,6 +42,28 @@
                         AND status = #{status})
     </select>
 
+    <!-- 이미 초대 받은 여러 명의 멤버들 조회 - Param List -->
+    <select id="findPendingInviteeIds" resultType="long">
+        SELECT invitee_id
+        FROM invitation
+        WHERE team_id = #{teamId}
+        AND status = 'PENDING'
+        AND invitee_id IN
+        <foreach collection="userIds" item="id" open="(" separator="," close=")">
+            #{id}
+        </foreach>
+    </select>
+
+    <!-- 여러 명의 멤버에게 보낼 초대 생성 - Param List -->
+    <insert id="insertInvitationsBulk" parameterType="java.util.List">
+        INSERT INTO invitation (team_id, inviter_id, invitee_id, token, status, expired_at, created_at)
+        VALUES
+        <foreach collection="list" item="item" separator=",">
+            (#{item.teamId}, #{item.inviterId}, #{item.inviteeId}, #{item.token}, #{item.status}, #{item.expiredAt},
+            NOW())
+        </foreach>
+    </insert>
+
     <!-- 팀원 초대 목록 -->
     <select id="findAllByTeamId" parameterType="long"
             resultType="com.nullpointer.domain.invitation.dto.TeamInvitationResponse">

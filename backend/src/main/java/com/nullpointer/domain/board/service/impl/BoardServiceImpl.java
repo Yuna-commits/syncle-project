@@ -13,9 +13,7 @@ import com.nullpointer.domain.board.mapper.BoardMapper;
 import com.nullpointer.domain.board.service.BoardService;
 import com.nullpointer.domain.board.vo.BoardVo;
 import com.nullpointer.domain.board.vo.enums.Visibility;
-import com.nullpointer.domain.card.dto.CardResponse;
 import com.nullpointer.domain.card.mapper.CardMapper;
-import com.nullpointer.domain.list.dto.ListWithCardsResponse;
 import com.nullpointer.domain.list.mapper.ListMapper;
 import com.nullpointer.domain.list.vo.ListVo;
 import com.nullpointer.domain.member.dto.board.BoardMemberResponse;
@@ -259,28 +257,34 @@ public class BoardServiceImpl implements BoardService {
         // - validateBoardViewer 내부 resolveEffectiveBoardRole에서 TEAM/PRIVATE 보드 여부, 권한 모두 체크
         memberVal.validateBoardViewer(boardId, userId);
 
-        // 보드 정보 조회
-        BoardVo boardVo = boardVal.getValidBoard(boardId);
+        // refactor) 보드 조회(1회) + 리스트 조회(1회) + 카드 조회(리스트 개수 N회) -> JOIN을 사용해서 데이터 일괄 조회
+        BoardViewResponse response = boardMapper.findBoardWithListsAndCards(boardId);
 
-        // 리스트 목록 조회
-        List<ListVo> lists = listMapper.findByBoardId(boardId);
+        if (response == null) {
+            throw new BusinessException(ErrorCode.BOARD_NOT_FOUND);
+        }
 
-        // 리스트 별 카드 조회
-        List<ListWithCardsResponse> listResponse = lists.stream().map(list -> {
-            List<CardResponse> cards = cardMapper.findCardsWithDetailsByListId(list.getId());
-            // ListVo + List<CardResponse> -> ListWithCardsResponse 변환
-            return ListWithCardsResponse.of(list, cards);
-        }).toList();
-
+        // 부가 정보 채우기 (멤버, 즐겨찾기는 별도로 조회)
         // 보드 멤버 조회
         List<BoardMemberResponse> boardMembers = boardMemberMapper.findMembersByBoardId(boardId);
 
         // 팀 멤버 조회
-        List<TeamMemberResponse> teamMembers = teamMemberMapper.findMembersByTeamId(boardVo.getTeamId());
+        List<TeamMemberResponse> teamMembers = teamMemberMapper.findMembersByTeamId(response.getTeamId());
 
         // 현재 유저가 이 보드를 즐겨찾기 했는지 확인
         boolean isFavorite = boardMapper.existsFavorite(boardId, userId);
 
-        return BoardViewResponse.of(boardVo, listResponse, boardMembers, teamMembers, isFavorite);
+        // Owner ID 추출
+        Long ownerId = boardMembers.stream()
+                .filter(m -> m.getRole() == Role.OWNER)
+                .map(BoardMemberResponse::getUserId)
+                .findFirst().orElse(null);
+
+        return response.toBuilder()
+                .ownerId(ownerId)
+                .boardMembers(boardMembers)
+                .teamMembers(teamMembers)
+                .isFavorite(isFavorite)
+                .build();
     }
 }

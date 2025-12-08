@@ -2,6 +2,8 @@ package com.nullpointer.domain.file.controller;
 
 import com.nullpointer.domain.file.service.FileStorageService;
 import com.nullpointer.global.common.ApiResponse;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -11,6 +13,7 @@ import org.springframework.web.multipart.MultipartFile;
 
 import java.util.Map;
 
+@Tag(name = "File", description = "파일 업로드 API")
 @RestController
 @RequestMapping("/api/files")
 @RequiredArgsConstructor
@@ -21,6 +24,7 @@ public class FileController {
     /**
      * 단일 파일 업로드
      */
+    @Operation(summary = "파일 업로드", description = "이미지 등의 파일을 업로드하고 URL을 반환받습니다.")
     @PostMapping("/upload")
     public ApiResponse<Map<String, String>> uploadFile(@RequestParam("file") MultipartFile file) {
         String fileUrl = fileStorageService.storeFile(file);

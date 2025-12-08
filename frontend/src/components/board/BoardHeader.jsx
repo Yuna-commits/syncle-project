@@ -1,7 +1,7 @@
 import React, { useState } from 'react'
 import useBoardStore from '../../stores/useBoardStore'
 import { Link } from 'react-router-dom'
-import InviteBoardMemeberModal from '../modals/InviteBoardMemeberModal'
+import InviteBoardMemeberModal from '../modals/board/InviteBoardMemeberModal'
 
 function BoardHeader({ board }) {
   const { toggleSettings, toggleFavorite } = useBoardStore()

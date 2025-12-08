@@ -9,7 +9,7 @@ export default function ProfilePage() {
   const {
     user,
     isLoading,
-    fetchUserProfile,
+    fetchUser,
     updateUserProfile,
     checkNicknameDuplicate,
     checkStatus,
@@ -20,8 +20,8 @@ export default function ProfilePage() {
 
   // 마운트될 때마다 프로필 정보 가져오기
   useEffect(() => {
-    fetchUserProfile()
-  }, [fetchUserProfile])
+    fetchUser()
+  }, [fetchUser])
 
   if (isLoading && !user) {
     return (

@@ -19,6 +19,9 @@ public interface TeamMemberMapper {
     // 팀 멤버 조회(탈퇴 멤버 포함)
     TeamMemberVo findMemberIncludeDeleted(@Param("teamId") Long teamId, @Param("userId") Long memberId);
 
+    // 여러 명의 팀원 조회
+    List<Long> findExistingMemberUserIds(@Param("teamId") Long teamId, @Param("userIds") List<Long> userIds);
+
     // 팀 역할 변경
     void updateTeamRole(TeamMemberVo vo);
 

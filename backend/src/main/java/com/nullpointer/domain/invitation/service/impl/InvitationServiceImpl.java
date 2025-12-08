@@ -11,6 +11,7 @@ import com.nullpointer.domain.invitation.service.InvitationEmailService;
 import com.nullpointer.domain.invitation.service.InvitationService;
 import com.nullpointer.domain.invitation.vo.InvitationVo;
 import com.nullpointer.domain.invitation.vo.enums.Status;
+import com.nullpointer.domain.member.mapper.TeamMemberMapper;
 import com.nullpointer.domain.member.service.TeamMemberService;
 import com.nullpointer.domain.member.vo.enums.Role;
 import com.nullpointer.domain.team.mapper.TeamMapper;
@@ -29,8 +30,7 @@ import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.util.UriComponentsBuilder;
 
 import java.time.LocalDateTime;
-import java.util.List;
-import java.util.UUID;
+import java.util.*;
 
 @Service
 @RequiredArgsConstructor
@@ -44,6 +44,7 @@ public class InvitationServiceImpl implements InvitationService {
     private final RedisUtil redisUtil;
     private final MemberValidator memberValidator;
     private final ActivityService activityService;
+    private final TeamMemberMapper teamMemberMapper;
 
     @Value("${app.domain.frontend}")
     private String frontendUrl;
@@ -65,55 +66,65 @@ public class InvitationServiceImpl implements InvitationService {
         UserVo inviter = userMapper.findById(inviterId)
                 .orElseThrow(() -> new BusinessException(ErrorCode.USER_NOT_FOUND));
 
-        for (Long targetUserId : req.getUserIds()) {
-            // 자기 자신을 초대하는 경우 방지
-            if (targetUserId.equals(inviterId)) {
-                throw new BusinessException(ErrorCode.CANNOT_INVITE_SELF);
-            }
+        // refactor) for문 안에서 쿼리 사용 -> 한 번만 사용하여 일괄 처리되도록 변경
+        List<Long> targetIds = req.getUserIds();
 
-            UserVo targetUser = userMapper.findById(targetUserId)
-                    .orElseThrow(() -> new BusinessException(ErrorCode.USER_NOT_FOUND));
+        // 데이터 일괄 조회
+        // 1. 초대할 사용자 정보, ID 조회
+        List<UserVo> targetUsers = userMapper.findAllByIds(targetIds);
 
-            // 활동 중인 멤버인지 확인 -> 신규 OR 탈퇴 멤버는 초대 가능
-            memberValidator.validateNotTeamMember(teamId, targetUserId, ErrorCode.MEMBER_ALREADY_EXISTS);
+        // 2. 이미 팀 멤버인 사용자 ID 조회
+        List<Long> existingMemberIds = teamMemberMapper.findExistingMemberUserIds(teamId, targetIds);
+        Set<Long> existingMemberSet = new HashSet<>(existingMemberIds);
 
-            // 이미 대기 중(PENDING)인 초대장이 있는지 확인
-            boolean hasPendingInvite = invitationMapper.existsByTeamIdAndInviteeIdAndStatus(teamId, targetUserId, Status.PENDING);
-            if (hasPendingInvite) {
-                throw new BusinessException(ErrorCode.INVITATION_ALREADY_SENT);
-            }
+        // 3. 이미 대기 중인 초대장이 있는 사용자 ID 조회
+        List<Long> pendingInviteeIds = invitationMapper.findPendingInviteeIds(teamId, targetIds);
+        Set<Long> pendingInviteeSet = new HashSet<>(pendingInviteeIds);
 
-            // 4. 토큰 및 초대 데이터 생성 (Status: PENDING)
+        // 초대장 생성
+        List<InvitationVo> invitationsToInsert = new ArrayList<>();
+
+        for (UserVo target : targetUsers) {
+            Long userId = target.getId();
+
+            // 검증
+            if (userId.equals(inviterId)) continue; // 본인 제외 초대
+            if (existingMemberSet.contains(userId)) continue; // 이미 멤버인 경우
+            if (pendingInviteeSet.contains(userId)) continue; // 이미 초대된 경우
+
+            // 초대장 객체 생성
             String token = UUID.randomUUID().toString();
-            LocalDateTime expireAt = LocalDateTime.now().plusDays(7);
-
             InvitationVo invitation = InvitationVo.builder()
                     .teamId(teamId)
                     .inviterId(inviterId)
-                    .inviteeId(targetUserId)
+                    .inviteeId(userId)
                     .token(token)
                     .status(Status.PENDING)
-                    .expiredAt(expireAt)
+                    .expiredAt(LocalDateTime.now().plusDays(7))
                     .build();
 
-            // 5. DB 저장
-            invitationMapper.insertInvitation(invitation);
+            invitationsToInsert.add(invitation);
 
-            // 6. Redis 저장
+            // Redis 저장
             redisUtil.setDataExpire(
                     RedisKeyType.INVITATION.getKey(token),
-                    String.valueOf(targetUserId),
+                    String.valueOf(userId),
                     RedisKeyType.INVITATION.getDefaultTtl()
             );
 
-            // 7. 이메일 전송
+            // 이메일 전송
             String inviteUrl = UriComponentsBuilder.fromUriString(frontendUrl)
                     .path("/invite/accept")
                     .queryParam("token", token)
                     .build()
                     .toUriString();
 
-            emailService.sendInvitationEmail(targetUser.getEmail(), inviteUrl, team.getName(), inviter.getNickname());
+            emailService.sendInvitationEmail(target.getEmail(), inviteUrl, team.getName(), inviter.getNickname());
+        }
+
+        // DB에 한 번에 저장 (Bulk Insert)
+        if (!invitationsToInsert.isEmpty()) {
+            invitationMapper.insertInvitationsBulk(invitationsToInsert);
         }
     }
 

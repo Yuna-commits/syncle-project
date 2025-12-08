@@ -2,7 +2,7 @@ import React, { useEffect, useState } from 'react'
 import defaultProfile from '../../assets/images/default.png'
 import api from '../../api/AxiosInterceptor'
 import { useParams } from 'react-router-dom'
-import InviteMemberModal from '../../components/modals/InviteMemberModal'
+import InviteMemberModal from '../../components/modals/team/InviteMemberModal'
 import useUserStore from '../../stores/useUserStore'
 
 export default function TeamMembersPage() {
