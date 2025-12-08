@@ -1,6 +1,5 @@
 import { create } from 'zustand'
-import api from '../api/AxiosInterceptor'
-import { ReceiptRussianRuble } from 'lucide-react'
+import { boardApi } from '../api/board.api'
 
 const useBoardStore = create((set, get) => ({
   // 현재 보고 있는 보드의 상세 데이터
@@ -63,7 +62,7 @@ const useBoardStore = create((set, get) => ({
 
     try {
       // API 호출 /boards/{boardId}/favorite
-      await api.post(`/boards/${activeBoard.id}/favorite`)
+      await boardApi.toggleFavorite(activeBoard.id)
     } catch (error) {
       // 실패 시 롤백
       set({ activeBoard: { ...activeBoard, isFavorite: previousState } })
@@ -82,7 +81,7 @@ const useBoardStore = create((set, get) => ({
       }
       // 1. 백엔드에서 보드 뷰(보드+멤버+리스트+카드) 데이터 조회
       // GET /api/boards/{boardId}/view
-      const response = await api.get(`/boards/${boardId}/view`)
+      const response = await boardApi.fetchBoard(boardId)
       const serverData = response.data.data
 
       console.log('응답: ', response)
@@ -109,14 +108,14 @@ const useBoardStore = create((set, get) => ({
   // 보드 정보 수정 (이름, 설명, 공개범위)
   updateBoard: async (boardId, updateData) => {
     if (!updateData) {
-      ReceiptRussianRuble
+      return
     }
     // UI 먼저 변경사항 반영
     const prevBoard = get().activeBoard
     set({ activeBoard: { ...prevBoard, ...updateData } })
 
     try {
-      await api.patch(`/boards/${boardId}`, updateData)
+      await boardApi.updateBoard(boardId, updateData)
     } catch (error) {
       console.error('보드 수정 실패:', error)
       set({ activeBoard: prevBoard }) // 롤백
@@ -128,7 +127,7 @@ const useBoardStore = create((set, get) => ({
   deleteBoard: async (boardId) => {
     const teamId = get().teamId
     try {
-      await api.delete(`/boards/${boardId}`)
+      await boardApi.deleteBoard(boardId)
       window.location.href = `/teams/${teamId}/boards` // 삭제 후 이동
     } catch (error) {
       console.error('보드 삭제 실패:', error)
@@ -149,7 +148,7 @@ const useBoardStore = create((set, get) => ({
     set({ activeBoard: { ...activeBoard, members: updateMembers } })
 
     try {
-      await api.patch(`/boards/${boardId}/members/${userId}`, { role: newRole })
+      await boardApi.changeMemberRole(boardId, userId, newRole)
     } catch (error) {
       console.error('권한 변경 실패:', error)
       // 롤백 (원래대로)
@@ -166,7 +165,7 @@ const useBoardStore = create((set, get) => ({
     set({ activeBoard: { ...activeBoard, members: filteredMembers } })
 
     try {
-      await api.delete(`/boards/${boardId}/members/${userId}`)
+      await boardApi.removeMember(boardId, userId)
     } catch (error) {
       console.error('멤버 추방 실패:', error)
       await get().fetchBoard(boardId)
@@ -181,9 +180,7 @@ const useBoardStore = create((set, get) => ({
 
     try {
       // 백엔드 api 호출
-      const response = await api.post(`/boards/${activeBoard.id}/lists`, {
-        title,
-      })
+      const response = await boardApi.addList(activeBoard.id, title)
 
       const newList = response.data.data
       // 프론트엔드 상태 업데이트
@@ -230,9 +227,7 @@ const useBoardStore = create((set, get) => ({
 
     try {
       // 2. 백엔드 API 호출
-      await api.put(`/lists/${listId}`, {
-        title: newTitle,
-      })
+      await boardApi.updateList(listId, newTitle)
     } catch (error) {
       console.error('리스트 수정 실패:', error)
       // 실패 시 롤백
@@ -257,7 +252,7 @@ const useBoardStore = create((set, get) => ({
 
     try {
       // 2. 백엔드 API 호출
-      await api.delete(`/lists/${listId}`)
+      await boardApi.deleteList(listId)
 
       // 3. 프론트엔드 상태 업데이트
       const newColumns = { ...activeBoard.columns }
@@ -304,7 +299,7 @@ const useBoardStore = create((set, get) => ({
         listId: id,
         orderIndex: index,
       }))
-      await api.patch(`/boards/${activeBoard.id}/lists/order`, payload)
+      await boardApi.moveList(activeBoard.id, payload)
     } catch (error) {
       console.error('리스트 이동 실패:', error)
       // 실패 시 롤백
@@ -318,9 +313,8 @@ const useBoardStore = create((set, get) => ({
     if (!activeBoard) return
     try {
       // 백엔드 API 호출
-      const response = await api.post(`/lists/${listId}/cards`, {
-        title,
-      })
+      const response = await boardApi.addCard(listId, title)
+
       const newCardId = response.data.data
       // 프론트엔드 상태 업데이트
       const updatedList = {
@@ -388,10 +382,7 @@ const useBoardStore = create((set, get) => ({
 
     // 백엔드 API 호출
     try {
-      await api.patch(`/cards/${cardId}/move`, {
-        listId: toListId,
-        orderIndex: newIndex,
-      })
+      await boardApi.moveCard(cardId, toListId, newIndex)
     } catch (error) {
       console.error('카드 이동 실패:', error)
       alert('카드 이동에 실패했습니다.')
@@ -423,7 +414,7 @@ const useBoardStore = create((set, get) => ({
     })
 
     try {
-      await api.patch(`/cards/${cardId}`, updates)
+      await boardApi.updateCard(cardId, updates)
     } catch (error) {
       console.error('카드 수정 실패:', error)
     }
@@ -435,7 +426,7 @@ const useBoardStore = create((set, get) => ({
     const { activeBoard, selectedCard } = get()
 
     try {
-      const response = await api.post(`/cards/${cardId}/checklists`, { title })
+      const response = await boardApi.createChecklist(cardId, title)
       const newItemId = response.data.data
 
       // 새 아이템 객체 (백엔드 ChecklistVo 구조에 맞춤)
@@ -506,7 +497,7 @@ const useBoardStore = create((set, get) => ({
     })
 
     try {
-      await api.patch(`/checklists/${itemId}`, updates)
+      await boardApi.updateChecklist(itemId, updates)
     } catch (error) {
       console.error('체크리스트 아이템 수정 실패:', error)
     }
@@ -545,7 +536,7 @@ const useBoardStore = create((set, get) => ({
     })
 
     try {
-      await api.delete(`/checklists/${itemId}`)
+      await boardApi.deleteChecklist(itemId)
     } catch (error) {
       console.error('체크리스트 아이템 삭제 실패:', error)
     }

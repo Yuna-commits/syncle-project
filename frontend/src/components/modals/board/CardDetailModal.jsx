@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react'
-import useBoardStore from '../../stores/useBoardStore'
+import useBoardStore from '../../../stores/useBoardStore'
 import {
   X,
   Check,

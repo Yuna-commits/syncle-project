@@ -67,10 +67,12 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
     // 요청에서 토큰 추출
     private String resolveToken(HttpServletRequest request) {
         String bearerToken = request.getHeader(JwtConstants.AUTHORIZATION_HEADER.getValue());
+        String prefix = JwtConstants.HEADER_PREFIX.getValue();
 
         if (StringUtils.hasText(bearerToken)
-                && bearerToken.startsWith(JwtConstants.HEADER_PREFIX.getValue())) {
-            return bearerToken.substring(7);
+                && bearerToken.startsWith(prefix)) {
+            // refactor)  매직 넘버 7 대신 prefix.length() 사용
+            return bearerToken.substring(prefix.length());
         }
 
         return null;

@@ -5,7 +5,7 @@ import BoardCard from '../../components/common/BoardCard'
 import CreateBoardButton from '../../components/common/CreateBoardButton'
 import defaultProfile from '../../assets/images/default.png'
 import useUserStore from '../../stores/useUserStore'
-import InviteMemberModal from '../../components/modals/InviteMemberModal'
+import InviteMemberModal from '../../components/modals/team/InviteMemberModal'
 
 function TeamBoardPage() {
   // 1. URL에서 teamId 추출

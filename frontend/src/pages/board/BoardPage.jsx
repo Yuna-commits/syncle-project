@@ -5,7 +5,7 @@ import useBoardStore from '../../stores/useBoardStore'
 import BoardHeader from '../../components/board/BoardHeader'
 import BoardCanvas from '../../components/board/BoardCanvas'
 import BoardSettings from '../../components/board/BoardSettings'
-import CardDetailModal from '../../components/modals/CardDetailModal'
+import CardDetailModal from '../../components/modals/board/CardDetailModal'
 import useBoardPermission from '../../hooks/useBoardPermission'
 import useUserStore from '../../stores/useUserStore'
 

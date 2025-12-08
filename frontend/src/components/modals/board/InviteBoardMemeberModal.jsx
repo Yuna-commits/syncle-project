@@ -1,7 +1,8 @@
 import React, { useMemo, useState } from 'react'
-import useBoardStore from '../../stores/useBoardStore'
-import api from '../../api/AxiosInterceptor'
+
 import { Check, Search, UserCheck, UserPlus, X } from 'lucide-react'
+import useBoardStore from '../../../stores/useBoardStore'
+import api from '../../../api/AxiosInterceptor'
 
 /**
  * 팀 멤버 중에서만 보드 멤버 초대 가능

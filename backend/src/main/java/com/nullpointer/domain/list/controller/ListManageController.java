@@ -4,6 +4,7 @@ import com.nullpointer.domain.list.dto.UpdateListRequest;
 import com.nullpointer.domain.list.service.ListService;
 import com.nullpointer.global.common.ApiResponse;
 import com.nullpointer.global.common.annotation.LoginUser;
+import lombok.RequiredArgsConstructor;
 import org.springframework.web.bind.annotation.*;
 
 /**
@@ -15,13 +16,10 @@ import org.springframework.web.bind.annotation.*;
  * (명세서가 /lists/{listId}, /list/{listId} 라면 아래 경로 문자열만 수정)
  */
 @RestController
+@RequiredArgsConstructor // refactor) 수동 생성자 제거
 public class ListManageController {
 
     private final ListService listService;
-
-    public ListManageController(ListService listService) {
-        this.listService = listService;
-    }
 
     // 리스트 정보 수정
     @PutMapping("/api/lists/{listId}")

@@ -2,15 +2,15 @@ import React from 'react'
 import { Routes, Route, Navigate } from 'react-router-dom'
 import AuthRoutes from './AuthRoutes'
 import ProfileRoutes from './ProfileRoutes'
-import NotificationPage from '../pages/main/NotificationPage'
 import MainLayout from '../layouts/MainLayout'
 import BoardRoutes from './BoardRoutes'
-import CalendarPage from '../pages/main/CalendarPage'
 import PublicRoute from './PublicRoute'
 import ProtectedRoute from './ProtectedRoute'
 import TeamRoutes from './TeamRoutes'
-import DashboardPage from '../pages/main/DashboardPage'
 import InviteAcceptPage from '../pages/auth/InviteAcceptPage'
+import DashboardPage from '../pages/dashboard/DashboardPage'
+import NotificationPage from '../pages/user/NotificationPage'
+import CalendarPage from '../pages/user/CalendarPage'
 
 export default function AppRoutes() {
   return (

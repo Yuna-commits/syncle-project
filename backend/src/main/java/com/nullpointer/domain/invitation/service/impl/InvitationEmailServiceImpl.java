@@ -7,6 +7,9 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.mail.javamail.JavaMailSender;
 import org.springframework.mail.javamail.MimeMessageHelper;
+import org.springframework.retry.annotation.Backoff;
+import org.springframework.retry.annotation.Recover;
+import org.springframework.retry.annotation.Retryable;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
 
@@ -25,7 +28,9 @@ public class InvitationEmailServiceImpl implements InvitationEmailService {
      * @param inviterName 초대한 사람의 이름(닉네임)
      */
     @Override
-    @Async
+    @Async("mailExecutor") // refactor) 스레드 개수 제한
+    // refactor) 메일 전송 실패 시 2초 간격으로 최대 3번까지 재시도
+    @Retryable(retryFor = MessagingException.class, maxAttempts = 3, backoff = @Backoff(delay = 2000))
     public void sendInvitationEmail(String toEmail, String inviteUrl, String teamName, String inviterName) {
         String subject = String.format("[SYNCLE] '%s' 팀에서 초대장이 도착했습니다.", teamName);
         String htmlContent = getInvitationHtml(teamName, inviterName, inviteUrl);
@@ -45,6 +50,12 @@ public class InvitationEmailServiceImpl implements InvitationEmailService {
             log.error("초대 메일 발송 실패: {}", e.getMessage());
             // 비동기 메서드라 예외를 던져도 Controller에서 잡을 수 없으므로 로그만 남기거나 별도 처리
         }
+    }
+
+    // 3번 다 실패했을 때 실행되는 최종 복구 로직
+    @Recover
+    public void recover(MessagingException e, String toEmail) {
+        log.error("메일 발송 최종 실패: {}, error: {}", toEmail, e.getMessage());
     }
 
     private String getInvitationHtml(String teamName, String inviterName, String inviteUrl) {
