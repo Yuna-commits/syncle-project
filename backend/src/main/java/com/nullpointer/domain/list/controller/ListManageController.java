@@ -4,6 +4,8 @@ import com.nullpointer.domain.list.dto.UpdateListRequest;
 import com.nullpointer.domain.list.service.ListService;
 import com.nullpointer.global.common.ApiResponse;
 import com.nullpointer.global.common.annotation.LoginUser;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
 import org.springframework.web.bind.annotation.*;
 
@@ -15,14 +17,17 @@ import org.springframework.web.bind.annotation.*;
  * <p>
  * (명세서가 /lists/{listId}, /list/{listId} 라면 아래 경로 문자열만 수정)
  */
+@Tag(name = "List Management", description = "리스트 수정 및 삭제 API")
 @RestController
+@RequestMapping("/api/lists")
 @RequiredArgsConstructor // refactor) 수동 생성자 제거
 public class ListManageController {
 
     private final ListService listService;
 
     // 리스트 정보 수정
-    @PutMapping("/api/lists/{listId}")
+    @Operation(summary = "리스트 정보 수정", description = "리스트 제목을 수정합니다.")
+    @PutMapping("/{listId}")
     public ApiResponse<String> updateList(
             @PathVariable("listId") Long listId,
             @RequestBody UpdateListRequest request,
@@ -33,7 +38,8 @@ public class ListManageController {
     }
 
     // 리스트 삭제 (soft delete)
-    @DeleteMapping("/api/lists/{listId}")
+    @Operation(summary = "리스트 삭제", description = "리스트를 삭제합니다.")
+    @DeleteMapping("/{listId}")
     public ApiResponse<String> deleteList(
             @PathVariable("listId") Long listId,
             @LoginUser Long userId
