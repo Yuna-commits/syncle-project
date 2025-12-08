@@ -24,13 +24,13 @@ function CardDescription() {
     <section>
       <div className="mb-3 flex items-center gap-3">
         <AlignLeft size={20} className="text-gray-600" />
-        <h3 className="text-base font-semibold text-gray-800">Description</h3>
+        <h3 className="text-base font-semibold text-gray-800">설명</h3>
       </div>
       <div className="pl-8">
         {isEditingDesc ? (
           <div className="space-y-2">
             <textarea
-              className="min-h-[120px] w-full resize-none rounded-xl border border-gray-200 p-3 text-sm text-gray-700 outline-none focus:border-transparent focus:ring-2 focus:ring-blue-500"
+              className="w-full resize-none rounded-xl border border-gray-200 p-3 text-sm text-gray-700 outline-none focus:border-transparent focus:ring-2 focus:ring-blue-500"
               value={description}
               onChange={(e) => setDescription(e.target.value)}
               autoFocus
@@ -55,7 +55,7 @@ function CardDescription() {
             onClick={() => setIsEditingDesc(true)}
             className={`min-h-20 cursor-pointer rounded-xl p-4 transition-colors ${
               description
-                ? 'bg-transparent hover:bg-gray-50'
+                ? 'bg-transparent font-medium text-gray-600 hover:bg-gray-50'
                 : 'bg-gray-50 text-gray-500 hover:bg-gray-100'
             }`}
           >

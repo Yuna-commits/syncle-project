@@ -1,10 +1,11 @@
-import { Check, X } from 'lucide-react'
+import { Check, Clock, X } from 'lucide-react'
 import { useState } from 'react'
 import useBoardStore from '../../../stores/useBoardStore'
 import CardActivity from '../../card/CardActivity'
 import CardChecklist from '../../card/CardChecklist'
 import CardDescription from '../../card/CardDescription'
 import CardSidebar from '../../card/CardSidebar'
+import { getDateStatusStyle } from '../../../utils/dateUtils'
 
 export default function CardDetailModal() {
   const { activeBoard, selectedCard, closeCardModal } = useBoardStore()
@@ -27,6 +28,9 @@ export default function CardDetailModal() {
     setIsAnimating(true)
     setTimeout(() => setIsAnimating(false), 300)
   }
+
+  // 날짜 스타일 계산
+  const dateStatus = getDateStatusStyle(selectedCard.dueDate)
 
   return (
     <div
@@ -58,6 +62,7 @@ export default function CardDetailModal() {
               />
             </button>
 
+            {/* 카드 제목 */}
             <div className="w-full pt-0.5">
               <h2
                 className={`mb-1 text-xl leading-tight font-bold text-gray-900 transition-all duration-300 ${
@@ -66,11 +71,25 @@ export default function CardDetailModal() {
               >
                 {selectedCard.title}
               </h2>
-              <p className="flex items-center gap-1 text-sm text-gray-500">
-                <span className="font-semibold text-gray-700 underline decoration-gray-300 underline-offset-4">
-                  {currentColumn?.title}
-                </span>
-              </p>
+              <div className="flex flex-wrap items-center gap-3">
+                {/* 리스트 제목 */}
+                <p className="flex items-center text-sm text-gray-500">
+                  <span className="ml-1 font-semibold text-gray-700 underline decoration-gray-300 underline-offset-4">
+                    {currentColumn?.title}
+                  </span>
+                </p>
+
+                {/* 마감일 뱃지 */}
+                {dateStatus && (
+                  <div
+                    className={`flex items-center gap-1.5 rounded-md px-2 py-0.5 text-xs ${dateStatus.bg} ${dateStatus.text}`}
+                    title="마감일"
+                  >
+                    <Clock size={12} />
+                    <span>{dateStatus.dateLabel}</span>
+                  </div>
+                )}
+              </div>
             </div>
           </div>
 
@@ -86,7 +105,7 @@ export default function CardDetailModal() {
         <div className="flex-1 overflow-y-auto bg-white p-6 md:p-8">
           <div className="flex flex-col gap-10 md:flex-row">
             {/* [Left Column] Main Content */}
-            <div className="flex-1 space-y-8">
+            <div className="flex flex-1 flex-col gap-8">
               {/* Description */}
               <CardDescription />
 
@@ -101,7 +120,10 @@ export default function CardDetailModal() {
             </div>
 
             {/* [Right Column] Sidebar Actions */}
-            <CardSidebar onAddChecklist={() => setShowChecklist(true)} />
+            <CardSidebar
+              onAddChecklist={() => setShowChecklist((prev) => !prev)}
+              showChecklist={showChecklist}
+            />
           </div>
         </div>
       </div>

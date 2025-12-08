@@ -1,36 +1,33 @@
-import React, { useEffect, useRef } from 'react'
+import React from 'react'
+import { ko } from 'date-fns/locale'
 import { DateRange } from 'react-date-range'
+import Portal from '../ui/Portal'
 
-export default function DateRangePickerModal({
+export default function DateRangePickerMenu({
   isOpen,
   onClose,
   range,
   setRange,
   onApply,
+  position,
 }) {
-  const modalRef = useRef(null)
-
-  // 모달 외부 클릭 시 닫기
-  useEffect(() => {
-    const handleClickOutside = (e) => {
-      if (modalRef.current && !modalRef.current.contains(e.target)) {
-        onClose()
-      }
-    }
-
-    if (isOpen) document.addEventListener('mousedown', handleClickOutside)
-    return () => document.removeEventListener('mousedown', handleClickOutside)
-  }, [isOpen, onClose])
-
   if (!isOpen) return null
 
   return (
-    <>
+    <Portal>
       <div
-        ref={modalRef}
-        className="animate-fade-in absolute top-full right-0 z-50 mt-2 rounded-xl border border-gray-300 bg-white shadow-xl"
+        className="fixed inset-0 z-60 hover:cursor-pointer"
+        onClick={onClose}
+      />
+      <div
+        className="animate-fade-in fixed z-70 overflow-hidden rounded-xl border border-gray-300 bg-white shadow-xl"
+        style={{
+          top: position?.top ?? 0,
+          left: position?.left ?? 0,
+        }}
       >
         <DateRange
+          locale={ko}
           editableDateInputs={true}
           onChange={(item) => setRange([item.selection])}
           moveRangeOnFirstSelection={false}
@@ -45,7 +42,6 @@ export default function DateRangePickerModal({
           }
           rangeColors={['#3b82f6']}
         />
-
         {/* 버튼 영역 */}
         <div className="flex justify-end gap-2 border-t border-gray-200 p-3">
           <button
@@ -70,6 +66,6 @@ export default function DateRangePickerModal({
           </button>
         </div>
       </div>
-    </>
+    </Portal>
   )
 }
