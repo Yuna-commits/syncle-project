@@ -1,6 +1,6 @@
 import React, { useState, useRef, useEffect } from 'react'
 import useBoardStore from '../../stores/useBoardStore'
-import TaskCard from './TaskCard'
+import TaskCard from '../card/TaskCard'
 
 /**
  * N개의 카드 작업을 담을 하나의 리스트 랜더링

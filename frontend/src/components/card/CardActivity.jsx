@@ -25,7 +25,7 @@ function CardActivity() {
       <div className="mb-4 flex items-center justify-between">
         <div className="flex items-center gap-3">
           <MessageSquare size={20} className="text-gray-600" />
-          <h3 className="text-base font-semibold text-gray-800">Activity</h3>
+          <h3 className="text-base font-semibold text-gray-800">댓글</h3>
         </div>
       </div>
       <div className="space-y-6 pl-8">
