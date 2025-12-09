@@ -1,13 +1,15 @@
-import React, { useState, useRef, useEffect } from 'react'
-import useBoardStore from '../../stores/useBoardStore'
+import React, { useState, useRef, useEffect, use } from 'react'
 import TaskCard from '../card/TaskCard'
 import { MoreHorizontal, Plus, X } from 'lucide-react'
+import { useCardMutations } from '../../hooks/useCardMutations'
+import { useListMutations } from '../../hooks/useListMutations'
 
 /**
  * N개의 카드 작업을 담을 하나의 리스트 랜더링
  */
-function BoardList({ column, innerRef }) {
-  const { addCard, deleteList, updateList } = useBoardStore()
+function BoardList({ column, innerRef, boardId }) {
+  const { addCard } = useCardMutations(boardId)
+  const { deleteList, updateList } = useListMutations(boardId)
 
   const [isAdding, setIsAdding] = useState(false)
   const [cardTitle, setCardTitle] = useState('')
@@ -31,20 +33,22 @@ function BoardList({ column, innerRef }) {
   const handleAddCard = (e) => {
     e.preventDefault()
     if (cardTitle.trim()) {
-      addCard(column.id, cardTitle)
+      addCard({ listId: column.id, title: cardTitle })
       setCardTitle('')
       setIsAdding(false)
     }
   }
 
   const handleDeleteList = () => {
-    deleteList(column.id)
+    if (window.confirm('리스트를 삭제하시겠습니까?')) {
+      deleteList(column.id)
+    }
     setIsMenuOpen(false)
   }
 
   const handleUpdateTitle = () => {
     if (listTitle.trim() !== '' && listTitle !== column.title) {
-      if (updateList) updateList(column.id, listTitle)
+      updateList({ listId: column.id, title: listTitle })
     }
     setIsEditing(false)
   }

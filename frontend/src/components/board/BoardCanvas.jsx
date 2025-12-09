@@ -20,9 +20,10 @@ function BoardCanvas({ board, columnRefs, listContainerRef }) {
               column={column}
               innerRef={(el) => (columnRefs.current[column.id] = el)}
               canEdit={canEdit} // 리스트 작업 권한
+              boardId={board.id}
             />
           ))}
-          {canEdit && <AddListButton />}
+          {canEdit && <AddListButton boardId={board.id} />}
         </div>
       </div>
     </div>
