@@ -137,7 +137,6 @@ public class CardServiceImpl implements CardService {
         if (req.getAssigneeId() != null) {
             // 담당자로 지정된 사람이 보드에 접근 가능한지 확인 (VIEWER 이상)
             memberVal.validateBoardViewer(boardId, req.getAssigneeId());
-
             cardMapper.updateCardAssignee(cardId, req.getAssigneeId());
         }
 
@@ -147,6 +146,7 @@ public class CardServiceImpl implements CardService {
                 .title(req.getTitle())
                 .description(req.getDescription())
                 .priority(req.getPriority())
+                .isComplete(req.getIsComplete())
                 .startDate(req.getStartDate())
                 .dueDate(req.getDueDate())
                 .build();

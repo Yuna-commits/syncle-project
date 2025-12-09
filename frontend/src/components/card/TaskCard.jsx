@@ -1,6 +1,6 @@
 import React from 'react'
 import useBoardStore from '../../stores/useBoardStore'
-import { Clock } from 'lucide-react'
+import { CheckCircle, Clock } from 'lucide-react'
 import { getDateStatusStyle } from '../../utils/dateUtils'
 
 /**
@@ -12,15 +12,27 @@ function TaskCard({ task }) {
   // 스타일 계산
   const { bg, border, text, dateLabel } = getDateStatusStyle(task.dueDate)
 
+  const isDone = task.isComplete
+
   return (
     <div
       data-id={task.id}
       onClick={() => openCardModal(task)}
-      className={`group mb-2 cursor-pointer rounded-lg border p-3 shadow-sm transition-all hover:shadow-md active:scale-[0.98] ${bg} ${border} hover:border-blue-400`}
+      className={`group mb-2 cursor-pointer rounded-lg border p-3 shadow-sm transition-all hover:shadow-md active:scale-[0.98] ${bg} ${border} hover:border-blue-400 ${isDone ? 'bg-gray-50 opacity-60' : ''} `}
     >
-      <h4 className="text-sm leading-snug font-medium text-gray-800">
-        {task.title}
-      </h4>
+      <div className="flex items-start gap-2">
+        {/* 완료 시 체크 아이콘 표시 */}
+        {isDone && (
+          <CheckCircle size={16} className="mt-0.5 shrink-0 text-green-500" />
+        )}
+
+        {/* 제목에 취소선 적용 */}
+        <h4
+          className={`text-sm leading-snug font-medium text-gray-800 ${isDone ? 'text-gray-400 line-through' : ''}`}
+        >
+          {task.title}
+        </h4>
+      </div>
 
       {/* 하단 정보 */}
       <div className="mt-2 flex items-center justify-between">

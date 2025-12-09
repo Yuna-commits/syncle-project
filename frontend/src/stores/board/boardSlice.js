@@ -113,21 +113,21 @@ const normalizeBoardData = (dto) => {
 
   const columns = {}
   const serverLists = dto.lists || []
+  const completedTasks = [] // 완료된 카드들을 모을 배열
 
   serverLists.forEach((list) => {
-    columns[list.id] = {
-      id: list.id,
-      title: list.title,
-      order: list.orderIndex,
+    // 이 리스트에 속한 '진행 중'인 카드들
+    const activeTasks = []
 
-      // 카드 매핑 (CardResponse -> UI Card Object)
-      tasks: (list.cards || []).map((card) => ({
+    ;(list.cards || []).forEach((card) => {
+      const mappedCard = {
         id: card.id,
         listId: list.id, // 부모 리스트 ID 역참조 용
         title: card.title,
         description: card.description,
         order: card.orderIndex,
         dueDate: card.dueDate,
+        isComplete: card.isComplete || false,
         // 댓글 수
         commentCount: card.commentCount || 0,
 
@@ -149,7 +149,23 @@ const normalizeBoardData = (dto) => {
 
         // 프론트 UI 전용 속성 (필요시)
         variant: 'solid',
-      })),
+      }
+
+      // 완료 여부에 따라 카드 분리
+      if (mappedCard.isComplete) {
+        completedTasks.push(mappedCard)
+      } else {
+        activeTasks.push(mappedCard)
+      }
+    })
+
+    // columns에는 '진행 중'인 카드만 저장
+    columns[list.id] = {
+      id: list.id,
+      title: list.title,
+      order: list.orderIndex,
+      // 카드 매핑 (CardResponse -> UI Card Object)
+      tasks: activeTasks,
     }
   })
 
@@ -163,6 +179,22 @@ const normalizeBoardData = (dto) => {
     position: m.position,
   })
 
+  // 기본 리스트 순서
+  const columnOrder = serverLists.map((l) => l.id)
+
+  // 완료된 카드가 하나라도 있으면 '완료' 리스트를 맨 끝에 추가
+  if (completedTasks.length > 0) {
+    const doneListId = 'virtual-done-list' // 가상 리스트
+    columns[doneListId] = {
+      id: doneListId,
+      title: '완료',
+      order: 9999,
+      tasks: completedTasks,
+      isVirtual: true,
+    }
+    columnOrder.push(doneListId)
+  }
+
   // 3. 최종 보드 객체 반환
   return {
     ...dto,
@@ -172,6 +204,6 @@ const normalizeBoardData = (dto) => {
     teamMembers: (dto.teamMembers || []).map(mapMember), // 초대 모달 등 사용
 
     columns, // 변환된 컬럼 객체
-    columnOrder: serverLists.map((l) => l.id), // 리스트 순서 배열 (필요시 사용)
+    columnOrder: columnOrder, // 리스트 순서 배열 (필요시 사용)
   }
 }

@@ -17,6 +17,7 @@ public class CreateCardRequest {
         return CardVo.builder()
                 .title(this.title)
                 .description(this.description)
+                .isComplete(false)
                 .build();
     }
 

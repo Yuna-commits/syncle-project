@@ -1,5 +1,5 @@
 import { Check, Clock, X } from 'lucide-react'
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import useBoardStore from '../../../stores/useBoardStore'
 import CardActivity from '../../card/CardActivity'
 import CardChecklist from '../../card/CardChecklist'
@@ -8,7 +8,8 @@ import CardSidebar from '../../card/CardSidebar'
 import { getDateStatusStyle } from '../../../utils/dateUtils'
 
 export default function CardDetailModal() {
-  const { activeBoard, selectedCard, closeCardModal } = useBoardStore()
+  const { activeBoard, selectedCard, closeCardModal, updateCard } =
+    useBoardStore()
 
   // 체크리스트 표시 여부 상테
   // - 아이템이 있으면 자동 펼침
@@ -19,14 +20,30 @@ export default function CardDetailModal() {
   const [isComplete, setIsComplete] = useState(false)
   const [isAnimating, setIsAnimating] = useState(false)
 
+  // 모달이 열리거나 selectedCard가 바뀔 때 상태 동기화
+  useEffect(() => {
+    if (selectedCard) {
+      setIsComplete(selectedCard.isComplete || false)
+    }
+  }, [selectedCard])
+
   if (!selectedCard || !activeBoard) return null
 
   const currentColumn = activeBoard.columns[selectedCard.listId]
 
+  // 완료 토글 핸들러
   const toggleComplete = () => {
+    const nextState = !isComplete
+
+    // UI 즉시 반영 (낙관적 업데이트)
     setIsComplete((prev) => !prev)
     setIsAnimating(true)
     setTimeout(() => setIsAnimating(false), 300)
+
+    // 업데이트
+    updateCard(selectedCard.id, selectedCard.listId, {
+      isComplete: nextState,
+    })
   }
 
   // 날짜 스타일 계산

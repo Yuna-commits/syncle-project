@@ -23,7 +23,7 @@ public class CardVo {
     private LocalDateTime startDate;
     private LocalDateTime dueDate;
     private Integer orderIndex;
-    private Integer progress;
+    private Boolean isComplete;
     private LocalDateTime createdAt;
     private LocalDateTime updatedAt;
     private LocalDateTime deletedAt;

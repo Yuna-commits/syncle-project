@@ -110,6 +110,7 @@
                 <result property="description" column="card_desc"/>
                 <result property="orderIndex" column="card_order"/>
                 <result property="dueDate" column="card_due_date"/>
+                <result property="isComplete" column="card_is_complete"/>
                 <result property="commentCount" column="card_comment_count"/>
 
                 <result property="assigneeId" column="assignee_id"/>
@@ -136,6 +137,7 @@
                c.description AS card_desc,
                c.order_index AS card_order,
                c.due_date    AS card_due_date,
+               c.is_complete As card_is_complete,
 
                -- 담당자 정보 (user 테이블 조인)
                u.id          AS assignee_id,

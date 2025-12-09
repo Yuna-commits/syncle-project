@@ -24,6 +24,8 @@ public class CardResponse {
     private LocalDateTime dueDate;
     private Integer commentCount;
 
+    private Boolean isComplete;
+
     // 담당자 정보
     private Long assigneeId;
     private String assigneeName;
@@ -41,6 +43,7 @@ public class CardResponse {
                 .assigneeName(assigneeName)
                 .assigneeProfileImg(assigneeProfileImg)
                 .commentCount(commentCount != null ? commentCount : 0)
+                .isComplete(c.getIsComplete() != null ? c.getIsComplete() : false)
                 .build();
     }
 }

@@ -15,6 +15,7 @@
                           title,
                           description,
                           order_index,
+                          is_complete,
                           created_at,
                           updated_at,
                           deleted_at)
@@ -23,6 +24,7 @@
                 #{title},
                 #{description},
                 #{orderIndex},
+                false,
                 NOW(),
                 NULL,
                 NULL)
@@ -38,6 +40,7 @@
                c.description,
                c.order_index                 AS orderIndex,
                c.due_date                    AS dueDate,
+               c.is_complete                 AS is_complete,
                c.assignee_id                 AS assigneeId,
                u.nickname                    As assigneeName,
                u.profile_img                 As assigneeProfileImg,
@@ -76,6 +79,7 @@
                c.title,
                c.description,
                c.order_index                 AS orderIndex,
+               c.is_complete                 AS isComplete,
                c.start_date                  AS startDate,
                c.due_date                    AS dueDate,
                c.assignee_id                 AS assigneeId,
@@ -107,6 +111,7 @@
         <set>
             <if test="title != null">title = #{title},</if>
             <if test="description != null">description = #{description},</if>
+            <if test="isComplete != null">is_complete = #{isComplete},</if>
             <if test="priority != null">priority = #{priority},</if>
             <if test="startDate != null">start_date = #{startDate},</if>
             <if test="dueDate != null">due_date = #{dueDate},</if>

@@ -14,6 +14,7 @@ public class UpdateCardRequest {
     private String description;
     private Long assigneeId;
     private Priority priority;
+    private Boolean isComplete;
     private LocalDateTime startDate;
     private LocalDateTime dueDate;
 
@@ -24,6 +25,7 @@ public class UpdateCardRequest {
                 .description(this.description)
                 .assigneeId(this.assigneeId)
                 .priority(this.priority)
+                .isComplete(this.isComplete)
                 .startDate(this.startDate)
                 .dueDate(this.dueDate)
                 .build();
