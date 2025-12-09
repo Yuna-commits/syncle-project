@@ -1,9 +1,9 @@
 import React, { useState } from 'react'
-import useBoardStore from '../../stores/useBoardStore'
 import { Plus, X } from 'lucide-react'
+import { useListMutations } from '../../hooks/useListMutations'
 
-function AddListButton() {
-  const { addList } = useBoardStore()
+function AddListButton(boardId) {
+  const { addList } = useListMutations(boardId)
   const [title, setTitle] = useState('')
   const [isAdding, setIsAdding] = useState(false)
 
