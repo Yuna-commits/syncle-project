@@ -1,8 +1,8 @@
 import React, { useMemo, useState } from 'react'
 
 import { Check, Search, UserCheck, UserPlus, X } from 'lucide-react'
-import useBoardStore from '../../../stores/useBoardStore'
 import api from '../../../api/AxiosInterceptor'
+import { useQueryClient } from '@tanstack/react-query'
 
 /**
  * 팀 멤버 중에서만 보드 멤버 초대 가능
@@ -14,7 +14,7 @@ function InviteBoardMemeberModal({
   currentBoardMembers = [],
   onClose,
 }) {
-  const { fetchBoard } = useBoardStore()
+  const queryClient = useQueryClient()
   const [keyword, setKeyword] = useState('')
   const [selectedUsers, setSelectedUsers] = useState([])
   const [inviting, setInviting] = useState(false)
@@ -78,7 +78,10 @@ function InviteBoardMemeberModal({
       })
 
       // 성공 시 보드 데이터 갱신
-      await fetchBoard(boardId, false)
+      await queryClient.invalidateQueries({
+        queryKey: ['board', Number(boardId)],
+      })
+
       onClose()
     } catch (error) {
       console.error('보드 멤버 추가 실패:', error)

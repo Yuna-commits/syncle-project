@@ -18,7 +18,8 @@ import { useListMutations } from '../../hooks/useListMutations'
  */
 function BoardPage() {
   // URL 파라미터 (/boards/{boardId})
-  const { boardId } = useParams()
+  const { boardId: boardIdParam } = useParams()
+  const boardId = Number(boardIdParam)
 
   const { selectedCard, isSettingsOpen, fetchBoard, resetBoard } =
     useBoardStore()
