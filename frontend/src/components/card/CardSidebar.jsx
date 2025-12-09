@@ -203,25 +203,34 @@ function CardSidebar({ onAddChecklist, showChecklist }) {
       </div>
 
       <div className="space-y-2">
-        <h4 className="mb-2 text-xs font-bold tracking-wider text-gray-500 uppercase">
-          이동
-        </h4>
-        <div className="group relative">
-          <div className="pointer-events-none absolute inset-y-0 left-2 flex items-center text-gray-500">
-            <ArrowRight size={14} />
-          </div>
-          <select
-            className="w-full cursor-pointer appearance-none rounded-md bg-gray-50 py-1.5 pr-2 pl-8 text-sm text-gray-500 transition-colors hover:bg-gray-200 focus:ring-2 focus:ring-blue-500 focus:outline-none"
-            value={selectedCard.listId}
-            onChange={handleMoveCard}
-          >
-            {allColumns.map((col) => (
-              <option key={col.id} value={col.id}>
-                {col.title}로 옮기기
-              </option>
-            ))}
-          </select>
-        </div>
+        {/* 완료된 카드가 아닐 때만 '이동' 섹션 표시 */}
+        {!selectedCard.isComplete && (
+          <>
+            <h4 className="mb-2 text-xs font-bold tracking-wider text-gray-500 uppercase">
+              이동
+            </h4>
+            <div className="group relative">
+              <div className="pointer-events-none absolute inset-y-0 left-2 flex items-center text-gray-500">
+                <ArrowRight size={14} />
+              </div>
+              <select
+                className="w-full cursor-pointer appearance-none rounded-md bg-gray-50 py-1.5 pr-2 pl-8 text-sm text-gray-500 transition-colors hover:bg-gray-200 focus:ring-2 focus:ring-blue-500 focus:outline-none"
+                value={selectedCard.listId}
+                onChange={handleMoveCard}
+              >
+                {allColumns.map(
+                  (col) =>
+                    // 가상 리스트는 이동 대상 목록에서 제외
+                    !col.isVirtual && (
+                      <option key={col.id} value={col.id}>
+                        {col.title}로 옮기기
+                      </option>
+                    ),
+                )}
+              </select>
+            </div>
+          </>
+        )}
         <button className="flex w-full items-center gap-2 rounded-md bg-gray-100 px-3 py-1.5 text-sm font-medium text-red-500 transition-colors hover:cursor-pointer hover:bg-red-100">
           <Trash2 size={14} />
           <span>휴지통</span>

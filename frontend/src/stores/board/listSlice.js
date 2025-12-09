@@ -1,5 +1,7 @@
 import { boardApi } from '../../api/board.api'
 
+const DONE_LIST_ID = 'virtual-done-list'
+
 export const createListSlice = (set, get) => ({
   // 리스트 추가
   addList: async (title) => {
@@ -21,14 +23,25 @@ export const createListSlice = (set, get) => ({
           tasks: [],
         },
       }
-      const updatedColumnOrder = [...activeBoard.columnOrder, newList.id]
+
+      const newColumnOrder = [...activeBoard.columnOrder]
+      // 완료 리스트가 존재하는지 확인
+      const doneListIndex = newColumnOrder.indexOf(DONE_LIST_ID)
+
+      if (doneListIndex !== -1) {
+        // 완료 리스트가 있는 경우 -> 완료 리스트 앞에 새 리스트 추가
+        newColumnOrder.splice(doneListIndex, 0, newList.id)
+      } else {
+        // 완료 리스트가 없는 경우 -> 맨 뒤에 새 리스트 추가
+        newColumnOrder.push(newList.id)
+      }
 
       // 3. 상태 일괄 적용
       set({
         activeBoard: {
           ...activeBoard,
           columns: updatedColumns,
-          columnOrder: updatedColumnOrder,
+          columnOrder: newColumnOrder,
         },
       })
     } catch (error) {

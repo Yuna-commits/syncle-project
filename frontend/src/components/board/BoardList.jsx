@@ -1,6 +1,7 @@
 import React, { useState, useRef, useEffect } from 'react'
 import useBoardStore from '../../stores/useBoardStore'
 import TaskCard from '../card/TaskCard'
+import { MoreHorizontal, Plus, X } from 'lucide-react'
 
 /**
  * N개의 카드 작업을 담을 하나의 리스트 랜더링
@@ -48,10 +49,18 @@ function BoardList({ column, innerRef }) {
     setIsEditing(false)
   }
 
+  // 완료 리스트 여부
+  const isDoneList = column.isVirtual
+
+  // 리스트 배경 색
+  const containerStyle = isDoneList
+    ? 'bg-green-100/60 ring-green-200 hover:ring-green-300'
+    : 'bg-gray-100/80 ring-gray-200/50 hover:ring-gray-300'
+
   return (
     <div
       data-id={column.id}
-      className="flex h-full max-h-full w-72 shrink-0 flex-col rounded-xl bg-gray-100/80 p-2 shadow-sm ring-1 ring-gray-200/50 transition-all hover:ring-gray-300"
+      className={`flex h-full max-h-full w-72 shrink-0 flex-col rounded-xl p-2 shadow-sm ring-1 transition-all ${containerStyle}`}
     >
       {/* 드래그 전용 핸들바 (Drag Handle)
         - board-list-header 클래스를 여기에만 적용합니다.
@@ -85,10 +94,14 @@ function BoardList({ column, innerRef }) {
             className="flex w-full cursor-pointer items-center gap-2"
             onClick={() => setIsEditing(true)}
           >
-            <h3 className="truncate text-sm font-semibold text-gray-700">
+            <h3
+              className={`truncate text-sm font-semibold ${isDoneList ? 'text-green-800' : 'text-gray-700'}`}
+            >
               {column.title}
             </h3>
-            <span className="flex h-5 min-w-5 items-center justify-center rounded-full bg-gray-200 px-1.5 text-xs font-medium text-gray-600">
+            <span
+              className={`flex h-5 min-w-5 items-center justify-center rounded-full px-1.5 text-xs font-medium ${isDoneList ? 'bg-green-200 text-green-700' : 'bg-gray-200 text-gray-600'}`}
+            >
               {column.tasks.length}
             </span>
           </div>
@@ -99,14 +112,7 @@ function BoardList({ column, innerRef }) {
             onClick={() => setIsMenuOpen(!isMenuOpen)}
             className="rounded p-1 text-gray-500 transition-colors hover:bg-gray-200"
           >
-            <svg
-              xmlns="http://www.w3.org/2000/svg"
-              viewBox="0 0 20 20"
-              fill="currentColor"
-              className="h-5 w-5"
-            >
-              <path d="M10 3a1.5 1.5 0 110 3 1.5 1.5 0 010-3zM10 8.5a1.5 1.5 0 110 3 1.5 1.5 0 010-3zM11.5 15.5a1.5 1.5 0 10-3 0 1.5 1.5 0 003 0z" />
-            </svg>
+            <MoreHorizontal size={20} />
           </button>
 
           {isMenuOpen && (
@@ -116,14 +122,14 @@ function BoardList({ column, innerRef }) {
                   setIsEditing(true)
                   setIsMenuOpen(false)
                 }}
-                className="flex w-full items-center px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
+                className="flex w-full items-center px-4 py-2 text-sm text-gray-700 hover:cursor-pointer hover:bg-gray-100"
               >
                 ✏️ 리스트 이름 수정
               </button>
 
               <button
                 onClick={handleDeleteList}
-                className="flex w-full items-center px-4 py-2 text-sm text-red-600 hover:bg-red-50"
+                className="flex w-full items-center px-4 py-2 text-sm text-red-600 hover:cursor-pointer hover:bg-red-50"
               >
                 🗑️ 리스트 삭제
               </button>
@@ -144,62 +150,50 @@ function BoardList({ column, innerRef }) {
       </div>
 
       {/* === 카드 추가 입력 === */}
-      {isAdding ? (
-        <form onSubmit={handleAddCard} className="mt-2 px-1 pb-1">
-          <textarea
-            autoFocus
-            rows={2}
-            value={cardTitle}
-            onChange={(e) => setCardTitle(e.target.value)}
-            placeholder="카드 제목을 입력하세요..."
-            className="w-full resize-none rounded-lg border border-blue-500 bg-white p-2 text-sm shadow-sm focus:outline-none"
-            onKeyDown={(e) => {
-              if (e.key === 'Enter' && !e.shiftKey) {
-                e.preventDefault()
-                handleAddCard(e)
-              }
-            }}
-            onMouseDown={(e) => e.stopPropagation()}
-          />
-          <div className="mt-1 flex items-center gap-2">
-            <button
-              type="submit"
-              className="rounded bg-blue-600 px-3 py-1.5 text-xs font-medium text-white transition-colors hover:bg-blue-700"
-            >
-              추가
-            </button>
-            <button
-              type="button"
-              onClick={() => setIsAdding(false)}
-              className="rounded p-1.5 text-gray-500 transition-colors hover:bg-gray-200"
-            >
-              <svg
-                xmlns="http://www.w3.org/2000/svg"
-                viewBox="0 0 20 20"
-                fill="currentColor"
-                className="h-5 w-5"
+      {/* 완료 리스트는 카드 추가 불가능 */}
+      {!isDoneList &&
+        (isAdding ? (
+          <form onSubmit={handleAddCard} className="mt-2 px-1 pb-1">
+            <textarea
+              autoFocus
+              rows={2}
+              value={cardTitle}
+              onChange={(e) => setCardTitle(e.target.value)}
+              placeholder="카드 제목을 입력하세요..."
+              className="w-full resize-none rounded-lg border border-blue-500 bg-white p-2 text-sm shadow-sm focus:outline-none"
+              onKeyDown={(e) => {
+                if (e.key === 'Enter' && !e.shiftKey) {
+                  e.preventDefault()
+                  handleAddCard(e)
+                }
+              }}
+              onMouseDown={(e) => e.stopPropagation()}
+            />
+            <div className="mt-1 flex items-center gap-2">
+              <button
+                type="submit"
+                className="rounded bg-blue-600 px-3 py-1.5 text-xs font-medium text-white transition-colors hover:bg-blue-700"
               >
-                <path d="M6.28 5.22a.75.75 0 00-1.06 1.06L8.94 10l-3.72 3.72a.75.75 0 101.06 1.06L10 11.06l3.72 3.72a.75.75 0 101.06-1.06L11.06 10l3.72-3.72a.75.75 0 00-1.06-1.06L10 8.94 6.28 5.22z" />
-              </svg>
-            </button>
-          </div>
-        </form>
-      ) : (
-        <button
-          onClick={() => setIsAdding(true)}
-          className="mt-2 flex w-full items-center gap-2 rounded-lg p-2 text-left text-sm text-gray-600 transition-colors hover:bg-gray-200"
-        >
-          <svg
-            xmlns="http://www.w3.org/2000/svg"
-            viewBox="0 0 20 20"
-            fill="currentColor"
-            className="h-5 w-5 text-gray-500"
+                추가
+              </button>
+              <button
+                type="button"
+                onClick={() => setIsAdding(false)}
+                className="rounded p-1.5 text-gray-500 transition-colors hover:bg-gray-200"
+              >
+                <X size={20} />
+              </button>
+            </div>
+          </form>
+        ) : (
+          <button
+            onClick={() => setIsAdding(true)}
+            className="mt-2 flex w-full items-center gap-2 rounded-lg p-2 text-left text-sm font-medium text-gray-600 transition-colors hover:cursor-pointer hover:bg-gray-200"
           >
-            <path d="M10.75 4.75a.75.75 0 00-1.5 0v4.5h-4.5a.75.75 0 000 1.5h4.5v4.5a.75.75 0 001.5 0v-4.5h4.5a.75.75 0 000-1.5h-4.5v-4.5z" />
-          </svg>
-          카드 추가
-        </button>
-      )}
+            <Plus size={20} className="text-gray-600" />
+            카드 추가
+          </button>
+        ))}
     </div>
   )
 }
