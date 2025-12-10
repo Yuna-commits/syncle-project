@@ -1,5 +1,6 @@
 import { useMutation, useQueryClient } from '@tanstack/react-query'
 import { boardApi } from '../api/board.api'
+import useBoardStore from '../stores/useBoardStore'
 
 const DONE_LIST_ID = 'virtual-done-list'
 
@@ -153,7 +154,35 @@ export const useCardMutations = (boardId) => {
     await queryClient.cancelQueries({ queryKey })
 
     const previousBoard = queryClient.getQueryData(queryKey)
-    queryClient.setQueryData(queryKey, (old) => updateFn(old, variables))
+
+    // 1. React Query 캐시 업데이트
+    queryClient.setQueryData(queryKey, (old) => {
+      if (!old) return old
+      const newBoard = updateFn(old, variables)
+
+      // 2. Zustand 스토어 동기화 (모달용)
+      useBoardStore.setState({ activeBoard: newBoard })
+
+      // 현재 선택된 카드가 수정된 경우, selectedCard 상태도 업데이트
+      const { selectedCard } = useBoardStore.getState()
+      if (selectedCard && selectedCard.id === variables.cardId) {
+        // 업데이트된 보드에서 해당 카드를 찾는 로직 대신, 간편하게 updates 병합
+        // (주의: 리스트 이동 등의 복잡한 변경은 activeBoard가 처리하므로 여기선 속성만 반영)
+        let updatedCard = { ...selectedCard }
+
+        if (variables.updates) {
+          updatedCard = { ...updatedCard, ...variables.updates }
+        }
+        // moveCard의 경우
+        if (variables.toListId) {
+          updatedCard.listId = variables.toListId
+        }
+
+        useBoardStore.setState({ selectedCard: updatedCard })
+      }
+
+      return newBoard
+    })
 
     return { previousBoard }
   }
@@ -162,6 +191,7 @@ export const useCardMutations = (boardId) => {
   const handleError = (context, message) => {
     if (context?.previousBoard) {
       queryClient.setQueryData(queryKey, context.previousBoard)
+      useBoardStore.setState({ activeBoard: context.previousBoard })
     }
     alert(message || '작업에 실패했습니다.')
   }

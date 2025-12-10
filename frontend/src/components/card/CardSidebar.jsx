@@ -3,9 +3,11 @@ import useBoardStore from '../../stores/useBoardStore'
 import DateRangePickerMenu from '../modals/DateRangePickerMenu'
 import { useEffect, useRef, useState } from 'react'
 import MemberPickerMenu from '../modals/MemberPickerMenu'
+import { useCardMutations } from '../../hooks/useCardMutations'
 
 function CardSidebar({ onAddChecklist, showChecklist }) {
-  const { activeBoard, selectedCard, moveCard, updateCard } = useBoardStore()
+  const { activeBoard, selectedCard } = useBoardStore()
+  const { updateCard, moveCard } = useCardMutations(activeBoard?.id)
 
   // -- 날짜 메뉴 상태 --
   const [isDateOpen, setIsDateOpen] = useState(false)
@@ -62,16 +64,25 @@ function CardSidebar({ onAddChecklist, showChecklist }) {
   const handleDateApply = (item) => {
     if (!item) {
       // 초기화 버튼 클릭 시 (날짜 삭제)
-      updateCard(selectedCard.id, selectedCard.listId, {
-        startDate: null,
-        dueDate: null,
+      updateCard({
+        cardId: selectedCard.id,
+        listId: selectedCard.listId,
+        updates: {
+          startDate: null,
+          dueDate: null,
+          removeDate: true,
+        },
       })
     } else {
       // 날짜 선택 시
       const { startDate, endDate } = item[0]
-      updateCard(selectedCard.id, selectedCard.listId, {
-        startDate: startDate.toISOString(),
-        dueDate: endDate.toISOString(),
+      updateCard({
+        cardId: selectedCard.id,
+        listId: selectedCard.listId,
+        updates: {
+          startDate: startDate.toISOString(),
+          dueDate: endDate.toISOString(),
+        },
       })
     }
     setIsDateOpen(false)
@@ -102,11 +113,15 @@ function CardSidebar({ onAddChecklist, showChecklist }) {
     // 이미 담당자라면 변경 x
     if (selectedCard.assignee?.id === member.id) return
 
-    updateCard(selectedCard.id, selectedCard.listId, {
-      assigneeId: member.id,
-      assigneeName: member.name,
-      assigneeProfileImg: member.profileImg,
-      assignee: member, // 프론트엔드 UI 즉시 반영
+    updateCard({
+      cardId: selectedCard.id,
+      listId: selectedCard.listId,
+      updates: {
+        assigneeId: member.id,
+        assigneeName: member.name,
+        assigneeProfileImg: member.profileImg,
+        assignee: member,
+      },
     })
     setIsMemberOpen(false)
   }
@@ -123,7 +138,12 @@ function CardSidebar({ onAddChecklist, showChecklist }) {
       const targetColumn = activeBoard.columns[newColId]
       const newIndex = targetColumn.tasks ? targetColumn.tasks.length : 0
 
-      moveCard(selectedCard.id, selectedCard.listId, newColId, newIndex)
+      moveCard({
+        cardId: selectedCard.id,
+        fromListId: selectedCard.listId,
+        toListId: newColId,
+        newIndex,
+      })
     }
   }
 

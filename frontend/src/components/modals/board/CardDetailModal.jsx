@@ -6,10 +6,11 @@ import CardChecklist from '../../card/CardChecklist'
 import CardDescription from '../../card/CardDescription'
 import CardSidebar from '../../card/CardSidebar'
 import { getDateStatusStyle } from '../../../utils/dateUtils'
+import { useCardMutations } from '../../../hooks/useCardMutations'
 
 export default function CardDetailModal() {
-  const { activeBoard, selectedCard, closeCardModal, updateCard } =
-    useBoardStore()
+  const { activeBoard, selectedCard, closeCardModal } = useBoardStore()
+  const { updateCard } = useCardMutations(activeBoard?.id)
 
   // 체크리스트 표시 여부 상테
   // - 아이템이 있으면 자동 펼침
@@ -41,8 +42,12 @@ export default function CardDetailModal() {
     setTimeout(() => setIsAnimating(false), 300)
 
     // 업데이트
-    updateCard(selectedCard.id, selectedCard.listId, {
-      isComplete: nextState,
+    updateCard({
+      cardId: selectedCard.id,
+      listId: selectedCard.listId,
+      updates: {
+        isComplete: nextState,
+      },
     })
   }
 

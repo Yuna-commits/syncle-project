@@ -154,6 +154,10 @@ public class CardServiceImpl implements CardService {
         // 업데이트 진행
         cardMapper.updateCard(updateVo);
 
+        if (Boolean.TRUE.equals(req.getRemoveDate())) {
+            cardMapper.deleteCardDates(cardId);
+        }
+
         return cardMapper.findCardDetailById(cardId);
     }
 }

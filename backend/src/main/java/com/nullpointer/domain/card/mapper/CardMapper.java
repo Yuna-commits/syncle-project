@@ -39,4 +39,7 @@ public interface CardMapper {
 
     // 담당자 변경
     void updateCardAssignee(@Param("cardId") Long cardId, @Param("assigneeId") Long assineeId);
+
+    // 마감일 초기화
+    void deleteCardDates(Long cardId);
 }

@@ -17,6 +17,7 @@ public class UpdateCardRequest {
     private Boolean isComplete;
     private LocalDateTime startDate;
     private LocalDateTime dueDate;
+    private Boolean removeDate;
 
     public CardVo toVo(Long cardId) {
         return CardVo.builder()

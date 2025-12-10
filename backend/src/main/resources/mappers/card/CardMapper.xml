@@ -127,4 +127,14 @@
         WHERE id = #{cardId}
           AND deleted_at IS NULL
     </update>
+
+    <!-- 마감일 초기화 -->
+    <update id="deleteCardDates">
+        UPDATE card
+        SET start_date = NULL,
+            due_date   = NULL
+        WHERE id = #{cardId}
+          AND deleted_at IS NULL
+    </update>
+
 </mapper>
