@@ -5,6 +5,46 @@ export const useBoardMutations = (boardId) => {
   const queryClient = useQueryClient()
   const queryKey = ['board', boardId]
 
+  // 즐겨찾기 토글
+  const toggleFavoriteMutation = useMutation({
+    mutationFn: () => boardApi.toggleFavorite(boardId),
+    onMutate: async () => {
+      // 1. 진행 중인 쿼리 취소
+      await queryClient.cancelQueries({ queryKey })
+
+      // 2. 이전 상태 저장 (에러 시 롤백용)
+      const previousBoard = queryClient.getQueryData(queryKey)
+
+      // 3. 낙관적 업데이트: 캐시 데이터 즉시 수정
+      queryClient.setQueryData(queryKey, (old) => {
+        if (!old) return old
+        return { ...old, isFavorite: !old.isFavorite } // true <-> false 반전
+      })
+
+      // context 반환
+      return { previousBoard }
+    },
+
+    onError: (err, variables, context) => {
+      // 4. 에러 발생 시 롤백
+      if (context?.previousBoard) {
+        queryClient.setQueryData(queryKey, context.previousBoard)
+      }
+
+      // 5. 에러 메시지 처리
+      if (err.response?.data?.errorCode === 'FAVORITE_LIMIT_EXCEEDED') {
+        alert('즐겨찾기는 최대 4개까지만 가능합니다.')
+      } else {
+        alert('즐겨찾기 변경에 실패했습니다.')
+      }
+    },
+
+    onSettled: () => {
+      // 6. 데이터 동기화
+      queryClient.invalidateQueries({ queryKey })
+    },
+  })
+
   //보드 정보 수정 (제목, 설명, 공개범위 등) - 낙관적 업데이트 적용
   const updateBoardMutation = useMutation({
     mutationFn: (updateData) => boardApi.updateBoard(boardId, updateData),
@@ -46,6 +86,7 @@ export const useBoardMutations = (boardId) => {
   })
 
   return {
+    toggleFavorite: toggleFavoriteMutation.mutate,
     updateBoard: updateBoardMutation.mutate,
     deleteBoard: deleteBoardMutation.mutate,
   }
