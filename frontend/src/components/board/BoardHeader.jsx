@@ -2,9 +2,11 @@ import React, { useState } from 'react'
 import useBoardStore from '../../stores/useBoardStore'
 import { Link } from 'react-router-dom'
 import InviteBoardMemeberModal from '../modals/board/InviteBoardMemeberModal'
+import { useBoardMutations } from '../../hooks/useBoardMutations'
 
 function BoardHeader({ board }) {
-  const { toggleSettings, toggleFavorite } = useBoardStore()
+  const { toggleSettings } = useBoardStore()
+  const { toggleFavorite } = useBoardMutations(board.id)
 
   // 모달 상태 관리
   const [isInviteModalOpen, setIsInviteModalOpen] = useState(false)
