@@ -5,11 +5,19 @@ export const createBoardSlice = (set, get) => ({
   isLoading: false,
   error: null,
   isSettingsOpen: false, // 우측 설정 사이드바
+  settingsView: 'MENU', // 사이드바 내 현재 화면
   isShareOpen: false, // 공유 모달
 
-  // 설정 사이드바 토글
+  // 설정 사이드바 토글 (기본)
   toggleSettings: () =>
     set((state) => ({ isSettingsOpen: !state.isSettingsOpen })),
+
+  // 특정 화면으로 설정 사이드바 열기
+  openSettings: (viewName = 'MENU') =>
+    set({ isSettingsOpen: true, settingsView: viewName }),
+
+  // 사이드바 내부에서 화면 전환
+  setSettingsView: (viewName) => set({ settingsView: viewName }),
 
   // 보드 공유 모달 토글
   toggleShare: () => set((state) => ({ isShareOpen: !state.isShareOpen })),

@@ -1,5 +1,4 @@
-import React, { useEffect, useRef, useState } from 'react'
-
+import React, { useEffect, useRef } from 'react'
 import { ChevronLeft } from 'lucide-react'
 import useBoardStore from '../../stores/useBoardStore'
 import MainMenuView from './view/MainMenuView'
@@ -14,18 +13,22 @@ import { useBoardMutations } from '../../hooks/useBoardMutations'
 
 function BoardSettings({ board }) {
   const navigate = useNavigate()
+  const menuRef = useRef(null)
 
-  const { toggleSettings, isSettingsOpen } = useBoardStore()
+  // UI 상태 가져오기
+  const {
+    toggleSettings,
+    isSettingsOpen,
+    settingsView, // 현재 보고 있는 화면 상태
+    setSettingsView, // 화면 변경 함수
+  } = useBoardStore()
 
+  // React Query
   const { deleteBoard } = useBoardMutations(board.id)
 
   // 로그인 사용자의 권한 가져오기
-  const { role, canManage, isExplicitMember } = useBoardPermission(board)
-
-  const menuRef = useRef(null)
-
-  // 현재 보고 있는 뷰의 상태
-  const [currentView, setCurrentView] = useState('root')
+  const { role, isExplicitMember } = useBoardPermission(board)
+  const isOwner = role === 'OWNER'
 
   // 외부 클릭 시 닫기
   useEffect(() => {
@@ -39,79 +42,25 @@ function BoardSettings({ board }) {
     return () => document.removeEventListener('mousedown', handleClickOutside)
   }, [isSettingsOpen, toggleSettings])
 
-  // 메뉴가 닫힐 때 뷰 초기화
+  // 사이드바가 닫히면 메뉴 초기화
   useEffect(() => {
-    if (!isSettingsOpen) {
-      setTimeout(() => setCurrentView('root'), 200)
+    return () => {
+      setSettingsView('MENU')
     }
-  }, [isSettingsOpen])
+  }, [setSettingsView])
 
-  // 뷰 타이틀 매핑
-  const viewTitles = {
-    root: '메뉴',
-    settings_menu: '보드 설정',
-    settings_info: '보드 정보',
-    settings_visibility: '공개 범위',
-    settings_permissions: '권한 설정',
-    members: '멤버 관리',
-    files: '파일 관리',
-    archive: '아카이브',
-  }
-
-  // 뒤로 가기 핸들러
+  // 뒤로 가기 핸들러 (항상 메인 메뉴로 복귀)
   const handleBack = () => {
-    if (
-      ['settings_info', 'settings_visibility', 'settings_permissions'].includes(
-        currentView,
-      )
-    ) {
-      setCurrentView('settings_menu')
-    } else {
-      setCurrentView('root')
-    }
+    setSettingsView('MENU')
   }
-
-  // 뷰 렌더링
-  const renderContent = () => {
-    // 하위 콘텐츠에 전달되는 프로퍼티
-    const props = {
-      board,
-      role, // 현재 '나'의 role
-      isOwner: canManage, // 관리 권한
-      isExplicitMember, // 보드 멤버 여부
-      onChangeView: setCurrentView,
-      onDeleteBoard: deleteBoard,
-      boardId: board.id,
-    }
-
-    switch (currentView) {
-      case 'root':
-        return <MainMenuView {...props} />
-      case 'settings_info':
-        return <BoardInfoView {...props} />
-      case 'settings_visibility':
-        return <VisibilityView {...props} />
-      case 'settings_permissions':
-        return <PermissionsView {...props} />
-      case 'members':
-        return <MembersView {...props} />
-      case 'archive':
-        return <ArchiveView {...props} />
-      default:
-        return <MainMenuView {...props} />
-    }
-  }
-
-  // 메뉴가 닫혀있으면 렌더링 x
-  if (!isSettingsOpen) return null
 
   // 보드 삭제 핸들러
-  const handleDelete = () => {
+  const handleDeleteBoard = () => {
     if (
       window.confirm('정말 이 보드를 삭제하시겠습니까? 복구할 수 없습니다.')
     ) {
       // [변경] 삭제 요청 및 성공 시 이동 처리
-      deleteBoard(null, {
+      deleteBoard(undefined, {
         onSuccess: () => {
           alert('보드가 삭제되었습니다.')
           // 팀 보드 목록 페이지로 이동 (board.teamId 활용)
@@ -124,36 +73,87 @@ function BoardSettings({ board }) {
     }
   }
 
+  // 현재 뷰에 따른 제목 결정
+  const getTitle = () => {
+    switch (settingsView) {
+      case 'INFO':
+        return '보드 정보 수정'
+      case 'VISIBILITY':
+        return '공개 범위 설정'
+      case 'PERMISSIONS':
+        return '권한 설정'
+      case 'MEMBERS':
+        return '멤버 관리'
+      case 'ARCHIVE':
+        return '보관된 항목'
+      default:
+        return '메뉴'
+    }
+  }
+
+  // 하위 뷰 렌더링
+  const renderContent = () => {
+    switch (settingsView) {
+      case 'MENU':
+        return (
+          <MainMenuView
+            board={board}
+            onChangeView={setSettingsView}
+            onDeleteBoard={handleDeleteBoard}
+            isOwner={isOwner}
+            isExplicitMember={isExplicitMember}
+          />
+        )
+      case 'INFO':
+        return <BoardInfoView board={board} isOwner={isOwner} />
+      case 'VISIBILITY':
+        return <VisibilityView board={board} isOwner={isOwner} />
+      case 'PERMISSIONS':
+        return <PermissionsView board={board} isOwner={isOwner} />
+      case 'MEMBERS':
+        return <MembersView board={board} isOwner={isOwner} />
+      case 'ARCHIVE':
+        return <ArchiveView board={board} />
+      default:
+        return (
+          <MainMenuView
+            board={board}
+            onChangeView={setSettingsView}
+            onDeleteBoard={handleDeleteBoard}
+            isOwner={isOwner}
+            isExplicitMember={isExplicitMember}
+          />
+        )
+    }
+  }
+
+  // 메뉴가 닫혀있으면 렌더링 x
+  if (!isSettingsOpen) return null
+
   return (
     <div
       ref={menuRef}
-      className="animate-in fade-in zoom-in-95 absolute top-14 right-4 z-50 w-80 overflow-hidden rounded-xl border border-gray-200 bg-white shadow-2xl duration-200"
+      className="animate-in fade-in zoom-in-95 absolute top-14 right-4 z-50 w-80 overflow-hidden rounded-xl border border-gray-200 bg-white p-3 shadow-2xl duration-200"
       style={{ maxHeight: 'calc(100vh - 80px)' }} // 화면 높이에 맞춰 최대 높이 제한
     >
       {/* 공통 헤더 */}
-      <div className="relative flex h-14 shrink-0 items-center justify-center border-b border-gray-200 px-4">
-        {currentView !== 'root' && (
+      <div className="relative flex h-14 shrink-0 items-center justify-center border-b border-gray-200">
+        {/* 루트 MENU가 아닐 때만 뒤로가기 버튼 표시 */}
+        {settingsView !== 'MENU' && (
           <button
             onClick={handleBack}
-            className="absolute left-4 rounded-md p-1 text-gray-500 transition-colors hover:cursor-pointer hover:bg-gray-100 hover:text-gray-800"
+            className="absolute left-1 rounded-md text-gray-500 transition-colors hover:cursor-pointer hover:bg-gray-100 hover:text-gray-800"
             title="뒤로 가기"
           >
             <ChevronLeft size={20} />
           </button>
         )}
 
-        <h2 className="text-base font-bold text-gray-800">
-          {viewTitles[currentView]}
-        </h2>
+        <h2 className="text-base font-bold text-gray-800">{getTitle()}</h2>
       </div>
       {/* 콘텐츠 영역 */}
-      <div className="overflow-y-auto p-3" style={{ maxHeight: '70vh' }}>
-        <div
-          key={currentView}
-          className="animate-in fade-in slide-in-from-right-4 duration-200"
-        >
-          {renderContent()}
-        </div>
+      <div className="h-[calc(100%-3.5rem)] overflow-y-auto">
+        {renderContent()}
       </div>
     </div>
   )

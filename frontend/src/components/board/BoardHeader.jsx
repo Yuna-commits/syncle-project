@@ -3,9 +3,22 @@ import useBoardStore from '../../stores/useBoardStore'
 import { Link } from 'react-router-dom'
 import InviteBoardMemeberModal from '../modals/board/InviteBoardMemeberModal'
 import { useBoardMutations } from '../../hooks/useBoardMutations'
+import {
+  Filter,
+  Lock,
+  Globe,
+  MoreHorizontal,
+  Plus,
+  Share2,
+  Star,
+} from 'lucide-react'
 
 function BoardHeader({ board }) {
-  const { toggleSettings } = useBoardStore()
+  // UI 상태 제어 함수 (Store)
+  const { toggleSettings, openSettings, isSettingsOpen, settingsView } =
+    useBoardStore()
+
+  // 데이터 변형 훅 (React Query)
   const { toggleFavorite } = useBoardMutations(board.id)
 
   // 모달 상태 관리
@@ -13,12 +26,32 @@ function BoardHeader({ board }) {
 
   const teamName = board.teamName
   const teamInitial = teamName.substring(0, 1).toUpperCase()
+  const isPrivate = board.visibility === 'PRIVATE'
+
+  // 표시할 멤버 목록 결정
+  const membersToDisplay = isPrivate
+    ? board.members || []
+    : board.teamMembers || []
 
   // 아바타 스택 (최대 3명 + 나머지)
   const MAX_DISPLAY = 3
-  const members = board.members || []
-  const displayMembers = members.slice(0, MAX_DISPLAY)
-  const remainingCount = Math.max(0, members.length - MAX_DISPLAY)
+  const displayMembers = membersToDisplay.slice(0, MAX_DISPLAY)
+  const remainingCount = Math.max(0, membersToDisplay.length - MAX_DISPLAY)
+
+  // 남은 인원수 클릭 핸들러
+  const handleMemberStackClick = (e) => {
+    // 이벤트 전파 방지
+    e.preventDefault()
+    e.stopPropagation()
+
+    // 이미 설정창이 열려있고, 현재 보고 있는 화면이 'MEMBERS'라면 -> 닫기
+    if (isSettingsOpen && settingsView === 'MEMBERS') {
+      toggleSettings()
+    } else {
+      // 그 외(닫혀있거나 다른 화면일 때) -> 'MEMBERS' 화면으로 열기
+      openSettings('MEMBERS')
+    }
+  }
 
   return (
     <>
@@ -43,7 +76,7 @@ function BoardHeader({ board }) {
             <h1 className="text-lg font-bold text-gray-800">{board.title}</h1>
 
             <button
-              onClick={toggleFavorite}
+              onClick={() => toggleFavorite()}
               className={`transition-colors hover:cursor-pointer focus:outline-none ${
                 board.isFavorite
                   ? 'text-yellow-500 hover:text-yellow-600' // 활성화: 노란색
@@ -51,35 +84,25 @@ function BoardHeader({ board }) {
               }`}
               title={board.isFavorite ? '즐겨찾기 해제' : '즐겨찾기 추가'}
             >
-              <svg
-                xmlns="http://www.w3.org/2000/svg"
-                // isFavorite이면 속 채우기(fill), 아니면 선만(none)
+              <Star
+                size={20}
                 fill={board.isFavorite ? 'currentColor' : 'none'}
-                viewBox="0 0 24 24"
-                strokeWidth={1.5}
-                stroke="currentColor"
-                className="h-6 w-6"
-              >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  d="M11.48 3.499a.562.562 0 011.04 0l2.125 5.111a.563.563 0 00.475.345l5.518.442c.499.04.701.663.321.988l-4.204 3.602a.563.563 0 00-.182.557l1.285 5.385a.562.562 0 01-.84.61l-4.725-2.885a.563.563 0 00-.586 0L6.982 20.54a.562.562 0 01-.84-.61l1.285-5.386a.562.562 0 00-.182-.557l-4.204-3.602a.563.563 0 01.321-.988l5.518-.442a.563.563 0 00.475-.345L11.48 3.5z"
-                />
-              </svg>
+              />
             </button>
           </div>
 
           {/* 공개 범위 */}
-          <span className="rounded-full border border-gray-200 bg-gray-100 px-2.5 py-0.5 text-xs font-medium text-gray-600">
-            {board.visibility}
-          </span>
+          <div className="flex items-center gap-1.5 rounded-full border border-gray-200 bg-gray-100 px-2.5 py-0.5 text-xs font-medium text-gray-600">
+            {isPrivate ? <Lock size={12} /> : <Globe size={12} />}
+            <span>{board.visibility}</span>
+          </div>
         </div>
 
         {/* 오른쪽: 멤버 및 액션 */}
         <div className="flex items-center gap-3">
           {/* 멤버 아바타 스택 */}
           <div className="flex items-center">
-            <div className="mr-2 flex -space-x-2">
+            <div className={`flex -space-x-2 ${isPrivate ? 'mr-2' : ''}`}>
               {displayMembers.map((member) => (
                 <div
                   key={member.id}
@@ -99,81 +122,52 @@ function BoardHeader({ board }) {
                 </div>
               ))}
 
-              {/* 남은 인원수 표시 */}
+              {/* 남은 인원수 표시 -> 클릭 시 멤버 목록 설정 뷰 열기 */}
               {remainingCount > 0 && (
-                <div
-                  className="relative flex h-8 w-8 items-center justify-center rounded-full border-2 border-white bg-gray-800 text-xs font-bold text-white hover:z-10"
-                  title={`외 ${remainingCount}명 더 있음`}
+                <button
+                  onMouseDown={handleMemberStackClick}
+                  className="relative flex h-8 w-8 cursor-pointer items-center justify-center rounded-full border-2 border-white bg-gray-800 text-xs font-bold text-white transition-transform hover:z-10 hover:scale-110"
+                  title={`외 ${remainingCount}명 더 보기 (멤버 목록)`}
                 >
                   +{remainingCount}
-                </div>
+                </button>
               )}
             </div>
 
             {/* 멤버 추가 버튼 */}
-            <button
-              onClick={() => setIsInviteModalOpen(true)}
-              className="flex h-8 w-8 items-center justify-center rounded-full border-2 border-dashed border-gray-300 bg-white text-gray-400 transition-colors hover:cursor-pointer hover:border-blue-400 hover:text-blue-600"
-              title="보드 멤버 추가"
-            >
-              <svg
-                xmlns="http://www.w3.org/2000/svg"
-                viewBox="0 0 20 20"
-                fill="currentColor"
-                className="h-5 w-5"
+            {isPrivate && (
+              <button
+                onClick={() => setIsInviteModalOpen(true)}
+                className="flex h-8 w-8 items-center justify-center rounded-full border-2 border-dashed border-gray-300 bg-white text-gray-400 transition-colors hover:cursor-pointer hover:border-blue-400 hover:text-blue-600"
+                title="보드 멤버 추가"
               >
-                <path d="M10.75 4.75a.75.75 0 00-1.5 0v4.5h-4.5a.75.75 0 000 1.5h4.5v4.5a.75.75 0 001.5 0v-4.5h4.5a.75.75 0 000-1.5h-4.5v-4.5z" />
-              </svg>
-            </button>
+                <Plus size={16} />
+              </button>
+            )}
           </div>
 
           <div className="mx-2 h-5 w-px bg-gray-300"></div>
 
           {/* 필터 버튼 */}
-          <button className="flex items-center gap-1 rounded-md px-2 py-1.5 text-sm font-medium text-gray-600 hover:bg-gray-100">
-            <svg
-              xmlns="http://www.w3.org/2000/svg"
-              fill="none"
-              viewBox="0 0 24 24"
-              strokeWidth={1.5}
-              stroke="currentColor"
-              className="h-5 w-5"
-            >
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                d="M12 3c2.755 0 5.455.232 8.083.678.533.09.917.556.917 1.096v1.044a2.25 2.25 0 01-.659 1.591l-5.432 5.432a2.25 2.25 0 00-.659 1.591v2.927a2.25 2.25 0 01-1.244 2.013L9.75 21v-6.568a2.25 2.25 0 00-.659-1.591L3.659 7.409A2.25 2.25 0 013 5.818V4.774c0-.54.384-1.006.917-1.096A48.32 48.32 0 0112 3z"
-              />
-            </svg>
+          <button className="flex items-center gap-1 rounded-md px-2 py-1.5 text-sm font-medium text-gray-600 transition-colors hover:cursor-pointer hover:bg-gray-100">
+            <Filter size={18} />
             <span className="hidden sm:inline">필터</span>
           </button>
 
           {/* 공유 버튼 */}
-          <button className="rounded-md bg-blue-600 px-3 py-1.5 text-sm font-medium text-white shadow-sm transition-all hover:bg-blue-700 active:scale-95">
-            공유
+          <button className="flex items-center gap-1.5 rounded-md bg-blue-600 px-3 py-1.5 text-sm font-medium text-white shadow-sm transition-all hover:cursor-pointer hover:bg-blue-700 active:scale-95">
+            <Share2 size={16} />
+            <span>공유</span>
           </button>
 
           {/* 더보기 메뉴 */}
           <button
             onClick={toggleSettings}
             onMouseDown={(e) => e.stopPropagation()}
-            className="rounded-md p-1.5 text-gray-500 hover:cursor-pointer hover:bg-gray-100 focus:outline-none"
+            className="rounded-md p-1.5 text-gray-500 transition-colors hover:cursor-pointer hover:bg-gray-100 focus:outline-none"
             title="메뉴 열기"
           >
-            <svg
-              xmlns="http://www.w3.org/2000/svg"
-              fill="none"
-              viewBox="0 0 24 24"
-              strokeWidth={1.5}
-              stroke="currentColor"
-              className="h-6 w-6"
-            >
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                d="M6.75 12a.75.75 0 11-1.5 0 .75.75 0 011.5 0zM12.75 12a.75.75 0 11-1.5 0 .75.75 0 011.5 0zM18.75 12a.75.75 0 11-1.5 0 .75.75 0 011.5 0z"
-              />
-            </svg>
+            <MoreHorizontal size={20} />
           </button>
         </div>
       </header>

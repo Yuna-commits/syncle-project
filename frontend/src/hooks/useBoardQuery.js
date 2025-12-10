@@ -1,8 +1,6 @@
 import { useQuery } from '@tanstack/react-query'
 import { boardApi } from '../api/board.api'
 
-const DONE_LIST_ID = 'virtual-done-list'
-
 // 1. 데이터 변환 (Server Array -> Client Object Map)
 // 백엔드: List<ListWithCardsResponse> -> 프론트: columns { id: { ... } }
 const normalizeBoardData = (dto) => {
