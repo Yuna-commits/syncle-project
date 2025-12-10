@@ -45,4 +45,11 @@ export const boardApi = {
   updateChecklist: (itemId, updates) =>
     api.patch(`/checklists/${itemId}`, updates),
   deleteChecklist: (itemId) => api.delete(`/checklists/${itemId}`),
+
+  // Comment
+  createComment: (cardId, content) =>
+    api.post(`/cards/${cardId}/comments`, { content }),
+  updateComment: (commentId, updates) =>
+    api.patch(`/comments/${commentId}`, updates),
+  deleteComment: (commentId) => api.delete(`/comments/${commentId}`),
 }

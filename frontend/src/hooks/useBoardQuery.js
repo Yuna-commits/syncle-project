@@ -43,6 +43,17 @@ const normalizeBoardData = (dto) => {
         startDate: card.startDate,
         dueDate: card.dueDate,
         isComplete: card.isComplete || false,
+
+        comments: (card.comments || [])
+          .filter((comment) => comment.id)
+          .map((comment) => ({
+            id: comment.id,
+            content: comment.content,
+            writerId: comment.writerId,
+            writerName: comment.writerName,
+            writerProfileImg: comment.writerProfileImg,
+            createdAt: comment.createdAt,
+          })),
         // 댓글 수
         commentCount: card.commentCount || 0,
 

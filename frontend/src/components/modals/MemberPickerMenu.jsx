@@ -1,7 +1,7 @@
 import React from 'react'
 import defaultProfile from '../../assets/images/default.png'
 import Portal from '../ui/Portal'
-import { Check, User } from 'lucide-react'
+import { Check } from 'lucide-react'
 
 function MemberPickerMenu({
   isOpen,

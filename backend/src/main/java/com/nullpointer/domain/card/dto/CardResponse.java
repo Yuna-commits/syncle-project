@@ -3,6 +3,7 @@ package com.nullpointer.domain.card.dto;
 import com.fasterxml.jackson.annotation.JsonFormat;
 import com.nullpointer.domain.card.vo.CardVo;
 import com.nullpointer.domain.checklist.vo.ChecklistVo;
+import com.nullpointer.domain.comment.dto.CommentResponse;
 import lombok.*;
 
 import java.time.LocalDateTime;
@@ -38,6 +39,9 @@ public class CardResponse {
     // 체크리스트 필드
     private List<ChecklistVo> checklists;
 
+    // 댓글 필드
+    private List<CommentResponse> comments;
+    
     public static CardResponse of(CardVo c, String assigneeName, String assigneeProfileImg, Integer commentCount, List<ChecklistVo> checklists) {
         return CardResponse.builder()
                 .id(c.getId())

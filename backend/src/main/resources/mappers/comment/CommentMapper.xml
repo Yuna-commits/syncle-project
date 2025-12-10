@@ -1,0 +1,72 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.nullpointer.domain.comment.mapper.CommentMapper">
+
+    <select id="selectCommentsByCardId"
+            resultType="com.nullpointer.domain.comment.dto.CommentResponse">
+        SELECT
+            c.id,
+            c.card_id,
+            c.content,
+            c.created_at,
+            c.updated_at,
+
+            c.writer_id,
+            u.nickname      AS writerName,
+            u.profile_img   AS writerProfileImg,
+            u.email         AS writerEmail
+        FROM comment c
+                 LEFT JOIN user u ON c.writer_id = u.id
+        WHERE c.card_id = #{cardId}
+          AND c.deleted_at IS NULL
+        ORDER BY c.created_at ASC
+    </select>
+
+    <select id="selectCommentById"
+            resultType="com.nullpointer.domain.comment.dto.CommentResponse">
+        SELECT c.id,
+               c.card_id,
+               c.content,
+               c.created_at,
+               c.updated_at,
+               c.writer_id,
+               u.nickname    AS writerName,
+               u.profile_img AS writerProfileImg,
+               u.email       AS writerEmail
+        FROM comment c
+                 LEFT JOIN user u ON c.writer_id = u.id
+        WHERE c.id = #{id}
+    </select>
+
+    <insert id="insertComment"
+            parameterType="com.nullpointer.domain.comment.dto.CommentRequest"
+            useGeneratedKeys="true"
+            keyProperty="id">
+        INSERT INTO comment (card_id,
+                             writer_id,
+                             content,
+                             created_at,
+                             updated_at)
+        VALUES (#{cardId},
+                #{writerId},
+                #{content},
+                NOW(),
+                NOW())
+    </insert>
+
+    <update id="updateComment">
+        UPDATE comment
+        SET content = #{content},
+            updated_at = NOW()
+        WHERE id = #{commentId}
+    </update>
+
+    <update id="deleteComment">
+        UPDATE comment
+        SET deleted_at = NOW()
+        WHERE id = #{commentId}
+    </update>
+
+</mapper>

@@ -120,52 +120,69 @@
 
                 <collection property="checklists" ofType="ChecklistVo">
                     <id property="id" column="check_id"/>
-                    <result property="cardId" column="card_id"/> <result property="title" column="check_title"/>
+                    <result property="cardId" column="card_id"/>
+                    <result property="title" column="check_title"/>
                     <result property="done" column="check_done"/>
+                </collection>
+                <collection property="comments" ofType="com.nullpointer.domain.comment.dto.CommentResponse"
+                            javaType="java.util.List">
+                    <id property="id" column="comment_id"/>
+                    <result property="content" column="comment_content"/>
+                    <result property="writerName" column="comment_writer_name"/>
+                    <result property="writerProfileImg" column="comment_writer_img"/>
+                    <result property="createdAt" column="comment_created_at"/>
                 </collection>
             </collection>
         </collection>
     </resultMap>
 
     <select id="findBoardWithListsAndCards" resultMap="BoardDetailMap">
-        SELECT b.id          AS board_id,
-               b.title       AS board_title,
-               b.description AS board_desc,
-               b.visibility  AS board_visibility,
-               b.team_id     AS team_id,
-               t.name        AS team_name,
+        SELECT b.id           AS board_id,
+               b.title        AS board_title,
+               b.description  AS board_desc,
+               b.visibility   AS board_visibility,
+               b.team_id      AS team_id,
+               t.name         AS team_name,
 
-               l.id          AS list_id,
-               l.title       AS list_title,
-               l.order_index AS list_order,
+               l.id           AS list_id,
+               l.title        AS list_title,
+               l.order_index  AS list_order,
 
-               c.id          AS card_id,
-               c.title       AS card_title,
-               c.description AS card_desc,
-               c.order_index AS card_order,
-               c.start_date  AS card_start_date,
-               c.due_date    AS card_due_date,
-               c.is_complete As card_is_complete,
+               c.id           AS card_id,
+               c.title        AS card_title,
+               c.description  AS card_desc,
+               c.order_index  AS card_order,
+               c.start_date   AS card_start_date,
+               c.due_date     AS card_due_date,
+               c.is_complete  As card_is_complete,
 
                -- 담당자 정보 (user 테이블 조인)
-               u.id          AS assignee_id,
-               u.nickname    AS assignee_name,
-               u.profile_img AS assignee_img,
+               u.id           AS assignee_id,
+               u.nickname     AS assignee_name,
+               u.profile_img  AS assignee_img,
 
                -- 체크리스트 (checklist 테이블 조인)
-               ck.id         AS check_id,
-               ck.title      AS check_title,
-               ck.done       AS check_done,
+               ck.id          AS check_id,
+               ck.title       AS check_title,
+               ck.done        AS check_done,
+
+
+               -- 댓글 (comment 테이블 조인)
+               cmt.id         AS comment_id,
+               cmt.content    AS comment_content,
+               cmt.created_at AS comment_created_at,
+               u.nickname     AS comment_writer_name,
+               u.profile_img  AS comment_writer_img,
 
                -- 댓글 수 (서브쿼리)
-               (CASE
-                    WHEN c.id IS NULL
-                        THEN NULL
-                    ELSE
-                        (SELECT COUNT(*)
-                         FROM comment cm
-                         WHERE cm.card_id = c.id)
-                   END)      AS card_comment_count
+            (CASE
+                 WHEN c.id IS NULL
+                     THEN NULL
+                 ELSE
+                     (SELECT COUNT(*)
+                      FROM comment cm
+                      WHERE cm.card_id = c.id)
+                END)      AS card_comment_count
         FROM board b
                  JOIN team t
                       ON b.team_id = t.id
@@ -184,6 +201,13 @@
                  LEFT JOIN check_list ck
                            ON c.id = ck.card_id
                                AND ck.deleted_at IS NULL
+
+            -- 댓글 LEFT JOIN
+                 LEFT JOIN comment cmt
+                           ON c.id = cmt.card_id
+                               AND cmt.deleted_at IS NULL
+                 LEFT JOIN user w
+                           ON cmt.writer_id = w.id
 
         WHERE b.id = #{boardId}
           AND b.deleted_at IS NULL
