@@ -11,7 +11,16 @@ const normalizeBoardData = (dto) => {
   }
 
   const columns = {}
-  const serverLists = dto.lists || []
+  // 원본 배열 복사 후 정렬
+  const serverLists = [...(dto.lists || [])].sort((a, b) => {
+    // 1순위: orderIndex (순서)
+    if (a.orderIndex !== b.orderIndex) {
+      return a.orderIndex - b.orderIndex
+    }
+    // 2순위: id (생성일 순 - 먼저 만든게 앞으로)
+    // 9999로 orderIndex가 같을 때 뒤섞이는 것을 방지
+    return a.id - b.id
+  })
   const completedTasks = [] // 완료된 카드들을 모을 배열
 
   serverLists.forEach((list) => {
