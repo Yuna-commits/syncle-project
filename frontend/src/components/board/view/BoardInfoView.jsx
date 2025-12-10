@@ -1,8 +1,9 @@
 import React, { useState } from 'react'
-import useBoardStore from '../../../stores/useBoardStore'
+import { useBoardMutations } from '../../../hooks/useBoardMutations'
 
 function BoardInfoView({ board, isOwner }) {
-  const { updateBoard } = useBoardStore()
+  const { updateBoard } = useBoardMutations()
+
   const [formData, setFormData] = useState({
     title: board.title,
     description: board.description || '',
@@ -16,8 +17,9 @@ function BoardInfoView({ board, isOwner }) {
 
   const handleSubmit = (e) => {
     e.preventDefault()
-    updateBoard(board.id, formData)
-    alert('보드 정보가 저장되었습니다.')
+    updateBoard(formData, {
+      onSuccess: () => alert('보드 정보가 저장되었습니다.'),
+    })
   }
 
   return (

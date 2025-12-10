@@ -1,5 +1,5 @@
 import React, { useEffect, useRef } from 'react'
-import { useNavigate, useParams } from 'react-router-dom'
+import { useParams } from 'react-router-dom'
 import Sortable from 'sortablejs'
 import useBoardStore from '../../stores/useBoardStore'
 import BoardHeader from '../../components/board/BoardHeader'
@@ -21,9 +21,8 @@ function BoardPage() {
   const { boardId: boardIdParam } = useParams()
   const boardId = Number(boardIdParam)
 
-  const { selectedCard, isSettingsOpen, fetchBoard, resetBoard } =
-    useBoardStore()
-  const navigate = useNavigate()
+  const { selectedCard, isSettingsOpen, resetBoard } = useBoardStore()
+
   // 데이터 조회는 React Query 훅 사용
   // 로딩, 에러, 데이터(activeBoard)를 여기서 바로 받습니다.
   const { data: activeBoard, isLoading, error } = useBoardQuery(boardId)
@@ -32,10 +31,10 @@ function BoardPage() {
   const { moveCard } = useCardMutations(boardId)
   const { moveList } = useListMutations(boardId)
 
-  const { user, fetchUser } = useUserStore()
-
   // 권한 계산
   const { canEdit } = useBoardPermission(activeBoard)
+
+  const { user, fetchUser } = useUserStore()
 
   // 각 리스트(컬럼)의 DOM 요소를 참조하기 위한 Ref 객체
   const columnRefs = useRef({})
@@ -49,12 +48,11 @@ function BoardPage() {
       fetchUser()
     }
   }, [user, fetchUser])
-  // 컴포넌트 마운트 시 보드 데이터 불러오기
+
+  // 4. 언마운트 시 스토어 초기화
   useEffect(() => {
-    if (boardId) {
-      fetchBoard(boardId, navigate)
-    }
-  }, [boardId, fetchBoard, resetBoard, navigate])
+    return () => resetBoard()
+  }, [resetBoard])
 
   // 리스트 이동 Sortable
   useEffect(() => {

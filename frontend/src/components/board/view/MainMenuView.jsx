@@ -10,9 +10,9 @@ import {
   AlertTriangle,
 } from 'lucide-react'
 import React from 'react'
-import useBoardStore from '../../../stores/useBoardStore'
 import { useNavigate } from 'react-router-dom'
 import useUserStore from '../../../stores/useUserStore'
+import { useMemberMutations } from '../../../hooks/useMemberMutations'
 
 function MainMenuView({
   board,
@@ -23,16 +23,22 @@ function MainMenuView({
 }) {
   const navigate = useNavigate()
   const { user } = useUserStore()
-  const { removeMember } = useBoardStore()
+
+  // 멤버 추방/탈퇴
+  const { removeMember } = useMemberMutations(board.id)
 
   const isPrivate = board.visibility === 'PRIVATE'
 
   // 보드 탈퇴 핸들러 (본인이 Owner가 아닐 때 가능)
   const handleLeaveBoard = async () => {
     if (window.confirm(`정말 '${board.title}' 보드에서 탈퇴하시겠습니까?`)) {
-      await removeMember(board.id, user.id)
-      alert('보드에서 탈퇴하였습니다.')
-      navigate('/dashboard')
+      removeMember(user.id, {
+        onSuccess: () => {
+          alert('보드에서 탈퇴하였습니다.')
+          navigate('/dashboard')
+        },
+        onError: () => alert('보드 탈퇴에 실패했습니다.'),
+      })
     }
   }
 
