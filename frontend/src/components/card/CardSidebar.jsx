@@ -6,6 +6,7 @@ import MemberPickerMenu from '../modals/MemberPickerMenu'
 import { useCardMutations } from '../../hooks/useCardMutations'
 import { useParams } from 'react-router-dom'
 import { useBoardQuery } from '../../hooks/useBoardQuery'
+import MoveColumnMenu from '../modals/board/MoveColumnMenu'
 
 function CardSidebar({ onAddChecklist, showChecklist }) {
   const { boardId } = useParams()
@@ -32,6 +33,11 @@ function CardSidebar({ onAddChecklist, showChecklist }) {
   const memberButtonRef = useRef(null)
   const [memberPopupPos, setMemberPopupPos] = useState({ top: 0, left: 0 })
 
+  // -- 이동 메뉴 상태 --
+  const [isMoveOpen, setIsMoveOpen] = useState(false)
+  const moveButtonRef = useRef(null)
+  const [movePopupPos, setMovePopupPos] = useState({ top: 0, left: 0 })
+
   // 카드가 선택될 때마다 기존 설정된 날짜로 초기화
   useEffect(() => {
     if (selectedCard) {
@@ -49,40 +55,51 @@ function CardSidebar({ onAddChecklist, showChecklist }) {
     }
   }, [selectedCard])
 
-  // 버튼 클릭 시 좌표 계산 및 토글 함수
+  // 날짜 메뉴 토글
   const toggleDateMenu = () => {
     if (!isDateOpen && dateButtonRef.current) {
       const rect = dateButtonRef.current.getBoundingClientRect()
-      // 버튼 바로 아래(bottom), 왼쪽 정렬(left) 좌표 저장
-      setDatePopupPos({
-        top: rect.bottom + 8, // 약간의 여백
-        left: rect.left,
-      })
+      setDatePopupPos({ top: rect.bottom + 8, left: rect.left })
     }
-    // 담당자 메뉴가 열려있으면 닫기
-    if (isMemberOpen) setIsDateOpen(false)
+    if (isMemberOpen) setIsMemberOpen(false)
+    if (isMoveOpen) setIsMoveOpen(false) // 다른 메뉴 닫기
     setIsDateOpen(!isDateOpen)
   }
 
-  // 날짜 적용 핸들러 (API 호출)
+  // 담당자 메뉴 토글
+  const toggleMemberMenu = () => {
+    if (!isMemberOpen && memberButtonRef.current) {
+      const rect = memberButtonRef.current.getBoundingClientRect()
+      setMemberPopupPos({ top: rect.bottom + 8, left: rect.left })
+    }
+    if (isDateOpen) setIsDateOpen(false)
+    if (isMoveOpen) setIsMoveOpen(false) // 다른 메뉴 닫기
+    setIsMemberOpen(!isMemberOpen)
+  }
+
+  // 이동 메뉴 토글 함수
+  const toggleMoveMenu = () => {
+    if (!isMoveOpen && moveButtonRef.current) {
+      const rect = moveButtonRef.current.getBoundingClientRect()
+      setMovePopupPos({ top: rect.bottom + 8, left: rect.left })
+    }
+    if (isDateOpen) setIsDateOpen(false)
+    if (isMemberOpen) setIsMemberOpen(false)
+    setIsMoveOpen(!isMoveOpen)
+  }
+
+  // 날짜 적용 핸들러
   const handleDateApply = (item) => {
     if (!item) {
-      // 초기화 버튼 클릭 시 (날짜 삭제)
       updateCard({
         cardId: selectedCard.id,
         listId: selectedCard.listId,
-        updates: {
-          startDate: null,
-          dueDate: null,
-          removeDate: true,
-        },
+        updates: { startDate: null, dueDate: null, removeDate: true },
       })
     } else {
-      // 날짜 선택 시
       const { startDate, endDate } = item[0]
       const adjustedStartDate = new Date(startDate)
       adjustedStartDate.setHours(12, 0, 0, 0)
-
       const adjustedEndDate = new Date(endDate)
       adjustedEndDate.setHours(12, 0, 0, 0)
 
@@ -98,31 +115,14 @@ function CardSidebar({ onAddChecklist, showChecklist }) {
     setIsDateOpen(false)
   }
 
-  // 멤버 목록
+  // 멤버 관련
   const assignableMembers =
     activeBoard.visibility === 'TEAM'
       ? activeBoard.teamMembers
       : activeBoard.members
 
-  // 담당자 메뉴 토글
-  const toggleMemberMenu = () => {
-    if (!isMemberOpen && memberButtonRef.current) {
-      const rect = memberButtonRef.current.getBoundingClientRect()
-      setMemberPopupPos({
-        top: rect.bottom + 8,
-        left: rect.left,
-      })
-    }
-    // 날짜 메뉴가 열려있으면 닫기 (겹침 방지)
-    if (isDateOpen) setIsDateOpen(false)
-    setIsMemberOpen(!isMemberOpen)
-  }
-
-  // 담당자 변경 핸들러
   const handleChangeMember = (member) => {
-    // 이미 담당자라면 변경 x
     if (selectedCard.assignee?.id === member.id) return
-
     updateCard({
       cardId: selectedCard.id,
       listId: selectedCard.listId,
@@ -136,14 +136,13 @@ function CardSidebar({ onAddChecklist, showChecklist }) {
     setIsMemberOpen(false)
   }
 
-  // 모든 컬럼 목록 (이동 옵션용)
+  // 이동할 컬럼 목록 (가상 리스트 제외)
   const allColumns = activeBoard.columns
-    ? Object.values(activeBoard.columns)
+    ? Object.values(activeBoard.columns).filter((col) => !col.isVirtual)
     : []
 
-  // 카드 이동 핸들러
-  const handleMoveCard = (e) => {
-    const newColId = Number(e.target.value) || e.target.value
+  // 카드 이동 핸들러 (이벤트 객체 대신 ID를 받도록 수정됨)
+  const handleMoveCard = (newColId) => {
     if (newColId && newColId !== selectedCard.listId) {
       const targetColumn = activeBoard.columns[newColId]
       const newIndex = targetColumn.tasks ? targetColumn.tasks.length : 0
@@ -154,6 +153,7 @@ function CardSidebar({ onAddChecklist, showChecklist }) {
         toListId: newColId,
         newIndex,
       })
+      setIsMoveOpen(false) // 이동 후 메뉴 닫기
     }
   }
 
@@ -237,28 +237,29 @@ function CardSidebar({ onAddChecklist, showChecklist }) {
         {!selectedCard.isComplete && (
           <>
             <h4 className="mb-2 text-xs font-bold tracking-wider text-gray-500 uppercase">
-              이동
+              작업
             </h4>
-            <div className="group relative">
-              <div className="pointer-events-none absolute inset-y-0 left-2 flex items-center text-gray-500">
-                <ArrowRight size={14} />
-              </div>
-              <select
-                className="w-full cursor-pointer appearance-none rounded-md bg-gray-50 py-1.5 pr-2 pl-8 text-sm text-gray-500 transition-colors hover:bg-gray-200 focus:ring-2 focus:ring-blue-500 focus:outline-none"
-                value={selectedCard.listId}
-                onChange={handleMoveCard}
-              >
-                {allColumns.map(
-                  (col) =>
-                    // 가상 리스트는 이동 대상 목록에서 제외
-                    !col.isVirtual && (
-                      <option key={col.id} value={col.id}>
-                        {col.title}로 옮기기
-                      </option>
-                    ),
-                )}
-              </select>
-            </div>
+
+            <button
+              ref={moveButtonRef}
+              onClick={toggleMoveMenu}
+              className={`flex w-full items-center gap-2 rounded-md px-2 py-1.5 text-left text-sm transition-colors hover:cursor-pointer ${
+                isMoveOpen ? 'bg-blue-100' : 'text-gray-700 hover:bg-gray-200'
+              }`}
+            >
+              <ArrowRight size={16} className="text-gray-500" />
+              <span className="text-gray-500">다른 리스트로 이동</span>
+            </button>
+
+            {/* 이동 메뉴 컴포넌트 연결 */}
+            <MoveColumnMenu
+              isOpen={isMoveOpen}
+              onClose={() => setIsMoveOpen(false)}
+              position={movePopupPos}
+              columns={allColumns}
+              currentListId={selectedCard.listId}
+              onSelectColumn={handleMoveCard}
+            />
           </>
         )}
         <button className="flex w-full items-center gap-2 rounded-md bg-gray-100 px-3 py-1.5 text-sm font-medium text-red-500 transition-colors hover:cursor-pointer hover:bg-red-100">

@@ -44,7 +44,6 @@ public class CardServiceImpl implements CardService {
                 .title(req.getTitle())
                 .description(req.getDescription())
                 .assigneeId(userId) // 생성자를 초기 담당자로 설정
-                .orderIndex(AppConstants.DEFAULT_ORDER_INDEX)
                 .build();
 
         // DB 저장

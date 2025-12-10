@@ -23,7 +23,10 @@
                 #{assigneeId},
                 #{title},
                 #{description},
-                #{orderIndex},
+                (SELECT COALESCE(MAX(c.order_index), -1) + 1
+                 FROM card c
+                 WHERE c.list_id = #{listId}
+                   AND c.deleted_at IS NULL),
                 false,
                 NOW(),
                 NULL,
