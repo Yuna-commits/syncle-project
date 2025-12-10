@@ -2,9 +2,11 @@ package com.nullpointer.domain.card.dto;
 
 import com.fasterxml.jackson.annotation.JsonFormat;
 import com.nullpointer.domain.card.vo.CardVo;
+import com.nullpointer.domain.checklist.vo.ChecklistVo;
 import lombok.*;
 
 import java.time.LocalDateTime;
+import java.util.List;
 
 @Getter
 @Setter
@@ -33,7 +35,10 @@ public class CardResponse {
     private String assigneeName;
     private String assigneeProfileImg;
 
-    public static CardResponse of(CardVo c, String assigneeName, String assigneeProfileImg, Integer commentCount) {
+    // 체크리스트 필드
+    private List<ChecklistVo> checklists;
+
+    public static CardResponse of(CardVo c, String assigneeName, String assigneeProfileImg, Integer commentCount, List<ChecklistVo> checklists) {
         return CardResponse.builder()
                 .id(c.getId())
                 .listId(c.getListId())
@@ -47,6 +52,7 @@ public class CardResponse {
                 .assigneeProfileImg(assigneeProfileImg)
                 .commentCount(commentCount != null ? commentCount : 0)
                 .isComplete(c.getIsComplete() != null ? c.getIsComplete() : false)
+                .checklists(checklists)
                 .build();
     }
 }

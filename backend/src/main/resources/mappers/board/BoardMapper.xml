@@ -117,6 +117,12 @@
                 <result property="assigneeId" column="assignee_id"/>
                 <result property="assigneeName" column="assignee_name"/>
                 <result property="assigneeProfileImg" column="assignee_img"/>
+
+                <collection property="checklists" ofType="ChecklistVo">
+                    <id property="id" column="check_id"/>
+                    <result property="cardId" column="card_id"/> <result property="title" column="check_title"/>
+                    <result property="done" column="check_done"/>
+                </collection>
             </collection>
         </collection>
     </resultMap>
@@ -146,6 +152,11 @@
                u.nickname    AS assignee_name,
                u.profile_img AS assignee_img,
 
+               -- 체크리스트 (checklist 테이블 조인)
+               ck.id         AS check_id,
+               ck.title      AS check_title,
+               ck.done       AS check_done,
+
                -- 댓글 수 (서브쿼리)
                (CASE
                     WHEN c.id IS NULL
@@ -169,6 +180,11 @@
             -- 담당자가 없어도 카드는 나와야 하므로 LEFT JOIN
                  LEFT JOIN user u
                            ON c.assignee_id = u.id
+            -- 체크리스트 LEFT JOIN
+                 LEFT JOIN check_list ck
+                           ON c.id = ck.card_id
+                               AND ck.deleted_at IS NULL
+
         WHERE b.id = #{boardId}
           AND b.deleted_at IS NULL
 

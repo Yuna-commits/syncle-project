@@ -47,11 +47,13 @@ const normalizeBoardData = (dto) => {
         commentCount: card.commentCount || 0,
 
         // 백엔드에서 넘어온 ChecklistVo 리스트를 바로 매핑
-        checklists: (card.checklists || []).map((cl) => ({
-          id: cl.id,
-          title: cl.title,
-          done: cl.done,
-        })),
+        checklists: (card.checklists || [])
+          .filter((cl) => cl.id)
+          .map((cl) => ({
+            id: cl.id,
+            title: cl.title,
+            done: cl.done,
+          })),
 
         // 담당자 객체 (Assignee)
         assignee: card.assigneeId

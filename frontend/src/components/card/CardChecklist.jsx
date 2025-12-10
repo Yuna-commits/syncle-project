@@ -1,10 +1,14 @@
 import { useState } from 'react'
 import useBoardStore from '../../stores/useBoardStore'
 import { CheckSquare, Trash2 } from 'lucide-react'
+import { useChecklistMutations } from '../../hooks/useChecklistMutations'
+import { useParams } from 'react-router-dom'
 
 function CardChecklist({ items }) {
-  const { selectedCard, createChecklist, updateChecklist, deleteChecklist } =
-    useBoardStore()
+  const { boardId } = useParams()
+  const { selectedCard } = useBoardStore()
+  const { createChecklist, updateChecklist, deleteChecklist } =
+    useChecklistMutations(boardId)
 
   const [checklistInput, setChecklistInput] = useState('')
 
@@ -16,23 +20,34 @@ function CardChecklist({ items }) {
   // 체크리스트 추가
   const handleAddChecklist = (e) => {
     e.preventDefault()
-    if (!checklistInput.trim()) return
-
-    createChecklist(selectedCard.id, selectedCard.listId, checklistInput)
+    createChecklist({
+      cardId: selectedCard.id,
+      listId: selectedCard.listId,
+      title: checklistInput,
+    })
     setChecklistInput('')
   }
 
   // 체크리스트 완료 토글 (done 필드 사용)
   const toggleCheckItem = (itemId, currentDone) => {
-    updateChecklist(selectedCard.id, selectedCard.listId, itemId, {
-      done: !currentDone, // [변경] isChecked -> done
+    updateChecklist({
+      cardId: selectedCard.id,
+      listId: selectedCard.listId,
+      itemId,
+      updates: {
+        done: !currentDone,
+      },
     })
   }
 
   // 체크리스트 삭제
   const handleDeleteItem = (itemId) => {
     if (window.confirm('삭제하시겠습니까?')) {
-      deleteChecklist(selectedCard.id, selectedCard.listId, itemId)
+      deleteChecklist({
+        cardId: selectedCard.id,
+        listId: selectedCard.listId,
+        itemId,
+      })
     }
   }
 

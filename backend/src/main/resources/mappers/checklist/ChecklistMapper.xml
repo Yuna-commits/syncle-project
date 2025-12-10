@@ -21,7 +21,7 @@
         SELECT id,
                card_id,
                title,
-               is_checked,
+               done,
                created_at,
                updated_at
         FROM check_list

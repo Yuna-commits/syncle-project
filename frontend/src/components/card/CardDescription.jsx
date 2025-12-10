@@ -1,9 +1,13 @@
 import React, { useEffect, useState } from 'react'
 import useBoardStore from '../../stores/useBoardStore'
 import { AlignLeft } from 'lucide-react'
+import { useCardMutations } from '../../hooks/useCardMutations'
+import { useParams } from 'react-router-dom'
 
 function CardDescription() {
-  const { selectedCard, updateCard } = useBoardStore()
+  const { boardId } = useParams()
+  const { selectedCard } = useBoardStore()
+  const { updateCard } = useCardMutations(boardId)
 
   const [description, setDescription] = useState('')
   const [isEditingDesc, setIsEditingDesc] = useState(false)
@@ -17,7 +21,13 @@ function CardDescription() {
 
   const handleSaveDescription = () => {
     setIsEditingDesc(false)
-    updateCard(selectedCard.id, selectedCard.listId, { description })
+    updateCard({
+      cardId: selectedCard.id,
+      listId: selectedCard.listId,
+      updates: {
+        description,
+      },
+    })
   }
 
   return (
