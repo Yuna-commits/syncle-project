@@ -1,15 +1,15 @@
 import React, { useState } from 'react'
-import useBoardStore from '../../../stores/useBoardStore'
 import { Briefcase, Lock } from 'lucide-react'
 import RadioOption from './RadioOption'
+import { useBoardMutations } from '../../../hooks/useBoardMutations'
 
 function VisibilityView({ board, isOwner }) {
-  const { updateBoard } = useBoardStore()
+  const { updateBoard } = useBoardMutations(board.id)
   const [visibility, setVisibility] = useState(board.visibility)
 
   const handleSubmit = (e) => {
     e.preventDefault()
-    updateBoard(board.id, { visibility })
+    updateBoard({ visibility })
     alert('공개 범위가 변경되었습니다.')
   }
 

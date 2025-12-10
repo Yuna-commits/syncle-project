@@ -27,7 +27,15 @@ const normalizeBoardData = (dto) => {
     // 이 리스트에 속한 '진행 중'인 카드들
     const activeTasks = []
 
-    ;(list.cards || []).forEach((card) => {
+    // 리스트와 동일하게 orderIndex 우선, 그 다음 id 순으로 정렬
+    const sortedCards = [...(list.cards || [])].sort((a, b) => {
+      if (a.orderIndex !== b.orderIndex) {
+        return a.orderIndex - b.orderIndex
+      }
+      return a.id - b.id
+    })
+
+    sortedCards.forEach((card) => {
       const mappedCard = {
         id: card.id,
         listId: list.id, // 부모 리스트 ID 역참조 용

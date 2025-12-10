@@ -197,7 +197,51 @@ export const useCardMutations = (boardId) => {
   // 카드 생성
   const addCardMutation = useMutation({
     mutationFn: ({ listId, title }) => boardApi.addCard(listId, title),
-    onSuccess: () => queryClient.invalidateQueries({ queryKey }),
+    onSuccess: (response, { listId }) => {
+      // 서버에서 생성된 카드 데이터
+      const newCard = response.data.data
+
+      queryClient.setQueryData(queryKey, (oldBoard) => {
+        if (!oldBoard) return oldBoard
+
+        const newColumns = { ...oldBoard.columns }
+        // 리스트가 없을 경우 방어 코드
+        if (!newColumns[listId]) return oldBoard
+
+        const targetList = { ...newColumns[listId] }
+
+        // 서버 응답(CardResponse) -> 클라이언트 객체 매핑
+        const mappedCard = {
+          id: newCard.id,
+          listId: listId,
+          title: newCard.title,
+          description: newCard.description,
+          order: newCard.orderIndex, // 서버에서 계산된 orderIndex
+          dueDate: newCard.dueDate,
+          isComplete: false,
+          commentCount: 0,
+          checklists: [],
+          assignee: newCard.assigneeId
+            ? {
+                id: newCard.assigneeId,
+                name: newCard.assigneeName,
+                profileImg: newCard.assigneeProfileImg,
+              }
+            : null,
+          variant: 'solid',
+        }
+
+        // 해당 리스트의 tasks 배열 끝에 추가
+        targetList.tasks = [...targetList.tasks, mappedCard]
+        newColumns[listId] = targetList
+
+        return {
+          ...oldBoard,
+          columns: newColumns,
+        }
+      })
+    },
+    onSettled: () => queryClient.invalidateQueries({ queryKey }),
   })
 
   // 카드 수정
