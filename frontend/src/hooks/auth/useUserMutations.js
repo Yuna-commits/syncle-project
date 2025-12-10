@@ -3,7 +3,7 @@ import { userApi } from '../../api/user.api'
 import { authApi } from '../../api/auth.api'
 import { useNavigate } from 'react-router-dom'
 
-export const useUserMutatons = () => {
+export const useUserMutations = () => {
   const queryClient = useQueryClient()
   const navigate = useNavigate()
 
@@ -30,12 +30,9 @@ export const useUserMutatons = () => {
   // 프로필 수정
   const updateProfileMutation = useMutation({
     mutationFn: userApi.updateProfile,
-    onSuccess: (res) => {
-      // 캐시 업데이트 (서버에서 받은 최신 정보로 교체 or 병합)
-      queryClient.setQueryData(['user', 'me'], (old) => ({
-        ...old,
-        ...res.data.data,
-      }))
+    onSuccess: () => {
+      // 쿼리 무효화를 통해 최신 데이터를 서버에서 다시 가져옴 -> 수정된 모든 정보 즉시 반영
+      queryClient.invalidateQueries({ queryKey: ['user', 'me'] })
       alert('프로필이 수정되었습니다.')
     },
     onError: (err) => alert(err.response?.data?.message || '프로필 수정 실패'),

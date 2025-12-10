@@ -1,17 +1,19 @@
 import React, { useEffect, useState } from 'react'
 import FormInput from '../common/FormInput'
+import { Check, X } from 'lucide-react'
 
 export default function FormModal({ title, fields, onSubmit, onClose }) {
   const [formData, setFormData] = useState({})
 
-  // 모달이 열릴 때(fields가 변경될 때) 초기값 설정
+  // 모달이 처음 열릴 때만 초기화
   useEffect(() => {
     const initialData = {}
     fields.forEach((field) => {
       initialData[field.name] = field.value || ''
     })
     setFormData(initialData)
-  }, [fields])
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [])
 
   // 입력 시 상태 업데이트
   const handleChange = (e) => {
@@ -73,13 +75,13 @@ export default function FormModal({ title, fields, onSubmit, onClose }) {
           {isPasswordModal && showCheck && (
             <div className="mt-2">
               {isMatching && (
-                <p className="text-sm font-medium text-green-600">
-                  ✔ 새 비밀번호가 일치합니다.
+                <p className="flex items-center gap-1 text-sm font-medium text-green-600">
+                  <Check size={16} /> 새 비밀번호가 일치합니다.
                 </p>
               )}
               {!isMatching && (
-                <p className="text-sm font-medium text-red-600">
-                  ✘ 비밀번호가 일치하지 않습니다.
+                <p className="flex items-center gap-1 text-sm font-medium text-red-600">
+                  <X size={16} /> 비밀번호가 일치하지 않습니다.
                 </p>
               )}
             </div>

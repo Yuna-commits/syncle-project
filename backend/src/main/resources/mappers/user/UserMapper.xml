@@ -109,9 +109,8 @@
                 WHERE cd.assignee_id = u.id) AS "activity.createdCards",
                (SELECT COUNT(*)
                 FROM comment c
-                         JOIN board_member bm ON c.board_member_id = bm.user_id
-                WHERE bm.user_id = u.id
-                  AND c.deleted_at IS NULL)  AS "activity.createdComments"
+                         JOIN user u ON c.writer_id = u.id
+                WHERE c.deleted_at IS NULL)  AS "activity.createdComments"
         -- 안 읽은 알림 개수 쿼리 추가 필요
         FROM user u
         WHERE u.id = #{id}
