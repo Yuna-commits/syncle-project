@@ -6,9 +6,10 @@ function MembersView({ board, isOwner }) {
   const { changeMemberRole, removeMember } = useMemberMutations(board.id)
   const { user } = useUserStore()
 
+  const isPrivate = board?.visibility === 'PRIVATE'
+
   // 공개 범위에 따라 멤버 목록 다름
-  const members =
-    board.visibility === 'TEAM' ? board.teamMembers || [] : board.members || []
+  const members = isPrivate ? board.members || [] : board.teamMembers || []
 
   // role 변경 핸들러 (Owner만 가능)
   const handleRoleChange = async (userId, newRole) => {
@@ -38,26 +39,28 @@ function MembersView({ board, isOwner }) {
           const isMe = user?.id === member.id
 
           // 작업 권한 판단
-          // 내가 Owner이고 나를 제외한 상대가 Owner가 아니어야 함
-          const canAction = isOwner && member.role !== 'OWNER' && !isMe
+          // 내가 Owner이고 나를 제외한 상대가 Owner가 아니어야 하며 PRIVATE 보드여야 함
+          const canAction =
+            isOwner && member.role !== 'OWNER' && !isMe && isPrivate
 
           return (
             <div
               key={member.id}
-              className={`flex items-center justify-between rounded-md px-2 py-2 transition-colors ${canAction && 'hover:cursor-pointer hover:bg-gray-200'} ${
-                isMe && 'bg-green-100 ring-1 ring-green-300'
-              }`}
+              className="flex items-center justify-between gap-3 rounded-md px-2 py-2 transition-colors hover:cursor-pointer hover:bg-gray-200"
             >
               {/* 왼쪽: 멤버 정보 */}
-              <div className="flex items-center gap-2 overflow-hidden">
+              <div className="flex flex-1 items-center gap-2 overflow-hidden">
                 <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-gray-200 text-xs font-bold text-gray-600">
                   {member.name ? member.name[0] : '?'}
                 </div>
-                <div className="min-w-0">
+                <div className="min-w-0 flex-1">
                   <p className="truncate text-sm font-medium text-gray-800">
                     {member.name}
                   </p>
-                  <p className="truncate text-xs text-gray-400">
+                  <p
+                    className="truncate text-xs text-gray-400"
+                    title={member.email}
+                  >
                     {member.email}
                   </p>
                 </div>

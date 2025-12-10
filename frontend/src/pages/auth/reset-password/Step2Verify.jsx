@@ -2,19 +2,20 @@ import React, { useEffect } from 'react'
 import useResetPasswordStore from '../../../stores/auth/useResetPasswordStore'
 import FormInput from '../../../components/common/FormInput'
 import FormButton from '../../../components/common/FormButton'
+import { useAuthMutations } from '../../../hooks/auth/useAuthMutations'
 
 function Step2Verify() {
+  const { authCode, setAuthCode, timeLeft, decreaseTime, setStep } =
+    useResetPasswordStore()
+
   const {
-    authCode,
-    setAuthCode,
-    timeLeft,
-    decreaseTime,
     verifyResetCode,
     resendResetCode,
-    setStep,
-    isLoading,
-    isResending,
-  } = useResetPasswordStore()
+    isVerifyResetPending,
+    isResendResetPending,
+  } = useAuthMutations()
+
+  const { email } = useResetPasswordStore.getState() // 이메일 조회
 
   // 타이머 (2단계일 때만 동작)
   useEffect(() => {
@@ -31,19 +32,12 @@ function Step2Verify() {
   const formatTime = (time) => {
     const minutes = Math.floor(time / 60)
     const seconds = time % 60
-
     return `${String(minutes).padStart(2, '0')}:${String(seconds).padStart(2, '0')}`
   }
 
   const handleSubmit = async (e) => {
     e.preventDefault()
-    await verifyResetCode()
-  }
-
-  const handleResend = async () => {
-    if (isResending) return
-    const success = await resendResetCode()
-    if (success) alert('재전송 완료!')
+    verifyResetCode({ email, authCode })
   }
 
   return (
@@ -53,10 +47,7 @@ function Step2Verify() {
           name="authCode"
           label="인증번호"
           value={authCode}
-          onChange={(e) => {
-            setAuthCode(e.target.value)
-            console.log(e.target.value)
-          }}
+          onChange={(e) => setAuthCode(e.target.value)}
           placeholder="인증번호 6자리를 입력해주세요."
           maxLength={6}
           className="text-center text-lg tracking-widest"
@@ -72,16 +63,16 @@ function Step2Verify() {
           <FormButton
             type="submit"
             text="인증하기"
-            isLoading={isLoading}
+            isLoading={isVerifyResetPending}
             disabled={timeLeft === 0}
           />
           {/* 재전송 */}
           <FormButton
             type="button"
-            text={isResending ? '전송 중' : '재전송'}
+            text="재전송"
             variant="secondary"
-            onClick={handleResend}
-            isLoading={isResending}
+            onClick={() => resendResetCode(email)}
+            isLoading={isResendResetPending}
           />
         </div>
       </div>

@@ -1,26 +1,23 @@
 import React, { useEffect } from 'react'
-import { useNavigate } from 'react-router-dom'
 import useSignUpStore from '../../../stores/auth/useSignUpStore'
 import FormInput from '../../../components/common/FormInput'
 import FormButton from '../../../components/common/FormButton'
+import { useAuthMutations } from '../../../hooks/auth/useAuthMutations'
 
 export default function Step2Form() {
-  const navigate = useNavigate()
-
   // Zustand Store에서 상태와 액션 꺼내기
   const {
     formData,
-    authCode,
+    authCode: storeAuthCode, // formData.authCod3
     setAuthCode,
     timeLeft,
     decreaseTime,
-    errors,
-    isLoading,
-    isResending,
-    verifySignupCode,
-    resendSignupCode,
     setStep, // 뒤로가기
+    errors,
   } = useSignUpStore()
+
+  const { verifySignup, resendSignupCode, isVerifySignupPending } =
+    useAuthMutations()
 
   // 타이머 (2단계일 때만 동작)
   useEffect(() => {
@@ -37,23 +34,12 @@ export default function Step2Form() {
   const formatTime = (time) => {
     const minutes = Math.floor(time / 60)
     const seconds = time % 60
-
     return `${String(minutes).padStart(2, '0')}:${String(seconds).padStart(2, '0')}`
   }
 
   const handleSubmit = async (e) => {
     e.preventDefault()
-    const success = await verifySignupCode()
-    if (success) {
-      alert(`${formData.nickname}님, 가입을 환영합니다!`)
-      navigate('/dashboard')
-    }
-  }
-
-  const handleResend = async () => {
-    if (isResending) return
-    const success = await resendSignupCode()
-    if (success) alert('재전송 완료!')
+    verifySignup({ email: formData.email, authCode: formData.authCode })
   }
 
   return (
@@ -63,7 +49,7 @@ export default function Step2Form() {
         <FormInput
           name="authCode"
           label="인증번호"
-          value={authCode}
+          value={storeAuthCode}
           onChange={(e) => setAuthCode(e.target.value)}
           placeholder={'인증번호 6자리를 입력해주세요.'}
           maxLength={6}
@@ -82,16 +68,15 @@ export default function Step2Form() {
         <FormButton
           type="submit"
           text="인증하기"
-          isLoading={isLoading}
+          isLoading={isVerifySignupPending}
           disabled={timeLeft === 0}
         />
         {/* 재전송 */}
         <FormButton
           type="button"
-          text={isResending ? '전송 중' : '재전송'}
+          text="재전송"
           variant="secondary"
-          onClick={handleResend}
-          isLoading={isResending}
+          onClick={() => resendSignupCode(formData.email)}
         />
       </div>
 

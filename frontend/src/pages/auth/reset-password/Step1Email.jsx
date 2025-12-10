@@ -2,21 +2,19 @@ import React from 'react'
 import useResetPasswordStore from '../../../stores/auth/useResetPasswordStore'
 import FormInput from '../../../components/common/FormInput'
 import FormButton from '../../../components/common/FormButton'
+import { useAuthMutations } from '../../../hooks/auth/useAuthMutations'
 
 function Step1Email() {
-  const { email, setEmail, isLoading, requestResetCode } =
-    useResetPasswordStore()
+  const { email, setEmail } = useResetPasswordStore()
+
+  const { requestResetCode, isRequestResetPending } = useAuthMutations()
 
   const handleSubmit = async (e) => {
     e.preventDefault()
-
     if (!email) {
       alert('이메일을 입력해주세요.')
     }
-    const success = await requestResetCode()
-    if (success) {
-      alert('인증번호가 발송되었습니다. 메일함을 확인해주세요.')
-    }
+    requestResetCode(email)
   }
 
   return (
@@ -33,7 +31,11 @@ function Step1Email() {
         />
 
         {/* 폼 제출 */}
-        <FormButton type="submit" text="인증번호 받기" isLoading={isLoading} />
+        <FormButton
+          type="submit"
+          text="인증번호 받기"
+          isLoading={isRequestResetPending}
+        />
       </form>
     </div>
   )

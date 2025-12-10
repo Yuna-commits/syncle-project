@@ -1,18 +1,18 @@
 import React from 'react'
-import { useNavigate } from 'react-router-dom'
 import useResetPasswordStore from '../../../stores/auth/useResetPasswordStore'
 import FormInput from '../../../components/common/FormInput'
 import FormButton from '../../../components/common/FormButton'
+import { useAuthMutations } from '../../../hooks/auth/useAuthMutations'
 
 function Step3NewPassword() {
-  const navigate = useNavigate()
-
-  const { newPassword, setNewPassword, resetPassword, isLoading } =
+  const { newPassword, setNewPassword, email, resetToken } =
     useResetPasswordStore()
+
+  const { resetPassword, isResetPasswordPending } = useAuthMutations()
 
   const handleSubmit = async (e) => {
     e.preventDefault()
-    await resetPassword(navigate)
+    resetPassword({ email, resetToken, newPassword })
   }
 
   return (
@@ -29,7 +29,7 @@ function Step3NewPassword() {
       <FormButton
         type="submit"
         text="비밀번호 변경하기"
-        isLoading={isLoading}
+        isLoading={isResetPasswordPending}
       />
     </form>
   )

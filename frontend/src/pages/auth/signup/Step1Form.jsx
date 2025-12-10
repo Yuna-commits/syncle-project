@@ -2,47 +2,62 @@ import React from 'react'
 import FormInput from '../../../components/common/FormInput'
 import FormButton from '../../../components/common/FormButton'
 import useSignUpStore from '../../../stores/auth/useSignUpStore'
-import { useNavigate } from 'react-router-dom'
 import { GoogleLogin } from '@react-oauth/google'
-import useSignInStore from '../../../stores/auth/useSignInStore'
+import { useAuthMutations } from '../../../hooks/auth/useAuthMutations'
 
 export default function Step1Form() {
-  const navigate = useNavigate()
-
+  // UI 상태
   const {
     formData,
+    setFormData,
     errors,
     successes,
-    isLoading,
     checkLoading,
-    setFormData,
-    requestSignupCode,
-    checkEmailDuplicate,
-    checkNicknameDuplicate,
+    setCheckLoading,
   } = useSignUpStore()
 
-  const googleLogin = useSignInStore((state) => state.googleLogin)
+  const {
+    googleLogin,
+    checkEmail,
+    checkNickname,
+    requestSignupCode,
+    isSignupPending,
+  } = useAuthMutations()
 
-  const handleChange = (e) => {
-    setFormData(e.target.name, e.target.value)
+  // 이메일 중복 확인
+  const handleCheckEmail = async () => {
+    if (!formData.email) return
+    setCheckLoading('email', true) // 로딩 UI 켜기
+    try {
+      await checkEmail(formData.email)
+    } finally {
+      setCheckLoading('email', false)
+    }
   }
 
-  const handleSubmit = async (e) => {
-    e.preventDefault()
-    const success = await requestSignupCode() // Store의 비동기 액션 호출
-    if (success) {
-      alert('인증 코드가 발송되었습니다.')
+  // 닉네임 중복 확인
+  const handleCheckNickname = async () => {
+    if (!formData.nickname) return
+    setCheckLoading('nickname', true) // 로딩 UI 켜기
+    try {
+      await checkNickname(formData.nickname)
+    } finally {
+      setCheckLoading('nickname', false)
     }
+  }
+
+  const handleNext = (e) => {
+    e.preventDefault()
+    requestSignupCode(formData)
   }
 
   return (
     <>
       {/* Google로 로그인하기 */}
       <GoogleLogin
-        onSuccess={(credentialResponse) => {
-          // 로그인 성공 시 Store 액션 호출
-          googleLogin(credentialResponse, navigate)
-        }}
+        onSuccess={(credentialResponse) =>
+          googleLogin(credentialResponse.credential)
+        }
         onError={() => {
           alert('로그인에 실패했습니다.')
         }}
@@ -63,7 +78,7 @@ export default function Step1Form() {
         </div>
       </div>
 
-      <form onSubmit={handleSubmit} className="space-y-6">
+      <form onSubmit={handleNext} className="space-y-6">
         {/* 이메일 */}
         <FormInput
           name="email"
@@ -71,10 +86,10 @@ export default function Step1Form() {
           type="email"
           value={formData?.email}
           placeholder="이메일을 입력해 주세요."
-          onChange={handleChange}
-          error={errors?.email}
-          success={successes?.email}
-          onCheck={checkEmailDuplicate}
+          onChange={(e) => setFormData('email', e.target.value)}
+          error={errors.email}
+          success={successes.email}
+          onCheck={handleCheckEmail}
           isChecking={checkLoading.email}
         />
         {/* 비밀번호 */}
@@ -82,25 +97,29 @@ export default function Step1Form() {
           name="password"
           label="비밀번호"
           type="password"
-          value={formData?.password}
+          value={formData.password}
           placeholder="비밀번호를 입력해 주세요."
-          onChange={handleChange}
+          onChange={(e) => setFormData('password', e.target.value)}
           error={errors?.password}
         />
         {/* 닉네임 */}
         <FormInput
           name="nickname"
           label="닉네임"
-          value={formData?.nickname}
+          value={formData.nickname}
           placeholder="닉네임을 입력해 주세요."
-          onChange={handleChange}
+          onChange={(e) => setFormData('nickname', e.target.value)}
           error={errors?.nickname}
-          success={successes?.nickname}
-          onCheck={checkNicknameDuplicate}
+          success={successes.nickname}
+          onCheck={handleCheckNickname}
           isChecking={checkLoading.nickname}
         />
         {/* 폼 제출 */}
-        <FormButton type="submit" text="인증번호 받기" isLoading={isLoading} />
+        <FormButton
+          type="submit"
+          text="인증번호 받기"
+          isLoading={isSignupPending}
+        />
       </form>
     </>
   )

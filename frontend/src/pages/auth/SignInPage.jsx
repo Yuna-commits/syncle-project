@@ -1,45 +1,24 @@
-import React, { useEffect } from 'react'
-import { Link, useLocation, useNavigate } from 'react-router-dom'
+import React, { useState } from 'react'
+import { Link } from 'react-router-dom'
 import FormInput from '../../components/common/FormInput'
-import useSignInStore from '../../stores/auth/useSignInStore'
 import FormButton from '../../components/common/FormButton'
 import { GoogleLogin } from '@react-oauth/google'
+import { useAuthMutations } from '../../hooks/auth/useAuthMutations'
 
 export default function SignIn() {
-  const navigate = useNavigate()
-  const location = useLocation() // 위치 정보 가져오기
+  const { login, googleLogin, isLoginPending } = useAuthMutations()
 
-  // ProtectedRoute에서 넘겨준 이전 경로(from)가 있으면 그곳으로, 없으면 /dashboard로
-  const from =
-    location.state?.from?.pathname + location.state?.from?.search ||
-    '/dashboard'
+  const [formData, setFormData] = useState({ email: '', password: '' })
+  const [isKeepLogin, setIsKeepLogin] = useState(false)
 
-  // Zustand Store에서 상태와 액션 꺼내기
-  const {
-    formData,
-    setFormData,
-    login,
-    isLoading,
-    googleLogin,
-    isKeepLogin,
-    toggleKeepLogin,
-    reset,
-  } = useSignInStore()
-
-  // 페이지에서 나가면 상태 초기화
-  useEffect(() => {
-    return () => reset()
-  }, [reset])
-
-  // 입력 핸들러
   const handleChange = (e) => {
-    setFormData(e.target.name, e.target.value)
+    const { name, value } = e.target
+    setFormData((prev) => ({ ...prev, [name]: value }))
   }
 
-  // 제출 핸들러
-  const handleSubmit = async (e) => {
+  const handleSubmit = (e) => {
     e.preventDefault()
-    await login(navigate, from)
+    login({ ...formData, isKeepLogin })
   }
 
   return (
@@ -53,10 +32,9 @@ export default function SignIn() {
 
       {/* Google로 로그인하기 */}
       <GoogleLogin
-        onSuccess={(credentialResponse) => {
-          // 로그인 성공 시 Store 액션 호출
-          googleLogin(credentialResponse, navigate, from)
-        }}
+        onSuccess={(credentialResponse) =>
+          googleLogin(credentialResponse.credential)
+        }
         onError={() => {
           alert('로그인에 실패했습니다.')
         }}
@@ -83,7 +61,7 @@ export default function SignIn() {
         <FormInput
           name="email"
           type="email"
-          value={formData?.email}
+          value={formData.email}
           onChange={handleChange}
           label="이메일"
           placeholder="이메일을 입력해 주세요."
@@ -92,7 +70,7 @@ export default function SignIn() {
         <FormInput
           name="password"
           type="password"
-          value={formData?.password}
+          value={formData.password}
           onChange={handleChange}
           label="비밀번호"
           placeholder="비밀번호를 입력해 주세요."
@@ -104,7 +82,7 @@ export default function SignIn() {
             <input
               type="checkbox"
               checked={isKeepLogin}
-              onChange={toggleKeepLogin}
+              onChange={(e) => setIsKeepLogin(e.target.checked)}
               className="h-5 w-5 rounded-md border border-gray-300 checked:border-transparent checked:bg-blue-500"
             />
             <span className="text-sm text-gray-700">로그인 상태 유지</span>
@@ -118,7 +96,7 @@ export default function SignIn() {
         </div>
 
         {/* 폼 제출 */}
-        <FormButton type="submit" text="로그인" isLoading={isLoading} />
+        <FormButton type="submit" text="로그인" isLoading={isLoginPending} />
       </form>
 
       {/* 회원가입 링크 */}

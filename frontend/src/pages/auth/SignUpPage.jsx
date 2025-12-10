@@ -6,7 +6,7 @@ import Step2Form from './signup/Step2Form'
 
 export default function SignUp() {
   // Zustand Store에서 상태와 액션 꺼내기
-  const { step, reset, globalError } = useSignUpStore()
+  const { step, reset } = useSignUpStore()
 
   // 페이지에서 나가면 상태 초기화
   useEffect(() => {
@@ -25,13 +25,6 @@ export default function SignUp() {
             : '이메일로 전송된 번호를 입력해주세요.'}
         </p>
       </div>
-
-      {/* 글로벌 에러 메시지 */}
-      {globalError && (
-        <div className="mb-4 rounded-lg bg-red-50 p-3 text-sm text-red-600">
-          {globalError}
-        </div>
-      )}
 
       {/* 1단계: 회원가입 정보 입력 */}
       {/* 2단계: 인증번호 입력 */}

@@ -139,7 +139,7 @@ public class AuthController {
      * 인증 링크 검증
      */
     @Operation(summary = "이메일 링크 인증", description = "이메일 인증 링크를 검증하여 인증 상태를 업데이트합니다.")
-    @GetMapping("/email/verification")
+    @PostMapping("/email/verify")
     public ApiResponse<String> verifyEmailLink(@RequestParam String token) {
         authService.verifyEmailLink(token);
         return ApiResponse.success("이메일 인증 완료");

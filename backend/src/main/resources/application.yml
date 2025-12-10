@@ -53,7 +53,7 @@ app:
     frontend: http://localhost:5173
 
   email:
-    verify-base-url: http://localhost:8080/auth/email/verification
+    verify-base-url: http://localhost:5173/auth/verify-email
 
   file:
     upload-dir: ./uploads
