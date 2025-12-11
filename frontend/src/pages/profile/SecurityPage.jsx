@@ -96,7 +96,7 @@ export default function SecurityPage() {
 
       <div className="flex flex-col gap-5">
         {/* 1. 이메일 인증 */}
-        <div className="rounded-2xl border border-gray-200 bg-white p-6 shadow-sm">
+        <div className="rounded-2xl border border-gray-300 bg-white p-6 shadow-sm">
           <h3 className="mb-4 flex items-center gap-2 text-lg font-bold text-gray-900">
             <Mail size={20} className="text-gray-500" />
             이메일 인증
@@ -139,7 +139,7 @@ export default function SecurityPage() {
         </div>
 
         {/* 2. 비밀번호 변경 */}
-        <div className="rounded-2xl border border-gray-200 bg-white p-6 shadow-sm">
+        <div className="rounded-2xl border border-gray-300 bg-white p-6 shadow-sm">
           <h3 className="mb-4 flex items-center gap-2 text-lg font-bold text-gray-900">
             <Key size={20} className="text-gray-500" />
             비밀번호
@@ -165,7 +165,7 @@ export default function SecurityPage() {
         </div>
 
         {/* 3. 소셜 계정 연동 */}
-        <div className="rounded-2xl border border-gray-200 bg-white p-6 shadow-sm">
+        <div className="rounded-2xl border border-gray-300 bg-white p-6 shadow-sm">
           <h3 className="mb-2 flex items-center gap-2 text-lg font-bold text-gray-900">
             <Globe size={20} className="text-gray-500" />
             소셜 계정
@@ -199,7 +199,7 @@ export default function SecurityPage() {
         {/* 추가) 2단계 인증 - 보류*/}
 
         {/* 4. 로그인 활동 - 보류 */}
-        <div className="rounded-2xl border border-gray-200 bg-white p-6 shadow-sm">
+        <div className="rounded-2xl border border-gray-300 bg-white p-6 shadow-sm">
           <div className="mb-4 flex items-center justify-between">
             <h3 className="flex items-center gap-2 text-lg font-bold text-gray-900">
               <Smartphone size={20} className="text-gray-500" />
