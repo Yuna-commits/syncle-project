@@ -4,14 +4,14 @@ import api from '../../api/AxiosInterceptor' // API 설정 파일
 import BoardCard from '../../components/common/BoardCard'
 import CreateBoardButton from '../../components/common/CreateBoardButton'
 import defaultProfile from '../../assets/images/default.png'
-import useUserStore from '../../stores/useUserStore'
 import InviteMemberModal from '../../components/modals/team/InviteMemberModal'
+import { useAuthQuery } from '../../hooks/auth/useAuthQuery'
 
 function TeamBoardPage() {
   // 1. URL에서 teamId 추출
   const { teamId } = useParams()
   const navigate = useNavigate() // 페이지 이동을 위한 navigate
-  const { user } = useUserStore() // 현재 로그인한 사용자 정보
+  const { data: user } = useAuthQuery() // 현재 로그인한 사용자 정보
   const [isInviteModalOpen, setIsInviteModalOpen] = useState(false)
 
   const [team, setTeam] = useState(null)

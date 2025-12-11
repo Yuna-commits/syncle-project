@@ -1,12 +1,12 @@
-import React, { useEffect, useState } from 'react'
+import React, { useState } from 'react'
 import Header from '../components/common/Header'
 import Sidebar from '../components/common/Sidebar'
 import { Outlet } from 'react-router-dom'
 import TeamCreateModal from '../components/modals/team/TeamCreateModal'
 import NotificationMenu from '../components/modals/NotificationMenu'
 import ProfileMenu from '../components/modals/ProfileMenu'
-import useUserStore from '../stores/useUserStore'
 import useUiStore from '../stores/useUiStore'
+import { useAuthQuery } from '../hooks/auth/useAuthQuery'
 
 function MainLayout() {
   const [openTeamModal, setOpenTeamModal] = useState(false)
@@ -14,13 +14,9 @@ function MainLayout() {
   // 메뉴 정보 가져오기
   const { openedMenu, closeAll } = useUiStore()
 
-  // 스토어에서 유저 정보 가져오기
-  const { fetchUser } = useUserStore()
-
-  // 마운트(로그인) 시 내 정보 가져오기
-  useEffect(() => {
-    fetchUser()
-  }, [fetchUser])
+  // 사용자 정보 가져오기
+  // 컴포넌트 마운트 시 자동으로 'fetchMe' API 호출
+  useAuthQuery()
 
   return (
     <div onClick={closeAll}>

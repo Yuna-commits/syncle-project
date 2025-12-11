@@ -3,7 +3,7 @@ import defaultProfile from '../../assets/images/default.png'
 import api from '../../api/AxiosInterceptor'
 import { useParams } from 'react-router-dom'
 import InviteMemberModal from '../../components/modals/team/InviteMemberModal'
-import useUserStore from '../../stores/useUserStore'
+import { useAuthQuery } from '../../hooks/auth/useAuthQuery'
 
 export default function TeamMembersPage() {
   const { teamId } = useParams()
@@ -11,7 +11,7 @@ export default function TeamMembersPage() {
   const [isInviteModalOpen, setIsInviteModalOpen] = useState(false)
 
   // 현재 로그인한 사용자 정보 가져오기
-  const { user } = useUserStore()
+  const { data: user } = useAuthQuery()
 
   // [변경] 현재 열려있는 메뉴의 ID를 저장 (예: 'role-1', 'board-2')
   const [activeMenu, setActiveMenu] = useState(null)

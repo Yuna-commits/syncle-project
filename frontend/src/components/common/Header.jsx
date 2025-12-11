@@ -1,13 +1,13 @@
 import React, { useEffect } from 'react'
 import { Link, useLocation } from 'react-router-dom'
-import useUserStore from '../../stores/useUserStore'
 import useUiStore from '../../stores/useUiStore'
 import { Plus } from 'lucide-react'
 import defaultProfile from '../../assets/images/default.png'
+import { useAuthQuery } from '../../hooks/auth/useAuthQuery'
 
 function Header({ onOpenTeamModal }) {
   const notificationCount = 1
-  const { user } = useUserStore()
+  const { data: user } = useAuthQuery()
   const { toggleMenu, closeAll } = useUiStore()
   const location = useLocation()
 
@@ -21,7 +21,6 @@ function Header({ onOpenTeamModal }) {
       {/* ---------------- 좌측: 로고 ---------------- */}
       <Link to="dashboard" className="flex items-center gap-3">
         {/* 서비스 로고 */}
-        <div className="h-8 w-8 rounded-md bg-blue-600"></div>
         <span className="text-xl font-semibold">Syncle</span>
       </Link>
 
