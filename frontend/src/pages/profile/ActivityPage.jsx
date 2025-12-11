@@ -6,7 +6,7 @@ import DateRangePickerMenu from '../../components/modals/DateRangePickerMenu'
 import ActivityLogItem from '../../components/activity_log/ActivityLogItem'
 import useActivityFilterStore from '../../stores/useActivityFilterStore'
 import { useActivityQuery } from '../../hooks/useActivityQuery'
-import { CalendarIcon, Filter, RefreshCcw, Search } from 'lucide-react'
+import { CalendarIcon, Filter, Inbox, RefreshCcw, Search } from 'lucide-react'
 
 export default function ActivityPage() {
   // 필터 상태 관리

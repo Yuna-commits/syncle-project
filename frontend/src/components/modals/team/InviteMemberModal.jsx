@@ -1,7 +1,9 @@
-import React, { useState, useEffect } from 'react'
+import React, { useState, useEffect, useMemo } from 'react'
 import { Search, UserPlus, X, Users } from 'lucide-react'
-import api from '../../../api/AxiosInterceptor'
 import { useNavigate } from 'react-router-dom'
+import { useInvitationMutations } from '../../../hooks/team/useInvitationMutations'
+import { useTeamInvitationsQuery } from '../../../hooks/team/useTeamQuery'
+import { useUserSearchQuery } from '../../../hooks/auth/useAuthQuery'
 
 // 더바운싱을 위한 커스텀 훅
 function useDebounce(value, delay) {
@@ -14,79 +16,56 @@ function useDebounce(value, delay) {
 }
 
 function InviteMemberModal({ teamId, currentMembers = [], onClose }) {
+  const navigate = useNavigate()
+
   const [keyword, setKeyword] = useState('')
   const debouncedKeyword = useDebounce(keyword, 500) // 0.5초 디바운스
-  const navigate = useNavigate()
-  const [searchResults, setSearchResults] = useState([])
   const [selectedUsers, setSelectedUsers] = useState([])
-  const [loading, setLoading] = useState(false)
   const [inviting, setInviting] = useState(false)
-  const [pendingInvitees, setPendingInvitees] = useState([])
+
+  // 초대장 발송
+  const { inviteToTeam } = useInvitationMutations()
 
   // 이미 초대장을 보낸 사람들 조회
-  useEffect(() => {
-    const fetchPendingInvitees = async () => {
-      try {
-        const response = await api.get(`/invitations/teams/${teamId}`)
-        const data = response.data.data || []
-        console.log('초대장 데이터:', data)
-        const pendingIds = data
-          .filter((invite) => invite.status === 'PENDING')
-          .map((invite) => invite.inviteeId)
-        setPendingInvitees(pendingIds)
-      } catch (error) {
-        console.error('초대장 조회 실패:', error)
-      }
-    }
+  const { data: invitations = [] } = useTeamInvitationsQuery()
 
-    fetchPendingInvitees()
-  }, [teamId])
+  const pendingInvitees = useMemo(() => {
+    return new Set(
+      invitations
+        .filter((invite) => invite.status === 'PENDING')
+        .map((invite) => invite.inviteeId), // inviteeId가 유저 ID인지 확인 필요
+    )
+  }, [invitations])
 
-  // 사용자 검색 API 호출
-  useEffect(() => {
-    if (!debouncedKeyword.trim()) {
-      setSearchResults([])
-      return
-    }
+  // 사용자 검색
+  const { data: searchData = [], isLoading: isSearching } =
+    useUserSearchQuery(debouncedKeyword)
 
-    const searchUsers = async () => {
-      setLoading(true)
-      try {
-        const response = await api.get(
-          `/users/search?keyword=${debouncedKeyword}`,
-        )
-        const data = response.data.data || []
+  // 검색 결과 필터링 (이미 멤버, 이미 초대됨, 이미 선택됨 제외)
+  const searchResults = useMemo(() => {
+    if (!debouncedKeyword.trim()) return []
 
-        // 필터링 기준:
-        // 1. 이미 멤버인 사람 (currentMemberIds)
-        // 2. 현재 모달에서 선택한 사람 (selectedIds)
-        // 3. 이미 초대장을 보낸 사람 (pendingInvitees)
-        const currentMemberIds = new Set(currentMembers.map((m) => m.userId))
-        const selectedIds = new Set(selectedUsers.map((u) => u.id))
-        const pendingIds = new Set(pendingInvitees)
+    const currentMemberIds = new Set(currentMembers.map((m) => m.userId))
+    const selectedIds = new Set(selectedUsers.map((u) => u.id))
 
-        const filtered = data.filter(
-          (u) =>
-            !currentMemberIds.has(u.id) &&
-            !selectedIds.has(u.id) &&
-            !pendingIds.has(u.id),
-        )
-        setSearchResults(filtered)
-      } catch (error) {
-        console.error('사용자 검색 실패:', error)
-      } finally {
-        setLoading(false)
-      }
-    }
-
-    searchUsers()
-  }, [debouncedKeyword, currentMembers, selectedUsers, pendingInvitees])
+    return searchData.filter(
+      (u) =>
+        !currentMemberIds.has(u.id) &&
+        !selectedIds.has(u.id) &&
+        !pendingInvitees.has(u.id),
+    )
+  }, [
+    searchData,
+    currentMembers,
+    selectedUsers,
+    pendingInvitees,
+    debouncedKeyword,
+  ])
 
   // 사용자 선택
   const handleSelectUser = (user) => {
     setSelectedUsers((prev) => [...prev, user])
     setKeyword('') // 검색창 초기화
-    setSearchResults([]) // 결과창 닫기
   }
 
   // 선택 취소
@@ -99,25 +78,25 @@ function InviteMemberModal({ teamId, currentMembers = [], onClose }) {
     if (selectedUsers.length === 0) return
 
     setInviting(true)
-    try {
-      const userIds = selectedUsers.map((u) => u.id)
-      // POST /api/invitations/teams/{teamId}
-      // Body: { userIds: [...], role: "MEMBER" }
-      await api.post(`/invitations/teams/${teamId}`, {
-        teamId: Number(teamId),
+    // 선택된 사용자 id 추출
+    const userIds = selectedUsers.map((u) => u.id)
+    inviteToTeam(
+      {
+        teamId,
         userIds,
-        role: 'MEMBER',
-      })
-
-      alert('초대되었습니다.')
-      onClose()
-      navigate(`/teams/${teamId}/invitations`)
-    } catch (error) {
-      console.error('초대 실패:', error)
-      alert(error.response?.data?.message || '초대에 실패했습니다.')
-    } finally {
-      setInviting(false)
-    }
+        role: 'MEMBER', // 기본 역할 지정
+      },
+      {
+        onSuccess: () => {
+          alert(`${selectedUsers.length}명을 초대했습니다.`)
+          onClose()
+          navigate(`/teams/${teamId}/invitations`)
+        },
+        onSettled: () => {
+          setInviting(false)
+        },
+      },
+    )
   }
 
   return (
@@ -165,7 +144,7 @@ function InviteMemberModal({ teamId, currentMembers = [], onClose }) {
             {/* 검색 결과 드롭다운 */}
             {keyword.trim() && (
               <div className="absolute top-full right-0 left-0 z-20 mt-1 max-h-48 overflow-y-auto rounded-lg border border-gray-200 bg-white shadow-lg">
-                {loading ? (
+                {isSearching ? (
                   <div className="p-3 text-center text-xs text-gray-500">
                     검색 중...
                   </div>

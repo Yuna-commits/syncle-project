@@ -30,7 +30,7 @@ public class TeamMemberController {
 
     // 팀 역할 변경
     @Operation(summary = "팀 멤버 역할 변경", description = "팀 멤버의 역할(권한)을 변경합니다.")
-    @PatchMapping("{memberId}/role")
+    @PatchMapping("{memberId}")
     public ApiResponse<String> updateTeamRole(@PathVariable Long teamId,
                                               @PathVariable Long memberId,
                                               @Valid @RequestBody TeamRoleUpdateRequest req,

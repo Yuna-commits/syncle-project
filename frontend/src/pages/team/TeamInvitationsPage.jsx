@@ -1,38 +1,22 @@
-import React, { useCallback, useEffect, useState } from 'react'
 import { useParams } from 'react-router-dom'
 import { Clock, CheckCircle, XCircle, AlertCircle } from 'lucide-react'
-import api from '../../api/AxiosInterceptor'
 import defaultProfile from '../../assets/images/default.png'
+import { useTeamInvitationsQuery } from '../../hooks/team/useTeamQuery'
+import { useInvitationMutations } from '../../hooks/team/useInvitationMutations'
 
 export default function TeamInvitationsPage() {
   const { teamId } = useParams()
-  const [invitations, setInvitations] = useState([])
-  const [loading, setLoading] = useState(true)
 
-  // 초대 내역 조회
-  const fetchInvitations = useCallback(async () => {
-    try {
-      setLoading(true)
-      const response = await api.get(`/invitations/teams/${teamId}`)
-      setInvitations(response.data.data)
-    } catch (error) {
-      console.error('초대 내역 조회 실패', error)
-      // 권한 없음 등의 에러 처리 가능
-    } finally {
-      setLoading(false)
-    }
-  }, [teamId])
+  // 초대 목록 조회
+  const { data: invitations = [], isLoading } = useTeamInvitationsQuery(teamId)
 
-  useEffect(() => {
-    if (teamId) fetchInvitations()
-  }, [teamId, fetchInvitations])
+  // 초대 취소
+  const { cancelInvitation } = useInvitationMutations()
 
   // 초대 취소 (API 호출 예시)
-  const handleCancel = async (invitationId) => {
+  const handleCancel = (invitationId) => {
     if (!window.confirm('초대를 취소하시겠습니까?')) return
-    await api.delete(`/invitations/${invitationId}`)
-    // 취소 후 목록 새로고침
-    fetchInvitations()
+    cancelInvitation(invitationId)
   }
 
   // 상태 뱃지
@@ -67,7 +51,7 @@ export default function TeamInvitationsPage() {
     }
   }
 
-  if (loading) return <div className="p-8">Loading...</div>
+  if (isLoading) return <div className="p-8">Loading...</div>
 
   return (
     <main className="flex-1 overflow-y-auto bg-white p-8">
@@ -131,7 +115,7 @@ export default function TeamInvitationsPage() {
                     <td className="px-6 py-4 text-sm whitespace-nowrap">
                       <button
                         onClick={() => handleCancel(invitation.id)}
-                        className="text-red-600 hover:text-red-900 hover:underline"
+                        className="rounded-lg border border-red-200 px-3 py-1 text-sm text-red-600 hover:cursor-pointer hover:bg-red-200"
                       >
                         취소
                       </button>

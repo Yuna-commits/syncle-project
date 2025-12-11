@@ -14,3 +14,18 @@ export const useAuthQuery = () => {
     refetchOnWindowFocus: false,
   })
 }
+
+// 사용자 검색
+export const useUserSearchQuery = (keyword) => {
+  return useQuery({
+    queryKey: ['users', 'search', keyword],
+    queryFn: async () => {
+      if (!keyword || !keyword.trim()) return []
+      const response = await userApi.searchUsers(keyword)
+      return response.data.data
+    },
+    // 키워드가 있을 때만 쿼리 실행
+    enabled: !!keyword && keyword.trim().length > 0,
+    staleTime: 1000 * 60, // 1분간 검색 결과 캐싱
+  })
+}

@@ -55,7 +55,7 @@ public class TeamController {
 
     // 팀 정보 수정
     @Operation(summary = "팀 정보 수정", description = "팀 이름 및 설명을 수정합니다 (팀장 권한).")
-    @PutMapping("/{teamId}")
+    @PatchMapping("/{teamId}")
     public ApiResponse<String> updateTeam(@PathVariable Long teamId,
                                           @Valid @RequestBody UpdateTeamRequest req,
                                           @LoginUser Long userId) {

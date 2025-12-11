@@ -1,14 +1,35 @@
 import { useMutation, useQueryClient } from '@tanstack/react-query'
 import { boardApi } from '../api/board.api'
+import { teamApi } from '../api/team.api'
+import { useNavigate } from 'react-router-dom'
+import { useAuthQuery } from './auth/useAuthQuery'
 
-export const useMemberMutations = (boardId) => {
+export const useMemberMutations = (entityId, type = 'BOARD') => {
   const queryClient = useQueryClient()
-  const queryKey = ['board', boardId]
+  const navigate = useNavigate()
+  const queryKey =
+    type === 'TEAM' ? ['team', Number(entityId)] : ['board', Number(entityId)]
+
+  const { data: user } = useAuthQuery()
+
+  // 보드 멤버 초대 (기존 팀원을 보드에 추가)
+  const inviteMemberToBoardMutation = useMutation({
+    mutationFn: (userIds) => boardApi.inviteMember(entityId, userIds),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey })
+    },
+    onError: (err) => alert(err.response?.data?.message || '멤버 추가 실패'),
+  })
 
   // 멤버 권한 변경
   const changeMemberRoleMutation = useMutation({
-    mutationFn: ({ userId, newRole }) =>
-      boardApi.changeMemberRole(boardId, userId, newRole),
+    mutationFn: ({ userId, newRole }) => {
+      if (type === 'TEAM') {
+        return teamApi.changeMemberRole(entityId, userId, newRole)
+      } else {
+        return boardApi.changeMemberRole(entityId, userId, newRole)
+      }
+    },
 
     onMutate: async ({ userId, newRole }) => {
       // 1. 쿼리 취소
@@ -46,7 +67,13 @@ export const useMemberMutations = (boardId) => {
 
   // 멤버 내보내기 (추방)
   const removeMemberMutation = useMutation({
-    mutationFn: (userId) => boardApi.removeMember(boardId, userId),
+    mutationFn: (userId) => {
+      if (type === 'TEAM') {
+        return teamApi.removeMember(entityId, userId)
+      } else {
+        return boardApi.removeMember(entityId, userId)
+      }
+    },
 
     onMutate: async (userId) => {
       await queryClient.cancelQueries({ queryKey })
@@ -67,9 +94,22 @@ export const useMemberMutations = (boardId) => {
       return { previousBoard }
     },
 
+    onSuccess: (data, targetUserId) => {
+      // 삭제된 멤버 ID가 현재 로그인한 유저 ID와 같다면 (본인 탈퇴)
+      if (Number(targetUserId) === Number(user?.id)) {
+        alert(
+          type === 'TEAM' ? '팀에서 탈퇴했습니다.' : '보드에서 탈퇴했습니다.',
+        )
+        navigate('/dashboard')
+      } else {
+        alert('멤버를 추방하였습니다.')
+      }
+    },
+
     onError: (err, vars, context) => {
-      queryClient.setQueryData(queryKey, context.previousBoard)
-      alert('멤버 추방에 실패했습니다.')
+      queryClient.setQueryData(queryKey, context.previousData)
+      const actionName = type === 'TEAM' ? '팀 탈퇴/추방' : '보드 탈퇴/추방'
+      alert(`${actionName}에 실패했습니다.`)
     },
 
     onSettled: () => {
@@ -78,6 +118,8 @@ export const useMemberMutations = (boardId) => {
   })
 
   return {
+    inviteMemberToBoard: (userIds, options) =>
+      inviteMemberToBoardMutation.mutate(userIds, options),
     changeMemberRole: changeMemberRoleMutation.mutate,
     removeMember: removeMemberMutation.mutate,
   }

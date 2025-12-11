@@ -1,17 +1,12 @@
-import React, { useEffect, useState } from 'react'
+import React, { useState } from 'react'
 import { Link, useLocation } from 'react-router-dom'
 import SidebarTeamItem from '../sidebar/SidebarTeamItem'
-import useTeamStore from '../../stores/useTeamStore'
+import { useTeamQuery } from '../../hooks/team/useTeamQuery'
 
 function Sidebar() {
   const location = useLocation()
-  const { teams, fetchTeams } = useTeamStore()
+  const { data: teams = [] } = useTeamQuery()
   const [selectedTeam, setSelectedTeam] = useState({})
-
-  // 팀 목록 불러오기
-  useEffect(() => {
-    fetchTeams()
-  }, [fetchTeams])
 
   // 팀 메뉴 토글
   const toggleTeam = (teamId) => {

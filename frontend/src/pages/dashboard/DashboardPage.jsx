@@ -1,64 +1,65 @@
-import React, { useCallback, useEffect, useState } from 'react'
 import BoardCard from '../../components/common/BoardCard'
-import api from '../../api/AxiosInterceptor'
 import TeamBoardSection from '../../components/dashboard/TeamBoardSection'
 // eslint-disable-next-line no-unused-vars
-import { motion, AnimatePresence } from 'framer-motion'
+import { AnimatePresence, motion } from 'framer-motion'
+import { useDashboardQuery } from '../../hooks/team/useTeamQuery'
 
 function DashboardPage() {
-  const [teams, setTeams] = useState([])
-  const [favoriteBoards, setFavoriteBoards] = useState([])
+  // 데이터 조회
+  const { data: rawData, isLoading, refetch } = useDashboardQuery()
 
-  // 데이터 불러오기
-  const fetchDashboardData = useCallback(async () => {
-    try {
-      const response = await api.get('/boards/me')
-      const rawData = response.data.data
+  // 데이터 가공
+  const allBoards = rawData || []
 
-      // 즐겨찾기 목록 필터링
-      const favBoards = rawData
-        .filter((board) => board.isFavorite)
-        .sort((a, b) => new Date(a.favoritedAt) - new Date(b.favoritedAt)) // 최신순 정렬
-        .map((board) => ({
-          id: board.id,
-          title: board.title,
-          imageUrl: board.imageUrl,
-          isFavorite: board.isFavorite,
-        }))
-      setFavoriteBoards(favBoards)
+  // 즐겨찾기 목록 필터링
+  const favoriteBoards = allBoards
+    .filter((board) => board.isFavorite)
+    .sort((a, b) => new Date(a.favoritedAt) - new Date(b.favoritedAt)) // 최신순 정렬
+    .map((board) => ({
+      id: board.id,
+      title: board.title,
+      imageUrl: board.imageUrl,
+      isFavorite: board.isFavorite,
+    }))
 
-      // 데이터 팀별 그룹화
-      const groupedMap = rawData.reduce((acc, cur) => {
-        const tName = cur.teamName || 'Unknown Team'
+  // 팀별 그룹화
+  const groupedMap = allBoards.reduce((acc, cur) => {
+    const tName = cur.teamName || '알 수 없는 팀'
 
-        if (!acc[tName]) {
-          acc[tName] = {
-            teamName: tName,
-            teamId: cur.teamId,
-            boards: [],
-          }
-        }
-
-        if (cur.id) {
-          acc[tName].boards.push({
-            id: cur.id,
-            title: cur.title,
-            imageUrl: cur.imageUrl,
-            isFavorite: cur.isFavorite,
-          })
-        }
-        return acc
-      }, {})
-      console.log('그룹화된 데이터:', groupedMap)
-      setTeams(Object.values(groupedMap))
-    } catch (error) {
-      console.error('대시보드 조회 실패:', error)
+    if (!acc[tName]) {
+      acc[tName] = {
+        teamName: tName,
+        teamId: cur.teamId,
+        boards: [],
+      }
     }
-  }, [])
 
-  useEffect(() => {
-    fetchDashboardData()
-  }, [fetchDashboardData])
+    if (cur.id) {
+      // 보드가 있는 경우
+      acc[tName].boards.push({
+        id: cur.id,
+        title: cur.title,
+        imageUrl: cur.imageUrl,
+        isFavorite: cur.isFavorite,
+      })
+    }
+    return acc
+  }, {})
+
+  const teams = Object.values(groupedMap)
+
+  // 보드 생성/수정 시 refetch 호출
+  const handleBoardUpdate = () => {
+    refetch()
+  }
+
+  if (isLoading) {
+    return (
+      <div className="flex h-full items-center justify-center">
+        <div className="h-8 w-8 animate-spin rounded-full border-4 border-blue-500 border-t-transparent"></div>
+      </div>
+    )
+  }
 
   return (
     <main className="flex-1 overflow-y-auto bg-white p-8">
@@ -90,7 +91,7 @@ function DashboardPage() {
                       imageUrl="https://picsum.photos/400/200"
                       title={board.title}
                       isFavorite={board.isFavorite}
-                      onToggleFavorite={fetchDashboardData}
+                      onToggleFavorite={handleBoardUpdate}
                     />
                   </motion.div>
                 ))
@@ -113,7 +114,7 @@ function DashboardPage() {
               <TeamBoardSection
                 key={team.teamId}
                 team={team}
-                onBoardCreated={fetchDashboardData}
+                onBoardCreated={handleBoardUpdate}
               />
             ))
           ) : (

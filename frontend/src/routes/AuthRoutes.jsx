@@ -14,8 +14,6 @@ export default function AuthRoutes() {
         <Route path="signin" element={<SignInPage />} />
         <Route path="signup" element={<SignUpPage />} />
         <Route path="reset-password" element={<ResetPasswordPage />} />
-        <Route path="invite/accept" element={<InviteAcceptPage />} />
-        <Route path="verify-email" element={<EmailVerificationPage />} />
       </Route>
     </Routes>
   )

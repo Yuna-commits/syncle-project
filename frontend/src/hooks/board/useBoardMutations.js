@@ -8,21 +8,17 @@ export const useBoardMutations = (boardId) => {
   // 즐겨찾기 토글
   const toggleFavoriteMutation = useMutation({
     mutationFn: () => boardApi.toggleFavorite(boardId),
-    onMutate: async () => {
-      // 1. 진행 중인 쿼리 취소
-      await queryClient.cancelQueries({ queryKey })
 
-      // 2. 이전 상태 저장 (에러 시 롤백용)
-      const previousBoard = queryClient.getQueryData(queryKey)
+    onSuccess: () => {
+      // 1. 대시보드 데이터 갱신 (즐겨찾기 목록, 최근 보드 등)
+      queryClient.invalidateQueries({ queryKey: ['dashboard'] })
 
-      // 3. 낙관적 업데이트: 캐시 데이터 즉시 수정
-      queryClient.setQueryData(queryKey, (old) => {
-        if (!old) return old
-        return { ...old, isFavorite: !old.isFavorite } // true <-> false 반전
-      })
+      // 2. 현재 보고 있는 개별 보드 상세 정보 갱신 (BoardPage)
+      queryClient.invalidateQueries({ queryKey: ['board', Number(boardId)] })
 
-      // context 반환
-      return { previousBoard }
+      // 3. 팀 보드 목록 갱신 (TeamBoardPage)
+      queryClient.invalidateQueries({ queryKey: ['teams'] }) // 팀 목록
+      queryClient.invalidateQueries({ queryKey: ['team'] }) // 개별 팀 상세 (보드 목록 포함)
     },
 
     onError: (err, variables, context) => {
@@ -43,6 +39,17 @@ export const useBoardMutations = (boardId) => {
       // 6. 데이터 동기화
       queryClient.invalidateQueries({ queryKey })
     },
+  })
+
+  // 보드 생성
+  const createBoardMutation = useMutation({
+    mutationFn: ({ teamId, data }) => boardApi.createBoard(teamId, data),
+    onSuccess: (res, { teamId }) => {
+      // 대시보드 및 해당 팀의 보드 목록 갱신
+      queryClient.invalidateQueries({ queryKey: ['dashboard'] })
+      queryClient.invalidateQueries({ queryKey: ['team', Number(teamId)] })
+    },
+    onError: (err) => alert(err.response?.data?.message || '보드 생성 실패'),
   })
 
   //보드 정보 수정 (제목, 설명, 공개범위 등) - 낙관적 업데이트 적용
@@ -87,6 +94,7 @@ export const useBoardMutations = (boardId) => {
 
   return {
     toggleFavorite: toggleFavoriteMutation.mutate,
+    createBoard: createBoardMutation.mutate,
     updateBoard: updateBoardMutation.mutate,
     deleteBoard: deleteBoardMutation.mutate,
   }

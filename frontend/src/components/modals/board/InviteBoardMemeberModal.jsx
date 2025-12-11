@@ -1,8 +1,7 @@
 import React, { useMemo, useState } from 'react'
 
-import { Check, Search, UserCheck, UserPlus, X } from 'lucide-react'
-import api from '../../../api/AxiosInterceptor'
-import { useQueryClient } from '@tanstack/react-query'
+import { Check, Search, UserCheck, UserPlus, Users, X } from 'lucide-react'
+import { useMemberMutations } from '../../../hooks/useMemberMutations'
 
 /**
  * 팀 멤버 중에서만 보드 멤버 초대 가능
@@ -14,10 +13,11 @@ function InviteBoardMemeberModal({
   currentBoardMembers = [],
   onClose,
 }) {
-  const queryClient = useQueryClient()
   const [keyword, setKeyword] = useState('')
   const [selectedUsers, setSelectedUsers] = useState([])
   const [inviting, setInviting] = useState(false)
+
+  const { inviteMemberToBoard } = useMemberMutations(boardId, 'BOARD')
 
   // 1. 현재 참여중인 보드 멤버 ID 집합 (userId 기준)
   const currentBoardMemberIds = useMemo(() => {
@@ -66,29 +66,20 @@ function InviteBoardMemeberModal({
   // 보드 멤버 초대 요청
   const handleInvite = async () => {
     if (selectedUsers.length === 0) return
-
     setInviting(true)
-    try {
-      // 선택된 유저들의 userId 추출
-      const userIds = selectedUsers.map((u) => u.id)
 
-      // [API] 보드 멤버 추가
-      await api.post(`/boards/${boardId}/members`, {
-        userIds: userIds,
-      })
+    // 선택된 유저들의 ID만 추출
+    const userIds = selectedUsers.map((u) => u.id)
 
-      // 성공 시 보드 데이터 갱신
-      await queryClient.invalidateQueries({
-        queryKey: ['board', Number(boardId)],
-      })
-
-      onClose()
-    } catch (error) {
-      console.error('보드 멤버 추가 실패:', error)
-      alert(error.response?.data?.message || '멤버 추가에 실패했습니다.')
-    } finally {
-      setInviting(false)
-    }
+    inviteMemberToBoard(userIds, {
+      onSuccess: () => {
+        alert(`${selectedUsers.length}명을 보드에 초대했습니다.`)
+        onClose()
+      },
+      onSettled: () => {
+        setInviting(false)
+      },
+    })
   }
 
   return (
@@ -223,29 +214,15 @@ function InviteBoardMemeberModal({
           </div>
 
           {/* 하단 버튼 */}
-          <div className="flex items-center justify-between border-t border-gray-100 pt-4">
-            <span className="text-sm text-gray-500">
-              {selectedUsers.length}명 선택됨
-            </span>
-            <div className="flex gap-3">
-              <button
-                onClick={onClose}
-                className="rounded-lg px-4 py-2 text-sm font-medium text-gray-600 transition hover:cursor-pointer hover:bg-gray-200"
-              >
-                취소
-              </button>
-              <button
-                onClick={handleInvite}
-                disabled={selectedUsers.length === 0 || inviting}
-                className={`flex items-center gap-2 rounded-lg px-6 py-2 text-sm font-medium text-white shadow-sm transition hover:cursor-pointer ${
-                  selectedUsers.length === 0 || inviting
-                    ? 'cursor-not-allowed bg-blue-300'
-                    : 'bg-blue-600 hover:bg-blue-700'
-                }`}
-              >
-                {inviting ? '추가 중...' : '보드에 추가'}
-              </button>
-            </div>
+          <div className="border-t border-gray-100 p-4">
+            <button
+              onClick={handleInvite}
+              disabled={selectedUsers.length === 0 || inviting}
+              className="flex w-full items-center justify-center gap-2 rounded-lg bg-blue-600 py-2.5 text-sm font-bold text-white shadow-sm hover:bg-blue-700 disabled:bg-gray-300"
+            >
+              <Users size={18} />
+              {inviting ? '추가 중...' : `${selectedUsers.length}명 추가하기`}
+            </button>
           </div>
         </div>
       </div>

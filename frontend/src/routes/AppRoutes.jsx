@@ -11,6 +11,7 @@ import InviteAcceptPage from '../pages/auth/InviteAcceptPage'
 import DashboardPage from '../pages/dashboard/DashboardPage'
 import NotificationPage from '../pages/user/NotificationPage'
 import CalendarPage from '../pages/user/CalendarPage'
+import EmailVerificationPage from '../pages/auth/EmailVerificationPage'
 
 export default function AppRoutes() {
   return (
@@ -22,6 +23,10 @@ export default function AppRoutes() {
         {/* 인증 */}
         <Route path="/auth/*" element={<AuthRoutes />} />
       </Route>
+
+      {/* 2. Common Routes (로그인 여부 상관없이 접근 가능) */}
+      <Route path="/auth/invite/accept" element={<InviteAcceptPage />} />
+      <Route path="/auth/verify-email" element={<EmailVerificationPage />} />
 
       {/* ================================================= */}
       {/* 2. 보호된 라우트 (로그인 한 사람만 접근 가능)        */}

@@ -1,21 +1,10 @@
-import React, { useEffect, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
-import api from '../../api/AxiosInterceptor'
 import { Star } from 'lucide-react'
+import { useBoardMutations } from '../../hooks/board/useBoardMutations'
 
-function BoardCard({
-  id,
-  imageUrl,
-  title,
-  isFavorite: initialIsFavorite,
-  onToggleFavorite,
-}) {
+function BoardCard({ id, imageUrl, title, isFavorite, onToggleFavorite }) {
   const navigate = useNavigate()
-  const [isFavorite, setIsFavorite] = useState(initialIsFavorite)
-
-  useEffect(() => {
-    setIsFavorite(initialIsFavorite)
-  }, [initialIsFavorite])
+  const { toggleFavorite } = useBoardMutations(id)
 
   const handleClick = () => {
     // 해당 보드 상세 페이지로 이동
@@ -24,22 +13,11 @@ function BoardCard({
 
   const handleFavoriteClick = async (e) => {
     e.stopPropagation()
-    try {
-      // 즐겨찾기 api 호출
-      await api.post(`/boards/${id}/favorite`, {
-        isFavorite: !isFavorite,
-      })
-      setIsFavorite(!isFavorite)
-      if (onToggleFavorite) {
-        onToggleFavorite()
-      }
-    } catch (error) {
-      console.error('즐겨찾기 실패:', error)
-      // 즐겨찾기 갯수 4개 초과 시 에러 처리
-      if (error.response && error.response.status === 400) {
-        alert('즐겨찾기는 최대 4개까지 설정할 수 있습니다.')
-      }
-    }
+    toggleFavorite(undefined, {
+      onSuccess: () => {
+        if (onToggleFavorite) onToggleFavorite()
+      },
+    })
   }
 
   return (

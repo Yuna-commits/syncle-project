@@ -1,5 +1,5 @@
 import React, { useState } from 'react'
-import { Link } from 'react-router-dom'
+import { Link, useLocation } from 'react-router-dom'
 import FormInput from '../../components/common/FormInput'
 import FormButton from '../../components/common/FormButton'
 import { GoogleLogin } from '@react-oauth/google'
@@ -7,9 +7,12 @@ import { useAuthMutations } from '../../hooks/auth/useAuthMutations'
 
 export default function SignIn() {
   const { login, googleLogin, isLoginPending } = useAuthMutations()
+  const location = useLocation() // 위치 훅
 
   const [formData, setFormData] = useState({ email: '', password: '' })
   const [isKeepLogin, setIsKeepLogin] = useState(false)
+
+  const from = location.state?.from || '/'
 
   const handleChange = (e) => {
     const { name, value } = e.target
@@ -18,7 +21,7 @@ export default function SignIn() {
 
   const handleSubmit = (e) => {
     e.preventDefault()
-    login({ ...formData, isKeepLogin })
+    login({ ...formData, isKeepLogin, redirectTo: from })
   }
 
   return (
@@ -33,7 +36,10 @@ export default function SignIn() {
       {/* Google로 로그인하기 */}
       <GoogleLogin
         onSuccess={(credentialResponse) =>
-          googleLogin(credentialResponse.credential)
+          googleLogin({
+            token: credentialResponse.credential,
+            redirectTo: from,
+          })
         }
         onError={() => {
           alert('로그인에 실패했습니다.')

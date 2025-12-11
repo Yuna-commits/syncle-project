@@ -1,0 +1,52 @@
+import { useQuery } from '@tanstack/react-query'
+import { teamApi } from '../../api/team.api'
+import { invitationApi } from '../../api/invitation.api'
+
+// 나의 팀 목록 조회
+export const useTeamQuery = () => {
+  return useQuery({
+    queryKey: ['teams'],
+    queryFn: async () => {
+      const res = await teamApi.getTeams()
+      return res.data.data
+    },
+    staleTime: 1000 * 60 * 5, // 5분
+  })
+}
+
+// 팀 상세 조회
+export const useTeamDetailQuery = (teamId) => {
+  return useQuery({
+    queryKey: ['team', Number(teamId)],
+    queryFn: async () => {
+      const res = await teamApi.getTeamDetail(teamId)
+      return res.data.data
+    },
+    enabled: !!teamId, // teamId가 있을 때만 실행
+    staleTime: 1000 * 60 * 1, // 1분
+  })
+}
+
+// 대시보드 데이터 조회
+export const useDashboardQuery = () => {
+  return useQuery({
+    queryKey: ['dashboard'],
+    queryFn: async () => {
+      const res = await teamApi.getDashboardData()
+      return res.data.data
+    },
+    staleTime: 1000 * 60 * 2, // 2분
+  })
+}
+
+// 팀 초대 목록 조회
+export const useTeamInvitationsQuery = (teamId) => {
+  return useQuery({
+    queryKey: ['invitations', 'team', Number(teamId)],
+    queryFn: async () => {
+      const res = await invitationApi.getTeamInvitations(teamId)
+      return res.data.data
+    },
+    enabled: !!teamId,
+  })
+}

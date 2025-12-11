@@ -15,4 +15,7 @@ export const userApi = {
 
   // 계정 삭제
   deleteUser: () => api.delete('/users/me'),
+
+  // 사용자 검색
+  searchUsers: (keyword) => api.get('/users/search', { params: { keyword } }),
 }

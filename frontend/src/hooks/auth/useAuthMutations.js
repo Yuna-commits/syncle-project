@@ -52,7 +52,8 @@ export const useAuthMutations = () => {
     mutationFn: ({ email, password }) => authApi.login({ email, password }),
     onSuccess: (response, variables) => {
       const { accessToken, refreshToken } = response.data.data
-      const { isKeepLogin } = variables
+      // 전달받은 리다이렉트 주소, 로그인 유지 여부 추출
+      const { isKeepLogin, redirectTo } = variables
 
       // 로그인 상태 유지 체크 여부에 따라 토큰 저장소 결정
       if (isKeepLogin) {
@@ -69,8 +70,8 @@ export const useAuthMutations = () => {
 
       queryClient.invalidateQueries({ queryKey: ['user', 'me'] })
       alert('로그인 성공!')
-      // 성공 시 메인 페이지(대시보드)로 이동
-      navigate('/dashboard')
+      // 성공 시 요청된 페이지로 이동 (없으면 대시보드로)
+      navigate(redirectTo || '/dashboard')
     },
     onError: (error, variables) => {
       const res = error.response?.data
@@ -87,15 +88,17 @@ export const useAuthMutations = () => {
 
   // 구글 로그인
   const googleLoginMutation = useMutation({
-    mutationFn: (idToken) => authApi.googleLogin(idToken),
-    onSuccess: (res) => {
+    mutationFn: ({ token }) => authApi.googleLogin(token),
+    onSuccess: (res, variables) => {
       const { accessToken, refreshToken } = res.data.data
+      const { redirectTo } = variables // 리다이렉트 주소 추출
+
       localStorage.setItem('accessToken', accessToken)
       localStorage.setItem('refreshToken', refreshToken)
 
       queryClient.invalidateQueries({ queryKey: ['user', 'me'] })
       alert('로그인 성공!')
-      navigate('/dashboard')
+      navigate(redirectTo || '/dashboard')
     },
     onError: () => alert('구글 로그인 처리에 실패했습니다.'),
   })
