@@ -1,4 +1,12 @@
-import { ArrowRight, CheckSquare, Clock, Tag, Trash2, User } from 'lucide-react'
+import {
+  MessageSquare,
+  ArrowRight,
+  CheckSquare,
+  Clock,
+  Tag,
+  Trash2,
+  User,
+} from 'lucide-react'
 import { useEffect, useRef, useState } from 'react'
 import { useParams } from 'react-router-dom'
 import { useCardMutations } from '../../hooks/card/useCardMutations'
@@ -8,7 +16,12 @@ import MoveColumnMenu from '../modals/board/MoveColumnMenu'
 import DateRangePickerMenu from '../modals/DateRangePickerMenu'
 import MemberPickerMenu from '../modals/MemberPickerMenu'
 
-function CardSidebar({ onAddChecklist, showChecklist }) {
+function CardSidebar({
+  onAddChecklist,
+  showChecklist,
+  onToggleComment,
+  showComment,
+}) {
   const { boardId } = useParams()
   const { selectedCard, closeCardModal } = useBoardStore()
   const { data: activeBoard } = useBoardQuery(boardId)
@@ -241,6 +254,8 @@ function CardSidebar({ onAddChecklist, showChecklist }) {
             onApply={handleDateApply}
             position={datePopupPos}
           />
+
+          {/* 체크리스트 버튼 */}
           <button
             onClick={onAddChecklist}
             className={`flex w-full items-center gap-2 rounded-md px-2 py-1.5 text-left text-sm transition-colors hover:cursor-pointer ${
@@ -249,6 +264,17 @@ function CardSidebar({ onAddChecklist, showChecklist }) {
           >
             <CheckSquare size={16} className="text-gray-500" />
             <span className="text-gray-500">체크리스트</span>
+          </button>
+
+          {/* 댓글 버튼 */}
+          <button
+            onClick={onToggleComment}
+            className={`flex w-full items-center gap-2 rounded-md px-2 py-1.5 text-left text-sm transition-colors hover:cursor-pointer ${
+              showComment ? 'bg-blue-100' : 'text-gray-700 hover:bg-gray-200'
+            }`}
+          >
+            <MessageSquare size={16} className="text-gray-500" />
+            <span className="text-gray-500">댓글</span>
           </button>
         </div>
       </div>

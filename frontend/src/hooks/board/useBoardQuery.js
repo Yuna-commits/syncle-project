@@ -33,10 +33,51 @@ const normalizeBoardData = (dto) => {
       return a.id - b.id
     })
 
+    // 댓글 트리 구조 변환 헬퍼 함수
+    const buildCommentTree = (flatComments) => {
+      const map = {}
+      const roots = []
+
+      // ID를 키로 하는 맵 생성
+      flatComments.forEach((c) => {
+        map[c.id] = { ...c, replies: [] } // replies 배열 초기화
+      })
+
+      // 부모-자식 연결
+      flatComments.forEach((c) => {
+        // 맵에 있는 객체를 참조
+        const node = map[c.id]
+
+        if (c.parentId && map[c.parentId]) {
+          // 부모가 있으면 부모의 replies에 넣음
+          map[c.parentId].replies.push(node)
+        } else {
+          // 부모가 없으면 최상위 루트
+          roots.push(node)
+        }
+      })
+
+      return roots
+    }
+
     sortedCards.forEach((card) => {
+      // 서버에서 온 평면 리스트 매핑
+      const flatComments = (card.comments || []).map((comment) => ({
+        id: comment.id,
+        content: comment.content,
+        writerId: comment.writerId,
+        writerName: comment.writerName,
+        writerProfileImg: comment.writerProfileImg,
+        createdAt: comment.createdAt,
+        parentId: comment.parentId,
+      }))
+
+      // 트리 구조로 변환
+      const treeComments = buildCommentTree(flatComments)
+
       const mappedCard = {
         id: card.id,
-        listId: list.id, // 부모 리스트 ID 역참조 용
+        listId: list.id,
         title: card.title,
         description: card.description,
         order: card.orderIndex,
@@ -44,16 +85,8 @@ const normalizeBoardData = (dto) => {
         dueDate: card.dueDate,
         isComplete: card.isComplete || false,
 
-        comments: (card.comments || [])
-          .filter((comment) => comment.id)
-          .map((comment) => ({
-            id: comment.id,
-            content: comment.content,
-            writerId: comment.writerId,
-            writerName: comment.writerName,
-            writerProfileImg: comment.writerProfileImg,
-            createdAt: comment.createdAt,
-          })),
+        comments: treeComments,
+
         // 댓글 수
         commentCount: card.commentCount || 0,
 

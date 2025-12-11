@@ -128,6 +128,7 @@
                             javaType="java.util.List">
                     <id property="id" column="comment_id"/>
                     <result property="writerId" column="comment_writer_id"/>
+                    <result property="parentId" column="comment_parent_id"/>
                     <result property="content" column="comment_content"/>
                     <result property="writerName" column="comment_writer_name"/>
                     <result property="writerProfileImg" column="comment_writer_img"/>
@@ -171,6 +172,7 @@
                -- 댓글 (comment 테이블 조인)
                cmt.id         AS comment_id,
                cmt.writer_id  AS comment_writer_id,
+               cmt.parent_id  AS comment_parent_id,
                cmt.content    AS comment_content,
                cmt.created_at AS comment_created_at,
                u.nickname     AS comment_writer_name,

@@ -22,6 +22,9 @@ export default function CardDetailModal() {
     selectedCard.checklists && selectedCard.checklists.length > 0,
   )
 
+  // 댓글 표시 여부 상태
+  const [showComment, setShowComment] = useState(true)
+
   const [isComplete, setIsComplete] = useState(false)
   const [isAnimating, setIsAnimating] = useState(false)
 
@@ -142,13 +145,15 @@ export default function CardDetailModal() {
               )}
 
               {/* Activity Section */}
-              <CardActivity />
+              {showComment && <CardActivity />}
             </div>
 
             {/* [Right Column] Sidebar Actions */}
             <CardSidebar
               onAddChecklist={() => setShowChecklist((prev) => !prev)}
               showChecklist={showChecklist}
+              onToggleComment={() => setShowComment((prev) => !prev)}
+              showComment={showComment}
             />
           </div>
         </div>

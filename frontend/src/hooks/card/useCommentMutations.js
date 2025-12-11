@@ -46,6 +46,63 @@ export const useCommentMutations = (boardId) => {
     return { previousBoard }
   }
 
+  // 1. 댓글 추가 (트리 구조 유지)
+  const addCommentToTree = (comments, newComment) => {
+    // 부모가 없으면(최상위 댓글) 배열 끝에 추가
+    if (!newComment.parentId) {
+      return [...comments, newComment]
+    }
+
+    return comments.map((comment) => {
+      // 부모를 찾음 -> replies에 추가
+      if (comment.id === newComment.parentId) {
+        return {
+          ...comment,
+          replies: [...(comment.replies || []), newComment],
+        }
+      }
+      // 자식이 있다면 재귀 탐색
+      if (comment.replies && comment.replies.length > 0) {
+        return {
+          ...comment,
+          replies: addCommentToTree(comment.replies, newComment),
+        }
+      }
+      return comment
+    })
+  }
+
+  // 2. 댓글 수정 (트리 탐색)
+  const updateCommentInTree = (comments, targetId, updates) => {
+    return comments.map((comment) => {
+      if (comment.id === targetId) {
+        return { ...comment, ...updates }
+      }
+      if (comment.replies && comment.replies.length > 0) {
+        return {
+          ...comment,
+          replies: updateCommentInTree(comment.replies, targetId, updates),
+        }
+      }
+      return comment
+    })
+  }
+
+  // 3. 댓글 삭제 (트리 탐색)
+  const deleteCommentFromTree = (comments, targetId) => {
+    return comments
+      .filter((comment) => comment.id !== targetId) // 현재 레벨에서 삭제
+      .map((comment) => {
+        if (comment.replies && comment.replies.length > 0) {
+          return {
+            ...comment,
+            replies: deleteCommentFromTree(comment.replies, targetId), // 자식 레벨에서 삭제
+          }
+        }
+        return comment
+      })
+  }
+
   // 2. 공통 에러 핸들러
   const handleError = (context, message) => {
     if (context?.previousBoard) {
@@ -55,17 +112,14 @@ export const useCommentMutations = (boardId) => {
     alert(message || '요청 처리에 실패했습니다.')
   }
 
-  // -------------------------------------------------------
-  // 3. 댓글 생성 (Create)
-  // -------------------------------------------------------
+  // 1. 생성 (Create)
   const createCommentMutation = useMutation({
-    mutationFn: ({ cardId, content }) =>
-      boardApi.createComment(cardId, content),
+    mutationFn: ({ cardId, content, parentId }) =>
+      boardApi.createComment(cardId, content, parentId),
 
-    // 생성은 서버에서 ID와 생성일시를 받아야 하므로 onSuccess에서 처리
     onSuccess: (response, { cardId, listId }) => {
-      // 백엔드에서 반환된 완전한 댓글 객체 (CommentResponse)
-      const newComment = response.data.data
+      // response 구조 확인 필요 (response.data.data 또는 response.data)
+      const newComment = response.data?.data || response.data
 
       queryClient.setQueryData(queryKey, (oldBoard) => {
         if (!oldBoard) return oldBoard
@@ -75,11 +129,16 @@ export const useCommentMutations = (boardId) => {
 
         targetList.tasks = targetList.tasks.map((task) => {
           if (task.id === cardId) {
+            const currentComments = task.comments || []
+            // ★ 재귀 헬퍼 사용
+            const updatedComments = addCommentToTree(
+              currentComments,
+              newComment,
+            )
+
             return {
               ...task,
-              // 댓글 배열에 추가 (comments 필드가 없으면 빈 배열로 시작)
-              comments: [...(task.comments || []), newComment],
-              // (옵션) 댓글 수 증가 필드가 있다면 업데이트
+              comments: updatedComments,
               commentCount: (task.commentCount || 0) + 1,
             }
           }
@@ -91,13 +150,16 @@ export const useCommentMutations = (boardId) => {
 
         // Zustand 동기화
         useBoardStore.setState({ activeBoard: newBoard })
-
         const { selectedCard } = useBoardStore.getState()
         if (selectedCard?.id === cardId) {
           useBoardStore.setState({
             selectedCard: {
               ...selectedCard,
-              comments: [...(selectedCard.comments || []), newComment],
+              // ★ 여기도 재귀 헬퍼 결과 적용
+              comments: addCommentToTree(
+                selectedCard.comments || [],
+                newComment,
+              ),
               commentCount: (selectedCard.commentCount || 0) + 1,
             },
           })
@@ -109,9 +171,7 @@ export const useCommentMutations = (boardId) => {
     onError: (error) => console.error('댓글 생성 실패:', error),
   })
 
-  // -------------------------------------------------------
-  // 4. 댓글 수정 (Update)
-  // -------------------------------------------------------
+  // 2. 수정 (Update)
   const updateCommentMutation = useMutation({
     mutationFn: ({ commentId, updates }) =>
       boardApi.updateComment(commentId, updates),
@@ -126,10 +186,11 @@ export const useCommentMutations = (boardId) => {
             if (task.id === cardId) {
               return {
                 ...task,
-                comments: (task.comments || []).map((comment) =>
-                  comment.id === commentId
-                    ? { ...comment, ...updates } // 내용 업데이트
-                    : comment,
+                // ★ 재귀 헬퍼 사용 (updateCommentInTree)
+                comments: updateCommentInTree(
+                  task.comments || [],
+                  commentId,
+                  updates,
                 ),
               }
             }
@@ -144,9 +205,7 @@ export const useCommentMutations = (boardId) => {
     onError: (err, vars, ctx) => handleError(ctx, '댓글 수정 실패'),
   })
 
-  // -------------------------------------------------------
-  // 5. 댓글 삭제 (Delete)
-  // -------------------------------------------------------
+  // 3. 삭제 (Delete)
   const deleteCommentMutation = useMutation({
     mutationFn: ({ commentId }) => boardApi.deleteComment(commentId),
 
@@ -159,11 +218,8 @@ export const useCommentMutations = (boardId) => {
           if (task.id === cardId) {
             return {
               ...task,
-              // 해당 ID 제외
-              comments: (task.comments || []).filter(
-                (comment) => comment.id !== commentId,
-              ),
-              // (옵션) 댓글 수 감소
+              // ★ 재귀 헬퍼 사용 (deleteCommentFromTree)
+              comments: deleteCommentFromTree(task.comments || [], commentId),
               commentCount: Math.max((task.commentCount || 0) - 1, 0),
             }
           }

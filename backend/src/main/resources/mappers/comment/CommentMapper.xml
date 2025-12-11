@@ -28,10 +28,11 @@
             resultType="com.nullpointer.domain.comment.dto.CommentResponse">
         SELECT c.id,
                c.card_id,
+               c.parent_id,
+               c.writer_id,
                c.content,
                c.created_at,
                c.updated_at,
-               c.writer_id,
                u.nickname    AS writerName,
                u.profile_img AS writerProfileImg,
                u.email       AS writerEmail
@@ -46,11 +47,13 @@
             keyProperty="id">
         INSERT INTO comment (card_id,
                              writer_id,
+                             parent_id,
                              content,
                              created_at,
                              updated_at)
         VALUES (#{cardId},
                 #{writerId},
+                #{parentId},
                 #{content},
                 NOW(),
                 NOW())

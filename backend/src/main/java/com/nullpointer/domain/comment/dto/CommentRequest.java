@@ -11,5 +11,6 @@ public class CommentRequest {
     private Long id;
     private Long cardId;
     private Long writerId;
+    private Long parentId;
     private String content;
 }
