@@ -108,6 +108,7 @@
                 <id property="id" column="card_id"/>
                 <result property="title" column="card_title"/>
                 <result property="description" column="card_desc"/>
+                <result property="priority" column="card_priority"/>
                 <result property="orderIndex" column="card_order"/>
                 <result property="startDate" column="card_start_date"/>
                 <result property="dueDate" column="card_due_date"/>
@@ -153,6 +154,7 @@
                c.id           AS card_id,
                c.title        AS card_title,
                c.description  AS card_desc,
+               c.priority     AS card_priority,
                c.order_index  AS card_order,
                c.start_date   AS card_start_date,
                c.due_date     AS card_due_date,

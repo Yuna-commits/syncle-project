@@ -64,19 +64,20 @@ function BoardList({ column, innerRef, boardId }) {
   return (
     <div
       data-id={column.id}
-      className={`flex h-full max-h-full w-72 shrink-0 flex-col rounded-xl p-2 shadow-sm ring-1 transition-all ${containerStyle}`}
+      className={`flex h-full max-h-full w-72 shrink-0 flex-col rounded-xl p-2 shadow-sm ring-1 transition-all ${containerStyle} ${!isDoneList ? 'draggable-list' : ''}`}
     >
       {/* 드래그 전용 핸들바 (Drag Handle)
         - board-list-header 클래스를 여기에만 적용합니다.
-        - 제목 입력창과 분리되어 있어 드래그가 씹히지 않습니다.
       */}
-      <div
-        className="board-list-header group flex h-5 w-full cursor-grab items-center justify-center rounded-t-md hover:bg-gray-200/80 active:cursor-grabbing"
-        title="이곳을 잡고 리스트를 이동하세요"
-      >
-        {/* 시각적 힌트: 작은 막대기 아이콘 */}
-        <div className="h-1 w-8 rounded-full bg-gray-300 transition-colors group-hover:bg-gray-400"></div>
-      </div>
+      {!isDoneList && (
+        <div
+          className="board-list-header group flex h-5 w-full cursor-grab items-center justify-center rounded-t-md hover:bg-gray-200/80 active:cursor-grabbing"
+          title="이곳을 잡고 리스트를 이동하세요"
+        >
+          {/* 시각적 힌트: 작은 막대기 아이콘 */}
+          <div className="h-1 w-8 rounded-full bg-gray-300 transition-colors group-hover:bg-gray-400"></div>
+        </div>
+      )}
 
       {/* === 리스트 헤더 영역 (제목 + 메뉴) === */}
       <div className="relative mb-2 flex items-center justify-between px-2 pt-1">

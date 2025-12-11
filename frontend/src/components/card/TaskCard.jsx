@@ -3,6 +3,20 @@ import useBoardStore from '../../stores/useBoardStore'
 import { CheckCircle, Clock } from 'lucide-react'
 import { getDateStatusStyle } from '../../utils/dateUtils'
 
+// [추가] 우선순위 스타일 매핑
+const PRIORITY_STYLES = {
+  HIGH: 'bg-red-100 text-red-700 border-red-200',
+  MEDIUM: 'bg-orange-100 text-orange-700 border-orange-200',
+  LOW: 'bg-green-100 text-green-700 border-green-200',
+}
+
+// [추가] 우선순위 라벨 매핑 (한글)
+const PRIORITY_LABELS = {
+  HIGH: '높음',
+  MEDIUM: '보통',
+  LOW: '낮음',
+}
+
 /**
  * 1개의 카드 렌더링
  */
@@ -13,6 +27,9 @@ function TaskCard({ task }) {
   const { bg, border, text, dateLabel } = getDateStatusStyle(task.dueDate)
 
   const isDone = task.isComplete
+
+  // [추가] 우선순위 스타일 가져오기
+  const priorityStyle = task.priority ? PRIORITY_STYLES[task.priority] : null
 
   return (
     <div
@@ -27,11 +44,23 @@ function TaskCard({ task }) {
         )}
 
         {/* 제목에 취소선 적용 */}
-        <h4
-          className={`text-sm leading-snug font-medium text-gray-800 ${isDone ? 'text-gray-400 line-through' : ''}`}
-        >
-          {task.title}
-        </h4>
+        <div className="flex flex-1 items-start justify-between gap-2">
+          {/* 제목 */}
+          <h4
+            className={`text-sm leading-snug font-medium break-all text-gray-800 ${isDone ? 'text-gray-400 line-through' : ''}`}
+          >
+            {task.title}
+          </h4>
+
+          {/* [수정] 우선순위 뱃지 (제목 오른쪽으로 이동, shrink-0으로 크기 유지) */}
+          {task.priority && !isDone && (
+            <span
+              className={`shrink-0 rounded border px-1.5 py-0.5 text-[10px] font-bold ${priorityStyle}`}
+            >
+              {PRIORITY_LABELS[task.priority]}
+            </span>
+          )}
+        </div>
       </div>
 
       {/* 하단 정보 */}

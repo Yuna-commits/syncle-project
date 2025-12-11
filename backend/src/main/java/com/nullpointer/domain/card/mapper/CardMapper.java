@@ -37,12 +37,15 @@ public interface CardMapper {
     // 카드 수정
     void updateCard(CardVo cardVo);
 
+    // 카드 삭제
+    void deleteCard(Long cardId);
+
     // 담당자 변경
     void updateCardAssignee(@Param("cardId") Long cardId, @Param("assigneeId") Long assineeId);
 
     // 마감일 초기화
     void deleteCardDates(Long cardId);
 
-    // 카드 삭제
-    void deleteCard(Long cardId);
+    // 우선순위 초기화
+    void deleteCardPriority(Long cardId);
 }

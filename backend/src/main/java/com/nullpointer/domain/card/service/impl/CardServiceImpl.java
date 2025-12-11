@@ -154,6 +154,12 @@ public class CardServiceImpl implements CardService {
         // 업데이트 진행
         cardMapper.updateCard(updateVo);
 
+        // 우선순위 초기화 요청 처리
+        if (Boolean.TRUE.equals(req.getRemovePriority())) {
+            cardMapper.deleteCardPriority(cardId);
+        }
+        
+        // 마감일 초기화 요청 처리
         if (Boolean.TRUE.equals(req.getRemoveDate())) {
             cardMapper.deleteCardDates(cardId);
         }

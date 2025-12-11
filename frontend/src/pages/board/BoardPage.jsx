@@ -23,7 +23,6 @@ function BoardPage() {
   const { selectedCard, isSettingsOpen, resetBoard } = useBoardStore()
 
   // 데이터 조회는 React Query 훅 사용
-  // 로딩, 에러, 데이터(activeBoard)를 여기서 바로 받습니다.
   const { data: activeBoard, isLoading, error } = useBoardQuery(boardId)
 
   // 2. 데이터 변경 (React Query Mutation)
@@ -53,6 +52,8 @@ function BoardPage() {
       direction: 'horizontal', // 가로 방향 정렬
       animation: 250,
       easing: 'cubic-bezier(0.25, 1, 0.5, 1)',
+      // .draggable-list 클래스가 있는 요소만 드래그/정렬 가능
+      draggable: '.draggable-list',
 
       // 리스트 헤더(.board-list-header)를 잡았을 때만 드래그 가능
       handle: '.board-list-header',

@@ -40,6 +40,7 @@
         SELECT c.id,
                c.list_id                     AS listId,
                c.title,
+               c.priority,
                c.description,
                c.order_index                 AS orderIndex,
                c.due_date                    AS dueDate,
@@ -80,6 +81,7 @@
         SELECT c.id,
                c.list_id                     AS listId,
                c.title,
+               c.priority,
                c.description,
                c.order_index                 AS orderIndex,
                c.is_complete                 AS isComplete,
@@ -146,4 +148,11 @@
           AND deleted_at IS NULL
     </update>
 
+    <!-- 우선순위 초기화 -->
+    <update id="deleteCardPriority">
+        UPDATE card
+        SET priority = NULL
+        WHERE id = #{cardId}
+          AND deleted_at IS NULL
+    </update>
 </mapper>

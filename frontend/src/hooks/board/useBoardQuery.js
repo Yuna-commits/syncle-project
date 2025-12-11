@@ -80,6 +80,7 @@ const normalizeBoardData = (dto) => {
         listId: list.id,
         title: card.title,
         description: card.description,
+        priority: card.priority,
         order: card.orderIndex,
         startDate: card.startDate,
         dueDate: card.dueDate,

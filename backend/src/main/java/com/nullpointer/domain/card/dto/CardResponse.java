@@ -2,6 +2,7 @@ package com.nullpointer.domain.card.dto;
 
 import com.fasterxml.jackson.annotation.JsonFormat;
 import com.nullpointer.domain.card.vo.CardVo;
+import com.nullpointer.domain.card.vo.enums.Priority;
 import com.nullpointer.domain.checklist.vo.ChecklistVo;
 import com.nullpointer.domain.comment.dto.CommentResponse;
 import lombok.*;
@@ -21,6 +22,7 @@ public class CardResponse {
     private Long listId;
     private String title;
     private String description;
+    private Priority priority;
     private Integer orderIndex;
 
     @JsonFormat(pattern = "yyyy-MM-dd")
