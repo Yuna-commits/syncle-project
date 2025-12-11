@@ -37,6 +37,7 @@ public class SecurityConfig {
                 .authorizeHttpRequests(auth -> auth
                         .requestMatchers("/api/auth/**").permitAll() // 로그인, 회원가입, 토큰 재발급
                         .requestMatchers("/api/users/check-*").permitAll() // 중복 확인
+                        .requestMatchers("/api/users/reactivate").permitAll()
                         // Swagger 경로 허용
                         .requestMatchers("/v3/api-docs/**", "/swagger-ui/**", "/swagger-ui.html").permitAll()
                         .anyRequest().authenticated()

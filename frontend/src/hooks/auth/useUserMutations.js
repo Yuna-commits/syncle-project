@@ -27,6 +27,18 @@ export const useUserMutations = () => {
 
   // --- 사용자 정보 관리 ---
 
+  // 로그아웃 (내부 정의)
+  const logoutMutation = useMutation({
+    mutationFn: authApi.logout,
+    onSettled: () => {
+      localStorage.clear()
+      sessionStorage.clear()
+      queryClient.setQueryData(['user', 'me'], null)
+      alert('로그아웃 되었습니다.')
+      navigate('/auth/signin')
+    },
+  })
+
   // 프로필 수정
   const updateProfileMutation = useMutation({
     mutationFn: userApi.updateProfile,
@@ -43,7 +55,7 @@ export const useUserMutations = () => {
     mutationFn: userApi.changePassword,
     onSuccess: () => {
       alert('비밀번호가 변경되었습니다. 다시 로그인해주세요.')
-      authApi.logoutMutation.mutate()
+      logoutMutation.mutate()
     },
     onError: (err) =>
       alert(err.response?.data?.message || '비밀번호 변경 실패'),
@@ -54,7 +66,7 @@ export const useUserMutations = () => {
     mutationFn: userApi.deactivateUser,
     onSuccess: () => {
       alert('계정이 비활성화되었습니다.')
-      authApi.logoutMutation.mutate()
+      logoutMutation.mutate()
     },
     onError: () => alert('비활성화 실패'),
   })
@@ -64,12 +76,13 @@ export const useUserMutations = () => {
     mutationFn: userApi.deleteUser,
     onSuccess: () => {
       alert('계정이 영구 삭제되었습니다.')
-      authApi.logoutMutation.mutate()
+      logoutMutation.mutate()
     },
     onError: () => alert('계정 삭제 실패'),
   })
 
   return {
+    logout: logoutMutation.mutate,
     updateProfile: (data, options) =>
       checkIsVerified() && updateProfileMutation.mutate(data, options),
     changePassword: (data) =>

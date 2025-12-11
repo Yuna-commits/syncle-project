@@ -1,31 +1,53 @@
-import { useEffect, useState } from 'react'
+import { useState } from 'react'
 import FormModal from '../../components/modals/FormModal'
-import useUserStore from '../../stores/useUserStore'
+import { useAuthQuery } from '../../hooks/auth/useAuthQuery'
+import { useUserMutations } from '../../hooks/auth/useUserMutations'
+import { useAuthMutations } from '../../hooks/auth/useAuthMutations'
+import {
+  AlertTriangle,
+  Ban,
+  CheckCircle2,
+  Globe,
+  Key,
+  Laptop,
+  LogOut,
+  Mail,
+  ShieldCheck,
+  Smartphone,
+  Trash2,
+  XCircle,
+} from 'lucide-react'
 
 export default function SecurityPage() {
-  // 임시 데이터 (삭제 | api 추가 필요)
+  // 임시 데이터 (로그인 활동 내역)
   const loginActivities = [
-    { device: 'Chrome — Windows', time: '2025/11/14 10:23', active: true },
-    { device: 'Safari — iPhone', time: '2025/11/13 22:10', active: false },
+    {
+      id: 1,
+      device: 'Chrome — Windows',
+      location: 'Seoul, KR',
+      time: '2025/11/14 10:23',
+      active: true,
+      icon: <Laptop size={20} />,
+    },
+    {
+      id: 2,
+      device: 'Safari — iPhone',
+      location: 'Busan, KR',
+      time: '2025/11/13 22:10',
+      active: false,
+      icon: <Smartphone size={20} />,
+    },
   ]
 
-  const {
-    user,
-    isLoading,
-    fetchUser,
-    changePassword,
-    deactivateUser,
-    deleteUser,
-    logout,
-    resendVerificationEmail,
-  } = useUserStore()
+  // 사용자 정보 조회
+  const { data: user, isLoading } = useAuthQuery()
+
+  // 기능
+  const { logout, changePassword, deactivateUser, deleteUser } =
+    useUserMutations()
+  const { sendEmailVerification } = useAuthMutations()
 
   const [isPwModalOpen, setPwModalOpen] = useState(false)
-
-  // 마운트될 때마다 프로필 정보 가져오기
-  useEffect(() => {
-    fetchUser()
-  }, [fetchUser])
 
   // 정보 조회 성공 여부 표시
   if (isLoading && !user) {
@@ -45,164 +67,166 @@ export default function SecurityPage() {
   }
 
   // 핸들러
-  const handleChangePassword = async (values) => {
-    // values: {currentPassword, newPassword, confirmPassword}
-    const success = await changePassword({
-      currentPassword: values.currentPassword,
-      newPassword: values.newPassword,
+  const handleChangePassword = (formData) => {
+    // formData: {currentPassword, newPassword, confirmPassword}
+    changePassword(formData, {
+      onSuccess: () => {
+        setPwModalOpen(false)
+      },
     })
-
-    if (success) setPwModalOpen(false)
   }
 
-  const handleDeactivate = async () => {
-    if (
-      window.confirm('정말 계정을 비활성화하시겠습니까?\n로그인이 제한됩니다.')
-    )
-      await deactivateUser()
-  }
-
-  const handleDelete = async () => {
-    if (window.confirm('정말 탈퇴하시겠습니까?\n이 작업은 되돌릴 수 없습니다.'))
-      await deleteUser()
-  }
-
-  const handleResendEmail = async () => {
-    await resendVerificationEmail()
-  }
+  const isVerified = user.verifyStatus === 'VERIFIED'
+  const isLocal = user.provider === 'LOCAL'
 
   return (
-    <div className="animate-fade-in mx-auto max-w-3xl p-4 pb-20 md:p-6 md:pb-24">
-      <div className="mb-8">
-        <h2 className="text-2xl font-bold text-gray-900">보안 설정</h2>
-        <p className="mt-2 text-gray-500">비밀번호와 계정 보안을 관리하세요.</p>
+    <div className="animate-fade-in mx-auto w-full max-w-4xl space-y-8 p-8 pb-20">
+      {/* 헤더 */}
+      <div className="flex items-center gap-4">
+        <div className="flex h-16 w-16 items-center justify-center rounded-2xl bg-white text-blue-600 shadow-sm">
+          <ShieldCheck size={32} />
+        </div>
+        <div>
+          <h2 className="text-3xl font-bold text-gray-900">보안 설정</h2>
+          <p className="mt-1 text-gray-500">
+            계정 보안 및 로그인 활동을 관리합니다.
+          </p>
+        </div>
       </div>
 
-      <div className="space-y-6">
-        {/* 1) 기본 보안 (비밀번호 & 이메일) */}
-        <div className="rounded-3xl bg-white p-6 shadow-sm ring-1 ring-gray-300">
+      <div className="flex flex-col gap-5">
+        {/* 1. 이메일 인증 */}
+        <div className="rounded-2xl border border-gray-300 bg-white p-6 shadow-sm">
           <h3 className="mb-4 flex items-center gap-2 text-lg font-bold text-gray-900">
-            <svg
-              xmlns="http://www.w3.org/2000/svg"
-              fill="none"
-              viewBox="0 0 24 24"
-              strokeWidth={1.5}
-              stroke="currentColor"
-              className="h-5 w-5 text-gray-600"
-            >
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                d="M16.5 10.5V6.75a4.5 4.5 0 10-9 0v3.75m-.75 11.25h10.5a2.25 2.25 0 002.25-2.25v-6.75a2.25 2.25 0 00-2.25-2.25H6.75a2.25 2.25 0 00-2.25 2.25v6.75a2.25 2.25 0 002.25 2.25z"
-              />
-            </svg>
-            로그인 및 보안
+            <Mail size={20} className="text-gray-500" />
+            이메일 인증
           </h3>
-
-          <div className="divide-y divide-gray-200">
-            {/* 비밀번호 변경 - 소셜 로그인 사용자는 사용 x */}
-            <div className="flex items-center justify-between py-4">
+          <div className="flex flex-col gap-4">
+            <div className="flex items-center justify-between rounded-lg bg-gray-50 p-4">
               <div>
-                <p className="font-medium text-gray-800">비밀번호</p>
-                <p className="text-sm text-gray-500">
-                  {user.provider === 'LOCAL'
-                    ? '정기적으로 비밀번호를 변경하여 계정을 안전하게 보호하세요.'
-                    : '현재 Google 계정으로 로그인 중입니다.'}
+                <p className="text-sm font-medium text-gray-800">
+                  {user.email}
                 </p>
-              </div>
-              {user.provider === 'LOCAL' ? (
-                <button
-                  onClick={() => setPwModalOpen(true)}
-                  className="rounded-lg border border-gray-300 px-4 py-2 text-sm font-medium text-gray-700 transition-colors hover:cursor-pointer hover:bg-gray-200"
+                <p
+                  className={`mt-1 flex items-center gap-1.5 text-xs font-medium ${
+                    isVerified ? 'text-green-600' : 'text-red-500'
+                  }`}
                 >
-                  변경
-                </button>
-              ) : (
-                ''
-              )}
-            </div>
-
-            {/* 이메일 인증 */}
-            <div className="flex items-center justify-between py-4">
-              <div>
-                <p className="font-medium text-gray-800">이메일 인증</p>
-                <div className="mt-1 flex items-center gap-2">
-                  <span className="text-sm text-gray-600">{user.email}</span>
-                  {user.verifyStatus === 'VERIFIED' ? (
-                    <span className="rounded-full bg-green-100 px-2 py-0.5 text-xs font-semibold text-green-700">
-                      인증됨
-                    </span>
+                  {isVerified ? (
+                    <>
+                      <CheckCircle2 size={12} /> 인증 완료됨
+                    </>
                   ) : (
-                    <span className="rounded-full bg-red-100 px-2 py-0.5 text-xs font-semibold text-red-700">
-                      미인증
-                    </span>
+                    <>
+                      <XCircle size={12} /> 인증되지 않음
+                    </>
                   )}
-                </div>
+                </p>
               </div>
-              {user.verifyStatus !== 'VERIFIED' && (
+              {!isVerified && (
                 <button
-                  onClick={handleResendEmail}
-                  className="rounded-lg border border-gray-300 px-4 py-2 text-sm font-medium text-gray-700 transition-colors hover:cursor-pointer hover:bg-gray-200"
+                  onClick={() => sendEmailVerification(user.email)}
+                  className="rounded-lg bg-white px-3 py-1.5 text-xs font-semibold text-blue-600 shadow-sm ring-1 ring-gray-200 transition-colors hover:bg-blue-50 hover:ring-blue-300"
                 >
-                  인증 메일 재전송
+                  인증 메일 발송
                 </button>
               )}
             </div>
+            <p className="text-xs text-gray-500">
+              안전한 계정 사용을 위해 이메일 인증을 완료해주세요.
+            </p>
+          </div>
+        </div>
 
-            {/* 소셜 계정 연동 상태 */}
-            <div className="flex items-center justify-between py-4">
-              <div>
-                <p className="font-medium text-gray-800">소셜 계정 연동</p>
-                <p className="text-sm text-gray-500">
-                  {user.provider === 'GOOGLE'
-                    ? '구글 계정으로 로그인 중입니다.'
-                    : '연동된 소셜 계정이 없습니다.'}
-                </p>
-              </div>
-              {user.provider === 'GOOGLE' && (
-                <span className="flex items-center gap-1 rounded-full bg-blue-100 px-3 py-1 text-xs font-medium text-blue-600">
-                  <svg
-                    className="h-3 w-3"
-                    viewBox="0 0 24 24"
-                    fill="currentColor"
-                  >
-                    <path d="M12.545,10.239v3.821h5.445c-0.712,2.315-2.647,3.972-5.445,3.972c-3.332,0-6.033-2.701-6.033-6.032s2.701-6.032,6.033-6.032c1.498,0,2.866,0.549,3.921,1.453l2.814-2.814C17.503,2.988,15.139,2,12.545,2C7.021,2,2.543,6.477,2.543,12s4.478,10,10.002,10c8.396,0,10.249-7.85,9.426-11.748L12.545,10.239z" />
-                  </svg>
-                  Google 연동됨
-                </span>
-              )}
+        {/* 2. 비밀번호 변경 */}
+        <div className="rounded-2xl border border-gray-300 bg-white p-6 shadow-sm">
+          <h3 className="mb-4 flex items-center gap-2 text-lg font-bold text-gray-900">
+            <Key size={20} className="text-gray-500" />
+            비밀번호
+          </h3>
+          <div className="justify-betwee flex items-center rounded-lg bg-gray-100 p-4">
+            <div>
+              <p className="text-sm font-medium text-gray-800">비밀번호 변경</p>
+              <p className="mt-1 text-xs text-gray-500">
+                {isLocal
+                  ? '정기적으로 비밀번호를 변경하여 계정을 안전하게 보호하세요.'
+                  : '현재 Google 계정으로 로그인 중입니다.'}
+              </p>
             </div>
+            {isLocal && (
+              <button
+                onClick={() => setPwModalOpen(true)}
+                className="rounded-lg border border-gray-300 bg-white px-4 py-2 text-sm font-semibold text-gray-700 transition-colors hover:bg-gray-50"
+              >
+                변경하기
+              </button>
+            )}
+          </div>
+        </div>
+
+        {/* 3. 소셜 계정 연동 */}
+        <div className="rounded-2xl border border-gray-300 bg-white p-6 shadow-sm">
+          <h3 className="mb-2 flex items-center gap-2 text-lg font-bold text-gray-900">
+            <Globe size={20} className="text-gray-500" />
+            소셜 계정
+          </h3>
+          <div className="flex items-center justify-between rounded-lg bg-gray-100 p-4 py-2">
+            <div>
+              <p className="text-sm font-medium text-gray-800">
+                소셜 계정 연동
+              </p>
+              <p className="mt-1 text-xs text-gray-500">
+                {user.provider === 'GOOGLE'
+                  ? '구글 계정으로 로그인 중입니다.'
+                  : '연동된 소셜 계정이 없습니다.'}
+              </p>
+            </div>
+            {user.provider === 'GOOGLE' && (
+              <span className="flex items-center gap-1 rounded-full bg-blue-100 px-3 py-1 text-xs font-medium text-blue-600">
+                <svg
+                  className="h-3 w-3"
+                  viewBox="0 0 24 24"
+                  fill="currentColor"
+                >
+                  <path d="M12.545,10.239v3.821h5.445c-0.712,2.315-2.647,3.972-5.445,3.972c-3.332,0-6.033-2.701-6.033-6.032s2.701-6.032,6.033-6.032c1.498,0,2.866,0.549,3.921,1.453l2.814-2.814C17.503,2.988,15.139,2,12.545,2C7.021,2,2.543,6.477,2.543,12s4.478,10,10.002,10c8.396,0,10.249-7.85,9.426-11.748L12.545,10.239z" />
+                </svg>
+                Google 연동됨
+              </span>
+            )}
           </div>
         </div>
 
         {/* 추가) 2단계 인증 - 보류*/}
 
-        {/* 추가) 로그인 기록 - 보류 */}
-        <div className="rounded-3xl bg-white p-6 shadow-sm ring-1 ring-gray-300">
-          <h4 className="mb-4 text-lg font-semibold text-gray-800">
-            로그인 활동
-          </h4>
-
+        {/* 4. 로그인 활동 - 보류 */}
+        <div className="rounded-2xl border border-gray-300 bg-white p-6 shadow-sm">
+          <div className="mb-4 flex items-center justify-between">
+            <h3 className="flex items-center gap-2 text-lg font-bold text-gray-900">
+              <Smartphone size={20} className="text-gray-500" />
+              로그인 활동
+            </h3>
+          </div>
           <div className="space-y-4">
-            {loginActivities.map((act, idx) => (
+            {loginActivities.map((activity) => (
               <div
-                key={idx}
-                className="flex items-center justify-between border-b border-gray-200 pb-3 last:border-none"
+                key={activity.id}
+                className="flex items-start justify-between border-b border-gray-100 pb-4 last:border-0 last:pb-0"
               >
-                <div>
-                  <p className="text-sm font-medium text-gray-800">
-                    {act.device}
-                  </p>
-                  <p className="text-xs text-gray-500">{act.time}</p>
+                <div className="flex items-start gap-3">
+                  <div className="mt-1 text-gray-400">{activity.icon}</div>
+                  <div>
+                    <p className="text-sm font-medium text-gray-800">
+                      {activity.device}
+                    </p>
+                    <p className="text-xs text-gray-500">
+                      {activity.location} • {activity.time}
+                    </p>
+                  </div>
                 </div>
-
-                {act.active ? (
-                  <span className="rounded-full bg-green-100 px-3 py-1 text-xs text-green-700">
-                    현재 세션
-                  </span>
-                ) : (
-                  <span className="rounded-full bg-gray-200 px-3 py-1 text-xs text-gray-600">
-                    로그아웃됨
+                {activity.active && (
+                  <span className="flex items-center gap-1.5 rounded-full bg-green-50 px-2 py-0.5 text-[10px] font-bold text-green-600">
+                    <span className="h-1.5 w-1.5 rounded-full bg-green-500"></span>
+                    현재 활동 중
                   </span>
                 )}
               </div>
@@ -210,50 +234,30 @@ export default function SecurityPage() {
           </div>
         </div>
 
-        {/* 3) 위험 구역 */}
-        <div className="rounded-3xl border border-red-300 bg-red-50/50 p-6">
+        {/* 5. 위험 구역 */}
+        <div className="rounded-2xl border border-red-200 bg-red-50 p-6 shadow-sm">
           <h3 className="mb-4 flex items-center gap-2 text-lg font-bold text-red-700">
-            <svg
-              xmlns="http://www.w3.org/2000/svg"
-              fill="none"
-              viewBox="0 0 24 24"
-              strokeWidth={1.5}
-              stroke="currentColor"
-              className="h-5 w-5"
-            >
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                d="M12 9v3.75m-9.303 3.376c-.866 1.5.217 3.374 1.948 3.374h14.71c1.73 0 2.813-1.874 1.948-3.374L13.949 3.378c-.866-1.5-3.032-1.5-3.898 0L2.697 16.126zM12 15.75h.007v.008H12v-.008z"
-              />
-            </svg>
+            <AlertTriangle size={20} />
             위험 구역
           </h3>
-
           <div className="space-y-4">
-            {/* 로그아웃 */}
+            {/* 로그아웃 버튼 */}
             <div className="flex items-center justify-between rounded-xl border border-red-200 bg-white p-4">
               <div>
-                <p className="font-medium text-gray-800">
-                  모든 기기에서 로그아웃
-                </p>
+                <p className="font-medium text-gray-800">모두 로그아웃</p>
                 <p className="text-xs text-gray-500">
-                  현재 접속 중인 기기를 포함해 모두 로그아웃됩니다.
+                  모든 기기에서 로그아웃합니다.
                 </p>
               </div>
               <button
-                onClick={async () => {
-                  if (window.confirm('모든 기기에서 로그아웃 하시겠습니까?')) {
-                    await logout()
-                  }
-                }}
-                className="rounded-lg border border-red-300 px-3 py-1.5 text-sm font-medium text-red-600 transition-colors hover:cursor-pointer hover:bg-red-200"
+                onClick={() => logout()}
+                className="flex items-center gap-1.5 rounded-lg border border-red-200 px-3 py-1.5 text-sm font-medium text-red-600 transition-colors hover:cursor-pointer hover:bg-red-100"
               >
+                <LogOut size={16} />
                 로그아웃
               </button>
             </div>
 
-            {/* 비활성화 */}
             <div className="flex items-center justify-between rounded-xl border border-red-200 bg-white p-4">
               <div>
                 <p className="font-medium text-gray-800">계정 비활성화</p>
@@ -262,14 +266,14 @@ export default function SecurityPage() {
                 </p>
               </div>
               <button
-                onClick={handleDeactivate}
-                className="rounded-lg border border-red-300 px-3 py-1.5 text-sm font-medium text-red-600 transition-colors hover:cursor-pointer hover:bg-red-200"
+                onClick={() => deactivateUser()}
+                className="flex items-center gap-1.5 rounded-lg border border-red-200 px-3 py-1.5 text-sm font-medium text-red-600 transition-colors hover:cursor-pointer hover:bg-red-100"
               >
+                <Ban size={16} />
                 비활성화
               </button>
             </div>
 
-            {/* 계정 삭제 */}
             <div className="flex items-center justify-between rounded-xl border border-red-200 bg-white p-4">
               <div>
                 <p className="font-medium text-gray-800">계정 영구 삭제</p>
@@ -278,9 +282,10 @@ export default function SecurityPage() {
                 </p>
               </div>
               <button
-                onClick={handleDelete}
-                className="rounded-lg bg-red-600 px-3 py-1.5 text-sm font-medium text-white shadow-sm transition-colors hover:cursor-pointer hover:bg-red-800"
+                onClick={() => deleteUser()}
+                className="flex items-center gap-1.5 rounded-lg bg-red-600 px-3 py-1.5 text-sm font-medium text-white shadow-sm transition-colors hover:cursor-pointer hover:bg-red-700"
               >
+                <Trash2 size={16} />
                 계정 삭제
               </button>
             </div>
@@ -297,12 +302,19 @@ export default function SecurityPage() {
               label: '현재 비밀번호',
               name: 'currentPassword',
               type: 'password',
+              placeholder: '현재 비밀번호를 입력해주세요.',
             },
-            { label: '새 비밀번호', name: 'newPassword', type: 'password' },
+            {
+              label: '새 비밀번호',
+              name: 'newPassword',
+              type: 'password',
+              placeholder: '영문과 숫자를 포함하여 8자 이상 입력해주세요.',
+            },
             {
               label: '새 비밀번호 확인',
               name: 'confirmPassword',
               type: 'password',
+              placeholder: '새 비밀번호를 다시 입력해주세요.',
             },
           ]}
           onSubmit={handleChangePassword}

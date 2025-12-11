@@ -107,6 +107,7 @@ export const useAuthMutations = () => {
       localStorage.clear()
       sessionStorage.clear()
       queryClient.setQueryData(['user', 'me'], null)
+      alert('로그아웃 되었습니다.')
       navigate('/auth/signin')
     },
   })

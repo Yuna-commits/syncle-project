@@ -10,7 +10,6 @@ import { useBoardQuery } from '../../hooks/board/useBoardQuery'
 import { useCardMutations } from '../../hooks/card/useCardMutations'
 import { useListMutations } from '../../hooks/useListMutations'
 import useBoardStore from '../../stores/useBoardStore'
-import useUserStore from '../../stores/useUserStore'
 
 /**
  * 보드 데이터 로딩,
@@ -34,20 +33,11 @@ function BoardPage() {
   // 권한 계산
   const { canEdit } = useBoardPermission(activeBoard)
 
-  const { user, fetchUser } = useUserStore()
-
   // 각 리스트(컬럼)의 DOM 요소를 참조하기 위한 Ref 객체
   const columnRefs = useRef({})
 
   // 리스트 컨테이너 Ref
   const listContainerRef = useRef(null)
-
-  // 컴포넌트 마운트 시 유저 정보가 없으면 불러오기
-  useEffect(() => {
-    if (!user) {
-      fetchUser()
-    }
-  }, [user, fetchUser])
 
   // 4. 언마운트 시 스토어 초기화
   useEffect(() => {

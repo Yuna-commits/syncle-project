@@ -1,5 +1,6 @@
 import React from 'react'
 import defaultProfile from '../../assets/images/default.png'
+import { Pencil } from 'lucide-react'
 
 function ProfileHeader({ user, onEdit }) {
   return (
@@ -48,9 +49,9 @@ function ProfileHeader({ user, onEdit }) {
           <div className="mt-6 sm:mt-0">
             <button
               onClick={onEdit}
-              className="inline-flex items-center gap-2 rounded-lg bg-white px-5 py-2.5 text-sm font-semibold text-gray-700 shadow-sm ring-1 ring-gray-300 transition-colors ring-inset hover:cursor-pointer hover:bg-gray-50"
+              className="inline-flex items-center gap-2 rounded-lg bg-white px-3 py-2.5 text-sm font-semibold text-gray-600 shadow-sm ring-1 ring-gray-300 transition-colors ring-inset hover:cursor-pointer hover:bg-gray-50"
             >
-              프로필 수정
+              <Pencil size={18} /> 프로필 수정
             </button>
           </div>
         </div>

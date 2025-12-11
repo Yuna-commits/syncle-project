@@ -11,7 +11,7 @@ import {
 } from 'lucide-react'
 import { useNavigate } from 'react-router-dom'
 import { useMemberMutations } from '../../../hooks/useMemberMutations'
-import useUserStore from '../../../stores/useUserStore'
+import { useAuthQuery } from '../../../hooks/auth/useAuthQuery'
 
 function MainMenuView({
   board,
@@ -21,7 +21,7 @@ function MainMenuView({
   isExplicitMember,
 }) {
   const navigate = useNavigate()
-  const { user } = useUserStore()
+  const { data: user } = useAuthQuery()
 
   // 멤버 추방/탈퇴
   const { removeMember } = useMemberMutations(board.id)

@@ -1,10 +1,10 @@
 import { ChevronDown, X } from 'lucide-react'
 import { useMemberMutations } from '../../../hooks/useMemberMutations'
-import useUserStore from '../../../stores/useUserStore'
+import { useAuthQuery } from '../../../hooks/auth/useAuthQuery'
 
 function MembersView({ board, isOwner }) {
   const { changeMemberRole, removeMember } = useMemberMutations(board.id)
-  const { user } = useUserStore()
+  const { data: user } = useAuthQuery()
 
   const isPrivate = board?.visibility === 'PRIVATE'
 

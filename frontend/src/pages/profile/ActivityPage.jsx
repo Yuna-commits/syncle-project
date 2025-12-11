@@ -1,55 +1,81 @@
-import React, { useEffect, useState } from 'react'
+import React, { useEffect, useRef, useState } from 'react'
 import { format } from 'date-fns'
 import SummaryItem from '../../components/activity_log/SummaryItem'
 import BoardCard from '../../components/activity_log/BoardCard'
 import DateRangePickerMenu from '../../components/modals/DateRangePickerMenu'
-import useActivityStore from '../../stores/useActivityStore'
 import ActivityLogItem from '../../components/activity_log/ActivityLogItem'
+import useActivityFilterStore from '../../stores/useActivityFilterStore'
+import { useActivityQuery } from '../../hooks/useActivityQuery'
+import { CalendarIcon, Filter, RefreshCcw, Search } from 'lucide-react'
 
 export default function ActivityPage() {
-  const {
-    stats,
-    topBoards,
-    logs,
-    isLoading,
-    filter,
-    setFilter,
-    fetchActivityData,
-    reset,
-  } = useActivityStore()
+  // 필터 상태 관리
+  const { filter, setFilter, reset } = useActivityFilterStore()
+
+  // 데이터 조회
+  const { data, isLoading, error, refetch } = useActivityQuery()
+  const { stats, topBoards, logs } = data || {
+    stats: { createdCards7: 0, completedTasks7: 0, comments7: 0 },
+    topBoards: [],
+    logs: [],
+  }
 
   // 날짜 범위 (전체 기간 → null)
   const [range, setLocalRange] = useState(null)
   const [openCalendar, setOpenCalendar] = useState(false)
 
-  // 마운트될 때마다 초기 데이터 로드 & 언마운트 시 리셋
-  useEffect(() => {
-    fetchActivityData()
-    return () => reset()
-  }, [fetchActivityData, reset])
+  // 달력 버튼 위치 참조용
+  const calendarButtonRef = useRef(null)
+  // 메뉴 위치 상태
+  const [calendarPos, setCalendarPos] = useState({ top: 0, right: 0 })
 
-  // 필터(타입, 날짜)가 바뀌면 데이터 다시 로드
+  // 언마운트 시 필터 초기화
   useEffect(() => {
-    fetchActivityData()
-  }, [filter.type, filter.startDate, filter.endDate, fetchActivityData])
+    return () => reset()
+  }, [reset])
+
+  // 달력 토글 핸들러
+  const toggleCalendar = () => {
+    if (!openCalendar && calendarButtonRef.current) {
+      const rect = calendarButtonRef.current.getBoundingClientRect()
+      const windowWidth = window.innerWidth
+      const windowHeight = window.innerHeight
+      const modalHeight = 400 // 예상 높이
+
+      // 1. 세로 위치 (Top)
+      // 아래 공간 부족 시 위로 띄우기
+      let top = rect.bottom + 8
+      if (top + modalHeight > windowHeight) {
+        top = rect.top - modalHeight - 8
+      }
+
+      // 2. 가로 위치 (Right Align)
+      // 화면 전체 너비 - 버튼의 오른쪽 좌표 = 화면 오른쪽 끝에서의 거리
+      const right = windowWidth - rect.right
+
+      setCalendarPos({ top, right })
+    }
+    setOpenCalendar(!openCalendar)
+  }
 
   // 날짜 적용 핸들러 (적용 버튼 클릭 시 실행)
   const handleDateApply = (newRange) => {
-    if (newRange && newRange[0]) {
+    if (newRange && newRange[0].startDate && newRange[0].endDate) {
       setFilter({
         startDate: format(newRange[0].startDate, 'yyyy-MM-dd'),
         endDate: format(newRange[0].endDate, 'yyyy-MM-dd'),
       })
+      setLocalRange(newRange)
     } else {
       setFilter({ startDate: null, endDate: null })
+      setLocalRange(null)
     }
+    setOpenCalendar(false)
   }
 
   // 검색어 엔터 처리
   const handleSearch = (e) => {
-    if (e.key === 'Enter') {
-      fetchActivityData()
-    }
+    setFilter({ keyword: e.target.value })
   }
 
   if (isLoading && !logs.length && !topBoards.length) {
@@ -61,149 +87,136 @@ export default function ActivityPage() {
   }
 
   return (
-    <div className="animate-fade-in mx-auto max-w-5xl p-4 pb-20 md:p-6 md:pb-24">
-      <div className="mb-8">
-        <h2 className="text-2xl font-bold text-gray-900">활동 내역</h2>
-        <p className="mt-2 text-gray-500">
-          나의 모든 활동 기록을 한눈에 확인하세요.
-        </p>
+    <div className="animate-fade-in mx-auto w-full max-w-5xl space-y-8 p-8 pb-20">
+      {/* 헤더 */}
+      <div className="flex items-center justify-between">
+        <div>
+          <h1 className="text-3xl font-bold text-gray-900">활동 내역</h1>
+          <p className="mt-1 text-gray-500">
+            최근 활동과 통계를 한눈에 확인하세요.
+          </p>
+        </div>
+        <button
+          onClick={() => refetch()}
+          className="flex items-center gap-2 rounded-lg border-b border-gray-100 bg-white px-4 py-2 text-sm font-medium text-gray-600 shadow-sm transition-colors hover:cursor-pointer hover:bg-gray-200"
+        >
+          <RefreshCcw size={16} />
+          새로고침
+        </button>
       </div>
 
-      <div className="space-y-6">
-        {/* 1. 활동 요약 (Stats) */}
-        <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
-          <SummaryItem label="생성 카드" value={stats.createdCards7} />
-          <SummaryItem label="완료 작업" value={stats.completedTasks7} />
-          <SummaryItem label="작성 댓글" value={stats.comments7} />
+      {/* 1. 요약 통계 (최근 7일) */}
+      <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
+        <SummaryItem label="생성한 카드" value={stats.createdCards7} />
+        <SummaryItem label="완료한 작업" value={stats.completedTasks7} />
+        <SummaryItem label="작성한 댓글" value={stats.comments7} />
+      </div>
+
+      <div className="flex flex-col gap-8">
+        {/* 2. 자주 찾는 보드 섹션 */}
+        <div className="space-y-6">
+          <div className="rounded-2xl border border-gray-300 bg-white p-6 shadow-sm">
+            <h3 className="mb-4 text-lg font-bold text-gray-900">
+              가장 활발한 보드
+            </h3>
+            {topBoards && topBoards.length > 0 ? (
+              <div className="grid grid-cols-1 gap-4 md:grid-cols-3">
+                {topBoards.map((board) => (
+                  <BoardCard key={board.id} board={board} />
+                ))}
+              </div>
+            ) : (
+              <div className="flex h-32 items-center justify-center rounded-xl bg-gray-50 text-sm text-gray-400">
+                최근 활동한 보드가 없습니다.
+              </div>
+            )}
+          </div>
         </div>
 
-        {/* 2. 인기 보드 (Top Boards) */}
-        <div className="rounded-3xl border border-gray-300 bg-white p-6 shadow-sm">
-          <h3 className="mb-4 text-lg font-bold text-gray-800">
-            가장 활발한 보드
-          </h3>
-
-          {topBoards.length > 0 ? (
-            <div className="grid grid-cols-1 gap-4 md:grid-cols-3">
-              {topBoards.map((board) => (
-                <BoardCard key={board.id} board={board} />
-              ))}
+        {/* 활동 로그 (필터 + 리스트) */}
+        <div className="space-y-6">
+          {/* 필터 바 */}
+          <div className="flex flex-col gap-4 rounded-2xl border border-gray-300 bg-white p-4 shadow-sm sm:flex-row sm:items-center sm:justify-between">
+            {/* 검색창 */}
+            <div className="relative w-full sm:w-64">
+              <div className="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3">
+                <Search size={18} className="text-gray-400" />
+              </div>
+              <input
+                type="text"
+                placeholder="활동 검색..."
+                value={filter.keyword || ''}
+                onChange={handleSearch}
+                className="block w-full rounded-lg border border-gray-300 bg-gray-50 py-2 pr-3 pl-10 text-sm placeholder-gray-400 focus:border-blue-500 focus:bg-blue-50 focus:ring-1 focus:ring-blue-500 focus:outline-none"
+              />
             </div>
-          ) : (
-            <div className="flex h-32 items-center justify-center rounded-xl bg-gray-50 text-sm text-gray-400">
-              최근 활동한 보드가 없습니다.
-            </div>
-          )}
-        </div>
 
-        {/* 3. 타임라인 (Logs) */}
-        <div className="rounded-3xl border border-gray-300 bg-white p-6 shadow-sm">
-          <div className="mb-6 flex flex-col justify-between gap-4 md:flex-row md:items-center">
-            <h3 className="text-lg font-bold text-gray-900">타임라인</h3>
-
-            {/* 필터링 도구 */}
-            <div className="flex flex-col items-center gap-2 sm:flex-row">
-              {/* 검색 */}
-              <div className="relative w-full sm:w-auto">
-                <input
-                  type="text"
-                  placeholder="내용 검색..."
-                  value={filter.keyword}
-                  onChange={(e) => setFilter({ keyword: e.target.value })}
-                  onKeyDown={handleSearch}
-                  className="w-full rounded-lg border border-gray-300 px-3 py-2 pl-9 text-sm focus:border-blue-500 focus:outline-none sm:w-48"
-                />
-                <svg
-                  className="absolute top-1/2 left-3 h-4 w-4 -translate-y-1/2 text-gray-400"
-                  fill="none"
-                  viewBox="0 0 24 24"
-                  stroke="currentColor"
+            <div className="flex items-center gap-2">
+              {/* 유형 필터 - 수정 필요!!! */}
+              <div className="relative">
+                <select
+                  value={filter.type}
+                  onChange={(e) => setFilter({ type: e.target.value })}
+                  className="appearance-none rounded-lg border border-gray-300 bg-gray-50 py-2 pr-8 pl-3 text-sm font-medium text-gray-700 hover:cursor-pointer hover:bg-gray-200 focus:border-blue-500 focus:ring-1 focus:ring-blue-500 focus:outline-none"
                 >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth={2}
-                    d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"
-                  />
-                </svg>
+                  <option value="all">모든 활동</option>
+                  <option value="card_create">카드 생성</option>
+                  <option value="card_update">카드 수정</option>
+                  <option value="comment">댓글</option>
+                </select>
+                <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center px-2 text-gray-500">
+                  <Filter size={14} />
+                </div>
               </div>
 
-              {/* 날짜 선택 */}
+              {/* 날짜 필터 */}
               <div className="relative">
                 <button
-                  onClick={() => setOpenCalendar(!openCalendar)}
-                  className="flex w-full items-center justify-between gap-2 rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm text-gray-600 transition-colors hover:bg-gray-50 sm:w-auto"
+                  ref={calendarButtonRef}
+                  onClick={toggleCalendar}
+                  className={`flex items-center gap-2 rounded-lg border bg-gray-50 px-3 py-2 text-sm font-medium transition-colors hover:cursor-pointer hover:bg-gray-200 ${
+                    filter.startDate
+                      ? 'border-blue-200 bg-blue-50 text-blue-700'
+                      : 'border-gray-300 bg-white text-gray-700 hover:bg-gray-50'
+                  }`}
                 >
+                  <CalendarIcon size={16} />
                   <span>
-                    {filter.startDate && filter.endDate
-                      ? `${format(
-                          new Date(filter.startDate),
-                          'MM.dd',
-                        )} ~ ${format(new Date(filter.endDate), 'MM.dd')}`
-                      : '전체 기간'}
+                    {filter.startDate ? `${filter.startDate} ~` : '전체 기간'}
                   </span>
-                  <svg
-                    className="h-4 w-4 text-gray-400"
-                    fill="none"
-                    viewBox="0 0 24 24"
-                    stroke="currentColor"
-                  >
-                    <path
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      strokeWidth={2}
-                      d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"
-                    />
-                  </svg>
                 </button>
 
+                {/* 캘린더 팝업 */}
                 <DateRangePickerMenu
                   isOpen={openCalendar}
                   onClose={() => setOpenCalendar(false)}
                   range={range}
                   setRange={setLocalRange}
                   onApply={handleDateApply}
+                  position={calendarPos}
                 />
               </div>
-
-              {/* 유형 필터 */}
-              <select
-                value={filter.type}
-                onChange={(e) => setFilter({ type: e.target.value })}
-                className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm text-gray-600 hover:cursor-pointer focus:border-blue-500 focus:outline-none sm:w-auto"
-              >
-                <option value="all">모든 활동</option>
-                <option value="CREATE_CARD">카드 생성</option>
-                <option value="MOVE_CARD">카드 이동</option>
-                <option value="CREATE_COMMENT">댓글 작성</option>
-                <option value="UPDATE_CARD_STATUS">
-                  카드 상태 변경 (완료)
-                </option>
-                <option value="UPDATE_CARD_DUE_DATE">마감일 변경</option>
-                <option value="INVITE_MEMBER">멤버 초대</option>
-              </select>
             </div>
           </div>
 
-          {/* 로그 리스트 */}
-          <div className="space-y-8">
-            {logs.length === 0 ? (
-              <div className="py-20 text-center">
-                <div className="mx-auto mb-2 flex h-12 w-12 items-center justify-center rounded-full bg-gray-100 text-gray-400">
-                  <svg
-                    xmlns="http://www.w3.org/2000/svg"
-                    fill="none"
-                    viewBox="0 0 24 24"
-                    strokeWidth={1.5}
-                    stroke="currentColor"
-                    className="h-6 w-6"
-                  >
-                    <path
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      d="M12 6v6h4.5m4.5 0a9 9 0 11-18 0 9 9 0 0118 0z"
-                    />
-                  </svg>
+          {/* 로그 리스트 - 로그 저장 방식 수정 필요!!! */}
+          <div
+            className={`rounded-2xl border border-gray-300 bg-white p-6 shadow-sm ${
+              isLoading || error || logs.length === 0 ? 'min-h-[400px]' : ''
+            }`}
+          >
+            {isLoading ? (
+              <div className="flex h-64 items-center justify-center">
+                <div className="h-8 w-8 animate-spin rounded-full border-4 border-blue-500 border-t-transparent"></div>
+              </div>
+            ) : error ? (
+              <div className="flex h-64 items-center justify-center text-red-500">
+                데이터를 불러오지 못했습니다.
+              </div>
+            ) : logs.length === 0 ? (
+              <div className="flex h-64 flex-col items-center justify-center gap-2">
+                <div className="flex h-12 w-12 items-center justify-center rounded-full bg-gray-100 text-gray-400">
+                  <Inbox size={24} />
                 </div>
                 <p className="text-gray-500">활동 내역이 없습니다.</p>
               </div>
@@ -211,9 +224,8 @@ export default function ActivityPage() {
               logs.map((group) => (
                 <div
                   key={group.date}
-                  className="relative border-l-2 border-gray-200 pl-4.5"
+                  className="relative mb-6 border-l-2 border-gray-300 pl-4.5 last:mb-0 hover:cursor-pointer"
                 >
-                  {/* 날짜 헤더 */}
                   <div className="mb-4 flex items-center">
                     <div className="mr-4 -ml-[25px] h-3 w-3 rounded-full border border-gray-100 bg-gray-300 ring-4 ring-white"></div>
                     <h4 className="text-sm font-bold text-gray-500">
@@ -221,7 +233,6 @@ export default function ActivityPage() {
                     </h4>
                   </div>
 
-                  {/* 로그 아이템 */}
                   <div className="space-y-3">
                     {group.logs.map((item) => (
                       <ActivityLogItem key={item.id} log={item} />

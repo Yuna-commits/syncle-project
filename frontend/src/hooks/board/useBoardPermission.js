@@ -1,11 +1,11 @@
 import React, { useMemo } from 'react'
-import useUserStore from '../../stores/useUserStore'
+import { useAuthQuery } from '../auth/useAuthQuery'
 
 /**
  * 로그인 사용자의 현재 보드 권한 판단
  */
 function useBoardPermission(board) {
-  const { user } = useUserStore()
+  const { data: user } = useAuthQuery()
 
   const permisions = useMemo(() => {
     // 1. 데이터가 없거나 로그인하지 않은 경우 -> 권한 없음

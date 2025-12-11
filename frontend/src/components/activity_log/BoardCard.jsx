@@ -2,7 +2,7 @@ import React from 'react'
 
 export default function BoardCard({ board }) {
   return (
-    <div className="flex h-full flex-col justify-between rounded-xl border border-gray-300 bg-white p-5 transition hover:shadow-md">
+    <div className="flex h-full flex-col justify-between rounded-xl border border-gray-300 bg-white p-5 shadow-sm transition hover:cursor-pointer hover:shadow-md">
       <div>
         <h5 className="text-base font-semibold text-blue-600">{board.title}</h5>
         <p className="mt-2 line-clamp-2 text-sm text-gray-600">

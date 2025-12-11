@@ -1,4 +1,4 @@
-import React from 'react'
+import React, { useEffect, useRef } from 'react'
 import { ko } from 'date-fns/locale'
 import { DateRange } from 'react-date-range'
 import Portal from '../ui/Portal'
@@ -11,19 +11,41 @@ export default function DateRangePickerMenu({
   onApply,
   position,
 }) {
+  const menuRef = useRef(null)
+
+  // 1. 외부 클릭 감지
+  useEffect(() => {
+    if (!isOpen) return
+
+    function handleClickOutside(event) {
+      // 달력 메뉴 내부를 클릭한 경우는 무시
+      if (menuRef.current && menuRef.current.contains(event.target)) {
+        return
+      }
+      // 외부 클릭 시 닫기
+      onClose()
+    }
+
+    // mousedown 이벤트 사용 (click보다 반응 빠름 & 드래그 이슈 방지)
+    document.addEventListener('mousedown', handleClickOutside)
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside)
+    }
+  }, [isOpen, onClose])
+
   if (!isOpen) return null
 
   return (
     <Portal>
       <div
-        className="fixed inset-0 z-60 hover:cursor-pointer"
-        onClick={onClose}
-      />
-      <div
+        ref={menuRef}
         className="animate-fade-in fixed z-70 overflow-hidden rounded-xl border border-gray-300 bg-white shadow-xl"
         style={{
           top: position?.top ?? 0,
-          left: position?.left ?? 0,
+          // right 값이 있으면 우측 정렬, 없으면 left 사용
+          ...(position?.right !== undefined
+            ? { right: position.right }
+            : { left: position?.left ?? 0 }),
         }}
       >
         <DateRange
