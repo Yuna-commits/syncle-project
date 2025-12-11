@@ -182,7 +182,7 @@ export default function TeamMembersPage() {
                         <div className="flex items-center gap-3">
                           <div className="relative h-10 w-10">
                             <img
-                              src={member.profile_img || defaultProfile}
+                              src={member.profileImg || defaultProfile}
                               alt={member.nickname}
                               className="h-full w-full rounded-full object-cover"
                             />

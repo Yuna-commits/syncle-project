@@ -1,5 +1,6 @@
 package com.nullpointer.domain.card.service.impl;
 
+import com.nullpointer.domain.board.vo.BoardVo;
 import com.nullpointer.domain.card.dto.CardResponse;
 import com.nullpointer.domain.card.dto.CreateCardRequest;
 import com.nullpointer.domain.card.dto.MoveCardRequest;
@@ -158,5 +159,26 @@ public class CardServiceImpl implements CardService {
         }
 
         return cardMapper.findCardDetailById(cardId);
+    }
+
+    // 카드 삭제
+    @Override
+    @Transactional
+    public void deleteCard(Long cardId, Long userId) {
+        // 카드 조회
+        CardVo card = cardMapper.findById(cardId)
+                .orElseThrow(() -> new BusinessException(ErrorCode.CARD_NOT_FOUND));
+
+        // 카드가 속한 리스트 정보로 보드 ID 확인
+        ListVo list = listMapper.findById(card.getListId())
+                .orElseThrow(() -> new BusinessException(ErrorCode.BOARD_NOT_FOUND));
+
+        Long boardId = list.getBoardId();
+
+        // 보드 작업 권한 검증 -> 요청자가 해당 보드의 MEMBER 권한 이상인지 확인
+        memberVal.validateBoardEditor(boardId, userId);
+
+        // 카드 삭제
+        cardMapper.deleteCard(cardId);
     }
 }

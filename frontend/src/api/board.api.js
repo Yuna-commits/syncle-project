@@ -33,6 +33,7 @@ export const boardApi = {
       title,
     }),
   updateCard: (cardId, updates) => api.patch(`/cards/${cardId}`, updates),
+  deleteCard: (cardId) => api.delete(`/cards/${cardId}`),
   moveCard: (cardId, toListId, newIndex) =>
     api.patch(`/cards/${cardId}/move`, {
       listId: toListId,

@@ -20,4 +20,7 @@ public interface CardService {
 
     // 카드 수정
     CardResponse updateCard(Long cardId, UpdateCardRequest req, Long userId);
+
+    // 카드 삭제
+    void deleteCard(Long cardId, Long userId);
 }

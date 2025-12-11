@@ -282,9 +282,17 @@ export const useCardMutations = (boardId) => {
     onSettled: () => queryClient.invalidateQueries({ queryKey }),
   })
 
+  // 카드 삭제
+  const deleteCardMutation = useMutation({
+    mutationFn: ({ cardId }) => boardApi.deleteCard(cardId),
+    onSuccess: () => queryClient.invalidateQueries({ queryKey }),
+    onError: (err, vars, ctx) => handleError(ctx, '카드 삭제 실패'),
+  })
+
   return {
     moveCard: moveCardMutation.mutate,
     addCard: addCardMutation.mutate,
     updateCard: updateCardMutation.mutate,
+    deleteCard: deleteCardMutation.mutate,
   }
 }

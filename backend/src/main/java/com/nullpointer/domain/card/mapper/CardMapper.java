@@ -42,4 +42,7 @@ public interface CardMapper {
 
     // 마감일 초기화
     void deleteCardDates(Long cardId);
+
+    // 카드 삭제
+    void deleteCard(Long cardId);
 }

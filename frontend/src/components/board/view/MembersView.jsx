@@ -51,7 +51,16 @@ function MembersView({ board, isOwner }) {
               {/* 왼쪽: 멤버 정보 */}
               <div className="flex flex-1 items-center gap-2 overflow-hidden">
                 <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-gray-200 text-xs font-bold text-gray-600">
-                  {member.name ? member.name[0] : '?'}
+                  {member.profileImg ? (
+                    <img
+                      src={member.profileImg}
+                      alt={member.name}
+                      className="h-full w-full rounded-full object-cover"
+                    />
+                  ) : (
+                    // 이미지가 없으면 이름 첫 글자 표시
+                    <span>{member.name ? member.name[0] : '?'}</span>
+                  )}
                 </div>
                 <div className="min-w-0 flex-1">
                   <p className="truncate text-sm font-medium text-gray-800">

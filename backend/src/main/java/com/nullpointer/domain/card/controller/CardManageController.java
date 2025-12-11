@@ -8,6 +8,7 @@ import com.nullpointer.global.common.annotation.LoginUser;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
+import org.springframework.security.core.parameters.P;
 import org.springframework.web.bind.annotation.*;
 
 @Tag(name = "Card Management", description = "카드 이동 및 수정 API")
@@ -35,5 +36,14 @@ public class CardManageController {
                                           @LoginUser Long userId) {
         cardService.updateCard(cardId, req, userId);
         return ApiResponse.success("카드 정보 수정");
+    }
+
+    // 카드 삭제
+    @Operation(summary = "카드 삭제", description = "카드를 삭제합니다 (멤버 등급 이상).")
+    @DeleteMapping("/{cardId}")
+    public ApiResponse<String> deleteCard(@PathVariable Long cardId,
+                                          @LoginUser  Long userId) {
+        cardService.deleteCard(cardId, userId);
+        return ApiResponse.success("카드 삭제");
     }
 }

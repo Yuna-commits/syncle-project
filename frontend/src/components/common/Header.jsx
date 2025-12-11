@@ -3,6 +3,7 @@ import { Link, useLocation } from 'react-router-dom'
 import useUserStore from '../../stores/useUserStore'
 import useUiStore from '../../stores/useUiStore'
 import { Plus } from 'lucide-react'
+import defaultProfile from '../../assets/images/default.png'
 
 function Header({ onOpenTeamModal }) {
   const notificationCount = 1
@@ -91,24 +92,23 @@ function Header({ onOpenTeamModal }) {
 
         {/* 프로필 아이콘 */}
         <div
-          className="h-8 w-8 cursor-pointer items-center justify-center rounded-full bg-blue-600 hover:opacity-80"
-          onMouseDown={(e) => {
-            e.stopPropagation()
-          }}
+          // 1. shrink-0: 찌그러짐 방지
+          // 2. overflow-hidden: 둥근 모서리 밖으로 이미지 튀어나옴 방지
+          className="h-9 w-9 shrink-0 cursor-pointer overflow-hidden rounded-full border border-gray-200 transition-opacity hover:opacity-80"
+          onMouseDown={(e) => e.stopPropagation()}
           onClick={(e) => {
             e.stopPropagation()
             toggleMenu('profile')
           }}
-          // 프로필 이미지 있으면 이미지로 대체
-          style={
-            user?.profileImg
-              ? {
-                  backgroundImage: `url(${user.profileImg})`,
-                  backgroundSize: 'cover',
-                }
-              : {}
-          }
-        ></div>
+        >
+          <img
+            // 유저 이미지가 없으면 기본 이미지 사용
+            src={user?.profileImg || defaultProfile}
+            alt="Profile"
+            // 3. object-cover: 이미지 비율 유지하며 꽉 채우기
+            className="h-full w-full object-cover"
+          />
+        </div>
       </div>
     </nav>
   )

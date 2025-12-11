@@ -10,9 +10,9 @@ import MemberPickerMenu from '../modals/MemberPickerMenu'
 
 function CardSidebar({ onAddChecklist, showChecklist }) {
   const { boardId } = useParams()
-  const { selectedCard } = useBoardStore()
+  const { selectedCard, closeCardModal } = useBoardStore()
   const { data: activeBoard } = useBoardQuery(boardId)
-  const { updateCard, moveCard } = useCardMutations(activeBoard?.id)
+  const { updateCard, moveCard, deleteCard } = useCardMutations(activeBoard?.id)
 
   // -- 날짜 메뉴 상태 --
   const [isDateOpen, setIsDateOpen] = useState(false)
@@ -157,6 +157,27 @@ function CardSidebar({ onAddChecklist, showChecklist }) {
     }
   }
 
+  // 카드 삭제 핸들러
+  const handleDeleteCard = () => {
+    if (
+      window.confirm(
+        '정말 이 카드를 삭제하시겠습니까?\n삭제된 카드는 복구할 수 없습니다.',
+      )
+    ) {
+      deleteCard(
+        {
+          cardId: selectedCard.id,
+          listId: selectedCard.listId,
+        },
+        {
+          onSuccess: () => {
+            if (closeCardModal) closeCardModal()
+          },
+        },
+      )
+    }
+  }
+
   return (
     <div className="w-full shrink-0 space-y-6 md:w-60">
       <div className="space-y-4">
@@ -262,7 +283,10 @@ function CardSidebar({ onAddChecklist, showChecklist }) {
             />
           </>
         )}
-        <button className="flex w-full items-center gap-2 rounded-md bg-gray-100 px-3 py-1.5 text-sm font-medium text-red-500 transition-colors hover:cursor-pointer hover:bg-red-100">
+        <button
+          onClick={handleDeleteCard}
+          className="flex w-full items-center gap-2 rounded-md bg-gray-100 px-3 py-1.5 text-sm font-medium text-red-500 transition-colors hover:cursor-pointer hover:bg-red-100"
+        >
           <Trash2 size={14} />
           <span>휴지통</span>
         </button>

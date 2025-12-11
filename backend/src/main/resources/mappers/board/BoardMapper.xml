@@ -127,6 +127,7 @@
                 <collection property="comments" ofType="com.nullpointer.domain.comment.dto.CommentResponse"
                             javaType="java.util.List">
                     <id property="id" column="comment_id"/>
+                    <result property="writerId" column="comment_writer_id"/>
                     <result property="content" column="comment_content"/>
                     <result property="writerName" column="comment_writer_name"/>
                     <result property="writerProfileImg" column="comment_writer_img"/>
@@ -169,20 +170,21 @@
 
                -- 댓글 (comment 테이블 조인)
                cmt.id         AS comment_id,
+               cmt.writer_id  AS comment_writer_id,
                cmt.content    AS comment_content,
                cmt.created_at AS comment_created_at,
                u.nickname     AS comment_writer_name,
                u.profile_img  AS comment_writer_img,
 
                -- 댓글 수 (서브쿼리)
-            (CASE
-                 WHEN c.id IS NULL
-                     THEN NULL
-                 ELSE
-                     (SELECT COUNT(*)
-                      FROM comment cm
-                      WHERE cm.card_id = c.id)
-                END)      AS card_comment_count
+               (CASE
+                    WHEN c.id IS NULL
+                        THEN NULL
+                    ELSE
+                        (SELECT COUNT(*)
+                         FROM comment cm
+                         WHERE cm.card_id = c.id)
+                   END)       AS card_comment_count
         FROM board b
                  JOIN team t
                       ON b.team_id = t.id
