@@ -45,6 +45,8 @@
                c.order_index                 AS orderIndex,
                c.due_date                    AS dueDate,
                c.is_complete                 AS is_complete,
+               c.label,
+               c.label_color                 AS labelColor,
                c.assignee_id                 AS assigneeId,
                u.nickname                    As assigneeName,
                u.profile_img                 As assigneeProfileImg,
@@ -85,6 +87,8 @@
                c.description,
                c.order_index                 AS orderIndex,
                c.is_complete                 AS isComplete,
+               c.label,
+               c.label_color                 AS labelColor,
                c.start_date                  AS startDate,
                c.due_date                    AS dueDate,
                c.assignee_id                 AS assigneeId,
@@ -120,6 +124,8 @@
             <if test="priority != null">priority = #{priority},</if>
             <if test="startDate != null">start_date = #{startDate},</if>
             <if test="dueDate != null">due_date = #{dueDate},</if>
+            <if test="label != null">label = #{label},</if>
+            <if test="labelColor != null">label_color = #{labelColor},</if>
             updated_at = NOW()
         </set>
         WHERE id = #{id}
@@ -154,5 +160,12 @@
         SET priority = NULL
         WHERE id = #{cardId}
           AND deleted_at IS NULL
+    </update>
+
+    <!-- 라벨 초기화 -->
+    <update id="deleteCardLabel">
+        UPDATE card
+        SET label = NULL, label_color = NULL
+        WHERE id = #{cardId} AND deleted_at IS NULL
     </update>
 </mapper>

@@ -12,11 +12,15 @@ import {
   Share2,
   Star,
 } from 'lucide-react'
+import BoardFilter from '../sidebar/BoardFilter'
 
 function BoardHeader({ board }) {
   // UI 상태 제어 함수 (Store)
   const { toggleSettings, openSettings, isSettingsOpen, settingsView } =
     useBoardStore()
+
+  // 임시 필터 함수
+  const [isFilterOpen, setIsFilterOpen] = useState(false)
 
   // 데이터 변형 훅 (React Query)
   const { toggleFavorite } = useBoardMutations(board.id)
@@ -149,9 +153,24 @@ function BoardHeader({ board }) {
           <div className="mx-2 h-5 w-px bg-gray-300"></div>
 
           {/* 필터 버튼 */}
-          <button className="flex items-center gap-1 rounded-md px-2 py-1.5 text-sm font-medium text-gray-600 transition-colors hover:cursor-pointer hover:bg-gray-100">
-            <Filter size={18} />
-            <span className="hidden sm:inline">필터</span>
+          <button
+            onClick={() => setIsFilterOpen(!isFilterOpen)}
+            className={`flex items-center space-x-2 rounded-md px-3 py-1.5 transition-colors ${isFilterOpen ? 'bg-blue-100 text-blue-700' : 'bg-gray-100 text-gray-700 hover:bg-gray-200'}`}
+          >
+            <svg
+              xmlns="http://www.w3.org/2000/svg"
+              width="16"
+              height="16"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              strokeWidth="2"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+            >
+              <polygon points="22 3 2 3 10 12.46 10 19 14 21 14 12.46 22 3"></polygon>
+            </svg>
+            <span className="text-sm font-medium">필터</span>
           </button>
 
           {/* 공유 버튼 */}
@@ -181,6 +200,9 @@ function BoardHeader({ board }) {
           onClose={() => setIsInviteModalOpen(false)}
         />
       )}
+
+      {/* 필터 팝업 컴포넌트 */}
+      {isFilterOpen && <BoardFilter onClose={() => setIsFilterOpen(false)} />}
     </>
   )
 }

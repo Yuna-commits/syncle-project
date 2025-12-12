@@ -3,7 +3,6 @@ import {
   ArrowRight,
   CheckSquare,
   Clock,
-  Flag,
   Trash2,
   User,
 } from 'lucide-react'
@@ -15,28 +14,8 @@ import useBoardStore from '../../stores/useBoardStore'
 import MoveColumnMenu from '../modals/board/MoveColumnMenu'
 import DateRangePickerMenu from '../modals/DateRangePickerMenu'
 import MemberPickerMenu from '../modals/MemberPickerMenu'
-import { createPortal } from 'react-dom'
-// 우선순위 옵션 상수 정의
-const PRIORITY_OPTIONS = [
-  {
-    key: 'HIGH',
-    label: '높음',
-    color: 'bg-red-100 text-red-700 hover:bg-red-200',
-    iconColor: 'text-red-500',
-  },
-  {
-    key: 'MEDIUM',
-    label: '보통',
-    color: 'bg-orange-100 text-orange-700 hover:bg-orange-200',
-    iconColor: 'text-orange-500',
-  },
-  {
-    key: 'LOW',
-    label: '낮음',
-    color: 'bg-green-100 text-green-700 hover:bg-green-200',
-    iconColor: 'text-green-500',
-  },
-]
+import CardPriority from './CardPriority'
+import CardLabel from './CardLabel'
 
 function CardSidebar({
   onAddChecklist,
@@ -52,9 +31,7 @@ function CardSidebar({
   // -- 날짜 메뉴 상태 --
   const [isDateOpen, setIsDateOpen] = useState(false)
   const dateButtonRef = useRef(null)
-  // 팝업 위치 저장을 위한 상태
   const [datePopupPos, setDatePopupPos] = useState({ top: 0, left: 0 })
-  // 달력 컴포넌트에 전달할 날짜 범위 상태
   const [dateRange, setDateRange] = useState([
     {
       startDate: new Date(),
@@ -67,11 +44,6 @@ function CardSidebar({
   const [isMemberOpen, setIsMemberOpen] = useState(false)
   const memberButtonRef = useRef(null)
   const [memberPopupPos, setMemberPopupPos] = useState({ top: 0, left: 0 })
-
-  // -- 우선순위 메뉴 상태 --
-  const [isPriorityOpen, setIsPriorityOpen] = useState(false)
-  const priorityButtonRef = useRef(null)
-  const [priorityPopupPos, setPriorityPopupPos] = useState({ top: 0, left: 0 })
 
   // -- 이동 메뉴 상태 --
   const [isMoveOpen, setIsMoveOpen] = useState(false)
@@ -95,14 +67,14 @@ function CardSidebar({
     }
   }, [selectedCard])
 
-  // 날짜 메뉴 토글
+  // 마감일 메뉴 토글
   const toggleDateMenu = () => {
     if (!isDateOpen && dateButtonRef.current) {
       const rect = dateButtonRef.current.getBoundingClientRect()
       setDatePopupPos({ top: rect.bottom + 8, left: rect.left })
     }
     if (isMemberOpen) setIsMemberOpen(false)
-    if (isMoveOpen) setIsMoveOpen(false) // 다른 메뉴 닫기
+    if (isMoveOpen) setIsMoveOpen(false)
     setIsDateOpen(!isDateOpen)
   }
 
@@ -113,23 +85,11 @@ function CardSidebar({
       setMemberPopupPos({ top: rect.bottom + 8, left: rect.left })
     }
     if (isDateOpen) setIsDateOpen(false)
-    if (isMoveOpen) setIsMoveOpen(false) // 다른 메뉴 닫기
+    if (isMoveOpen) setIsMoveOpen(false)
     setIsMemberOpen(!isMemberOpen)
   }
 
-  // 우선순위 메뉴 토글
-  const togglePriorityMenu = () => {
-    if (!isPriorityOpen && priorityButtonRef.current) {
-      const rect = priorityButtonRef.current.getBoundingClientRect()
-      setPriorityPopupPos({ top: rect.bottom + 8, left: rect.left })
-    }
-    if (isDateOpen) setIsDateOpen(false)
-    if (isMemberOpen) setIsMemberOpen(false)
-    if (isMoveOpen) setIsMoveOpen(false)
-    setIsPriorityOpen(!isPriorityOpen)
-  }
-
-  // 이동 메뉴 토글 함수
+  // 이동 메뉴 토글
   const toggleMoveMenu = () => {
     if (!isMoveOpen && moveButtonRef.current) {
       const rect = moveButtonRef.current.getBoundingClientRect()
@@ -188,30 +148,11 @@ function CardSidebar({
     setIsMemberOpen(false)
   }
 
-  // 우선순위 변경 핸들러
-  const handleUpdatePriority = (priorityKey) => {
-    if (priorityKey === null) {
-      updateCard({
-        cardId: selectedCard.id,
-        listId: selectedCard.listId,
-        updates: { priority: null, removePriority: true },
-      })
-    } else {
-      updateCard({
-        cardId: selectedCard.id,
-        listId: selectedCard.listId,
-        updates: { priority: priorityKey },
-      })
-    }
-    setIsPriorityOpen(false)
-  }
-
-  // 이동할 컬럼 목록 (가상 리스트 제외)
+  // 이동할 컬럼 목록
   const allColumns = activeBoard.columns
     ? Object.values(activeBoard.columns).filter((col) => !col.isVirtual)
     : []
 
-  // 카드 이동 핸들러 (이벤트 객체 대신 ID를 받도록 수정됨)
   const handleMoveCard = (newColId) => {
     if (newColId && newColId !== selectedCard.listId) {
       const targetColumn = activeBoard.columns[newColId]
@@ -223,7 +164,7 @@ function CardSidebar({
         toListId: newColId,
         newIndex,
       })
-      setIsMoveOpen(false) // 이동 후 메뉴 닫기
+      setIsMoveOpen(false)
     }
   }
 
@@ -248,11 +189,6 @@ function CardSidebar({
     }
   }
 
-  // 현재 선택된 우선순위 정보 가져오기
-  const currentPriority = PRIORITY_OPTIONS.find(
-    (p) => p.key === selectedCard.priority,
-  )
-
   return (
     <div className="w-full shrink-0 space-y-6 md:w-60">
       <div className="space-y-4">
@@ -260,6 +196,7 @@ function CardSidebar({
           <h4 className="mb-2 text-xs font-bold tracking-wider text-gray-500 uppercase">
             추가 요소
           </h4>
+
           {/* 담당자 버튼 */}
           <button
             ref={memberButtonRef}
@@ -271,7 +208,7 @@ function CardSidebar({
             <User size={16} className="text-gray-500" />
             <span className="text-gray-500">담당자</span>
 
-            {/* 현재 담당자 이름 뱃지 */}
+            {/* 현재 담당자 뱃지 */}
             {selectedCard.assignee && (
               <span className="ml-auto flex items-center gap-1.5 rounded bg-blue-50 px-2 py-0.5 text-xs font-semibold text-blue-600">
                 {selectedCard.assignee.name}
@@ -284,73 +221,16 @@ function CardSidebar({
             isOpen={isMemberOpen}
             onClose={() => setIsMemberOpen(false)}
             position={memberPopupPos}
-            members={assignableMembers} // 팀/보드 전체 멤버
-            assignedMemberId={selectedCard?.assignee?.id} //현재 담당자
+            members={assignableMembers}
+            assignedMemberId={selectedCard?.assignee?.id}
             onSelectMember={handleChangeMember}
           />
 
-          {/* [수정] 우선순위 버튼 (기존 태그 버튼 대체) */}
-          <button
-            ref={priorityButtonRef}
-            onClick={togglePriorityMenu}
-            className={`flex w-full items-center gap-2 rounded-md px-2 py-1.5 text-left text-sm transition-colors hover:cursor-pointer ${
-              isPriorityOpen ? 'bg-blue-100' : 'text-gray-700 hover:bg-gray-200'
-            }`}
-          >
-            <Flag size={16} className="text-gray-500" />
-            <span className="text-gray-500">우선순위</span>
+          {/* 라벨 컴포넌트 */}
+          <CardLabel />
 
-            {/* 선택된 우선순위 뱃지 */}
-            {currentPriority && (
-              <span
-                className={`ml-auto rounded px-2 py-0.5 text-xs font-semibold ${currentPriority.color}`}
-              >
-                {currentPriority.label}
-              </span>
-            )}
-          </button>
-
-          {/* [추가] 우선순위 선택 팝업 (Portal 사용) */}
-          {isPriorityOpen &&
-            createPortal(
-              <div
-                className="animate-in fade-in zoom-in-95 fixed z-50 w-40 overflow-hidden rounded-md border border-gray-200 bg-white shadow-lg duration-100"
-                style={{
-                  top: priorityPopupPos.top,
-                  left: priorityPopupPos.left,
-                }}
-              >
-                <div
-                  className="fixed inset-0 -z-10"
-                  onClick={() => setIsPriorityOpen(false)}
-                />
-                <div className="flex flex-col p-1">
-                  {PRIORITY_OPTIONS.map((option) => (
-                    <button
-                      key={option.key}
-                      onClick={() => handleUpdatePriority(option.key)}
-                      className={`flex w-full items-center gap-2 rounded px-3 py-2 text-left text-sm transition-colors hover:cursor-pointer ${option.color}`}
-                    >
-                      <Flag size={14} className={option.iconColor} />
-                      <span className="font-medium">{option.label}</span>
-                      {selectedCard.priority === option.key && (
-                        <span className="ml-auto text-xs">✓</span>
-                      )}
-                    </button>
-                  ))}
-                  {/* 우선순위 제거 옵션 */}
-                  {selectedCard.priority && (
-                    <button
-                      onClick={() => handleUpdatePriority(null)}
-                      className="mt-1 w-full rounded px-3 py-1.5 text-left text-xs text-gray-500 hover:bg-gray-100"
-                    >
-                      제거
-                    </button>
-                  )}
-                </div>
-              </div>,
-              document.body,
-            )}
+          {/* 우선순위 컴포넌트 */}
+          <CardPriority />
 
           {/* 마감일 버튼 */}
           <button
@@ -399,7 +279,7 @@ function CardSidebar({
       </div>
 
       <div className="space-y-2">
-        {/* 완료된 카드가 아닐 때만 '이동' 섹션 표시 */}
+        {/* 이동 및 삭제 섹션 */}
         {!selectedCard.isComplete && (
           <>
             <h4 className="mb-2 text-xs font-bold tracking-wider text-gray-500 uppercase">
@@ -417,7 +297,6 @@ function CardSidebar({
               <span className="text-gray-500">다른 리스트로 이동</span>
             </button>
 
-            {/* 이동 메뉴 컴포넌트 연결 */}
             <MoveColumnMenu
               isOpen={isMoveOpen}
               onClose={() => setIsMoveOpen(false)}

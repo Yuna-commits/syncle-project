@@ -113,6 +113,8 @@
                 <result property="startDate" column="card_start_date"/>
                 <result property="dueDate" column="card_due_date"/>
                 <result property="isComplete" column="card_is_complete"/>
+                <result property="label" column="card_label"/>
+                <result property="labelColor" column="card_label_color"/>
                 <result property="commentCount" column="card_comment_count"/>
 
                 <result property="assigneeId" column="assignee_id"/>
@@ -159,6 +161,8 @@
                c.start_date   AS card_start_date,
                c.due_date     AS card_due_date,
                c.is_complete  As card_is_complete,
+               c.label        AS card_label,
+               c.label_color  AS card_label_color,
 
                -- 담당자 정보 (user 테이블 조인)
                u.id           AS assignee_id,

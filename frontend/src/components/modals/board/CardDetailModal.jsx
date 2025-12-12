@@ -1,4 +1,4 @@
-import { Check, Clock, X } from 'lucide-react'
+import { Tag, Check, Clock, X } from 'lucide-react'
 import { useEffect, useState } from 'react'
 import { useParams } from 'react-router-dom'
 import { useCardMutations } from '../../../hooks/card/useCardMutations'
@@ -9,6 +9,7 @@ import CardActivity from '../../card/CardActivity'
 import CardChecklist from '../../card/CardChecklist'
 import CardDescription from '../../card/CardDescription'
 import CardSidebar from '../../card/CardSidebar'
+import CardLabel from '../../card/CardLabel'
 
 export default function CardDetailModal() {
   const { boardId } = useParams()
@@ -107,6 +108,20 @@ export default function CardDetailModal() {
                     {currentColumn?.title}
                   </span>
                 </p>
+
+                {/* 라벨 뱃지 */}
+                {selectedCard.label && (
+                  <div
+                    className="flex items-center gap-1.5 rounded-md px-2 py-0.5 text-xs font-bold text-white shadow-sm"
+                    style={{
+                      backgroundColor: selectedCard.labelColor || '#6b7280',
+                    }}
+                    title="라벨"
+                  >
+                    <Tag size={12} fill="currentColor" />
+                    <span>{selectedCard.label}</span>
+                  </div>
+                )}
 
                 {/* 마감일 뱃지 */}
                 {dateStatus.dateLabel && (

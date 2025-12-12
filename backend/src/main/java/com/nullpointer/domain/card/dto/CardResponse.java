@@ -32,7 +32,8 @@ public class CardResponse {
     private Integer commentCount;
 
     private Boolean isComplete;
-
+    private String label;
+    private String labelColor;
     // 담당자 정보
     private Long assigneeId;
     private String assigneeName;
@@ -53,6 +54,8 @@ public class CardResponse {
                 .orderIndex(c.getOrderIndex())
                 .startDate(c.getStartDate())
                 .dueDate(c.getDueDate())
+                .label(c.getLabel())
+                .labelColor(c.getLabelColor())
                 .assigneeId(c.getAssigneeId())
                 .assigneeName(assigneeName)
                 .assigneeProfileImg(assigneeProfileImg)

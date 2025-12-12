@@ -85,7 +85,10 @@ const normalizeBoardData = (dto) => {
         startDate: card.startDate,
         dueDate: card.dueDate,
         isComplete: card.isComplete || false,
+        label: card.label,
+        labelColor: card.labelColor,
 
+        // 댓글 트리
         comments: treeComments,
 
         // 댓글 수
@@ -175,6 +178,7 @@ export const useBoardQuery = (boardId) => {
     queryKey: ['board', Number(boardId)], // 이 키가 캐시의 이름표가 됩니다.
     queryFn: async () => {
       const response = await boardApi.fetchBoard(boardId)
+      console.log('📌 [RAW SERVER DATA]', response.data.data)
       return normalizeBoardData(response.data.data)
     },
 

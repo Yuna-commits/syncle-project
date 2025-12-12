@@ -149,6 +149,8 @@ public class CardServiceImpl implements CardService {
                 .isComplete(req.getIsComplete())
                 .startDate(req.getStartDate())
                 .dueDate(req.getDueDate())
+                .label(req.getLabel())
+                .labelColor(req.getLabelColor())
                 .build();
 
         // 업데이트 진행
@@ -162,6 +164,11 @@ public class CardServiceImpl implements CardService {
         // 마감일 초기화 요청 처리
         if (Boolean.TRUE.equals(req.getRemoveDate())) {
             cardMapper.deleteCardDates(cardId);
+        }
+
+        // 라벨 삭제 요청 처리
+        if (Boolean.TRUE.equals(req.getRemoveLabel())) {
+            cardMapper.deleteCardLabel(cardId);
         }
 
         return cardMapper.findCardDetailById(cardId);

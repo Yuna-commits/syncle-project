@@ -48,4 +48,7 @@ public interface CardMapper {
 
     // 우선순위 초기화
     void deleteCardPriority(Long cardId);
+
+    // 라벨 초기화
+    void deleteCardLabel(Long cardId);
 }

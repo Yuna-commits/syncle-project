@@ -24,6 +24,8 @@ public class CardVo {
     private LocalDateTime dueDate;
     private Integer orderIndex;
     private Boolean isComplete;
+    private String label;
+    private String labelColor;
     private LocalDateTime createdAt;
     private LocalDateTime updatedAt;
     private LocalDateTime deletedAt;

@@ -245,7 +245,7 @@ export const useCardMutations = (boardId) => {
           listId: listId,
           title: newCard.title,
           description: newCard.description,
-          order: newCard.orderIndex, // 서버에서 계산된 orderIndex
+          order: newCard.orderIndex,
           dueDate: newCard.dueDate,
           isComplete: false,
           commentCount: 0,
