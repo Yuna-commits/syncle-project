@@ -10,11 +10,14 @@ import com.nullpointer.domain.card.service.CardService;
 import com.nullpointer.domain.card.vo.CardVo;
 import com.nullpointer.domain.list.mapper.ListMapper;
 import com.nullpointer.domain.list.vo.ListVo;
+import com.nullpointer.domain.socket.dto.SocketBoardMessage;
+import com.nullpointer.global.common.SocketSender;
 import com.nullpointer.global.common.constants.AppConstants;
 import com.nullpointer.global.common.enums.ErrorCode;
 import com.nullpointer.global.exception.BusinessException;
 import com.nullpointer.global.validator.MemberValidator;
 import lombok.RequiredArgsConstructor;
+import org.springframework.messaging.simp.SimpMessagingTemplate;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -27,6 +30,7 @@ public class CardServiceImpl implements CardService {
     private final CardMapper cardMapper;
     private final ListMapper listMapper;
     private final MemberValidator memberVal;
+    private final SocketSender socketSender;
 
     @Override
     @Transactional
@@ -49,6 +53,9 @@ public class CardServiceImpl implements CardService {
 
         // DB 저장
         cardMapper.insertCard(cardVo);
+
+        // 소켓 전송
+        socketSender.sendSocketMessage(list.getBoardId(), "CARD_CREATE", userId, null);
 
         // 담당자 정보 포함 응답 반환
         return cardMapper.findCardDetailById(cardVo.getId());
@@ -114,6 +121,9 @@ public class CardServiceImpl implements CardService {
         card.setListId(newListId);
         card.setOrderIndex(newOrder);
         cardMapper.updateCardLocation(card);
+
+        // 소켓 전송
+        socketSender.sendSocketMessage(list.getBoardId(), "CARD_MOVE", userId, null);
     }
 
     // 카드 수정
@@ -171,6 +181,9 @@ public class CardServiceImpl implements CardService {
             cardMapper.deleteCardLabel(cardId);
         }
 
+        // 소켓 전송
+        socketSender.sendSocketMessage(list.getBoardId(),"CARD_UPDATE", userId, null);
+
         return cardMapper.findCardDetailById(cardId);
     }
 
@@ -193,5 +206,9 @@ public class CardServiceImpl implements CardService {
 
         // 카드 삭제
         cardMapper.deleteCard(cardId);
+
+        // 소켓 전송
+        socketSender.sendSocketMessage(list.getBoardId(), "CARD_DELETE", userId, null);
     }
+
 }

@@ -30,4 +30,8 @@ public class CardValidator {
 
         return card;
     }
+
+    /**
+     * 유효한 카드 가져오기
+     */
 }

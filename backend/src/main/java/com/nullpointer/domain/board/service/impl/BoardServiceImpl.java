@@ -22,6 +22,7 @@ import com.nullpointer.domain.member.mapper.BoardMemberMapper;
 import com.nullpointer.domain.member.mapper.TeamMemberMapper;
 import com.nullpointer.domain.member.vo.BoardMemberVo;
 import com.nullpointer.domain.member.vo.enums.Role;
+import com.nullpointer.global.common.SocketSender;
 import com.nullpointer.global.common.enums.ErrorCode;
 import com.nullpointer.global.exception.BusinessException;
 import com.nullpointer.global.validator.BoardValidator;
@@ -46,8 +47,8 @@ public class BoardServiceImpl implements BoardService {
     private final BoardValidator boardVal;
     private final ListMapper listMapper;
     private final ActivityService activityService;
-    private final CardMapper cardMapper;
     private final TeamMemberMapper teamMemberMapper;
+    private final SocketSender socketSender;
 
     /**
      * 보드 권한
@@ -168,6 +169,9 @@ public class BoardServiceImpl implements BoardService {
 
         // 보드 수정 로그 저장
         updateBoardLog(userId, boardVo.getTeamId(), boardVo);
+
+        // 소켓 전송
+        socketSender.sendSocketMessage(boardId,"BOARD_UPDATED", userId, null);
     }
 
     @Override
@@ -186,6 +190,9 @@ public class BoardServiceImpl implements BoardService {
 
         // 보드 삭제 로그 저장
         deleteBoardLog(userId, teamId, boardId, boardTitle);
+
+        // 소켓 전송
+        socketSender.sendSocketMessage(boardId,"BOARD_DELETED", userId, null);
     }
 
     private ListVo createDefaultList(Long boardId, String title, int orderIndex) {

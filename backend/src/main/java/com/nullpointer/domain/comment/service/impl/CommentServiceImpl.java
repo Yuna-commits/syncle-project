@@ -4,6 +4,7 @@ import com.nullpointer.domain.comment.dto.CommentRequest;
 import com.nullpointer.domain.comment.dto.CommentResponse;
 import com.nullpointer.domain.comment.mapper.CommentMapper;
 import com.nullpointer.domain.comment.service.CommentService;
+import com.nullpointer.global.common.SocketSender;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -18,6 +19,7 @@ import java.util.Map;
 public class CommentServiceImpl implements CommentService {
 
     private final CommentMapper commentMapper;
+    private final SocketSender socketSender;
 
     // 목록 조회
     @Transactional(readOnly = true)

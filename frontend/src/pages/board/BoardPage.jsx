@@ -10,6 +10,7 @@ import { useBoardQuery } from '../../hooks/board/useBoardQuery'
 import { useCardMutations } from '../../hooks/card/useCardMutations'
 import { useListMutations } from '../../hooks/useListMutations'
 import useBoardStore from '../../stores/useBoardStore'
+import { useBoardSocket } from '../../hooks/board/useBoardSocket'
 
 /**
  * 보드 데이터 로딩,
@@ -25,7 +26,11 @@ function BoardPage() {
   // 데이터 조회는 React Query 훅 사용
   const { data: activeBoard, isLoading, error } = useBoardQuery(boardId)
 
-  // 2. 데이터 변경 (React Query Mutation)
+  // 웹소켓 연결 및 실시간 감지
+  // 이 Hook만 호출해두면, 내부에서 메시지를 받을 때마다 useBoardQuery를 자동으로 갱신(Refetch)합니다.
+  useBoardSocket(boardId)
+
+  // 데이터 변경
   const { moveCard } = useCardMutations(boardId)
   const { moveList } = useListMutations(boardId)
 

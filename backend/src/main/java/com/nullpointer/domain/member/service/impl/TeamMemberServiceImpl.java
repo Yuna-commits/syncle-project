@@ -13,6 +13,7 @@ import com.nullpointer.domain.member.vo.TeamMemberVo;
 import com.nullpointer.domain.member.vo.enums.Role;
 import com.nullpointer.domain.user.mapper.UserMapper;
 import com.nullpointer.domain.user.vo.UserVo;
+import com.nullpointer.global.common.SocketSender;
 import com.nullpointer.global.common.enums.ErrorCode;
 import com.nullpointer.global.exception.BusinessException;
 import com.nullpointer.global.validator.MemberValidator;
@@ -30,8 +31,7 @@ public class TeamMemberServiceImpl implements TeamMemberService {
     private final UserMapper userMapper;
     private final MemberValidator memberVal;
     private final ActivityService activityService;
-    private final BoardMapper boardMapper;
-    private final BoardMemberMapper boardMemberMapper;
+    private final SocketSender socketSender;
 
     // 멤버 추가 (초대 수락 시 호출됨)
     @Override
@@ -56,7 +56,7 @@ public class TeamMemberServiceImpl implements TeamMemberService {
             // 이미 활동 중인 멤버 -> 예외처리
             throw new BusinessException(ErrorCode.MEMBER_ALREADY_EXISTS);
         }
-        
+
     }
 
     @Override

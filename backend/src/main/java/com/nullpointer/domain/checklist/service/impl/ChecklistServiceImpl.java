@@ -6,6 +6,7 @@ import com.nullpointer.domain.checklist.dto.UpdateChecklistRequest;
 import com.nullpointer.domain.checklist.mapper.ChecklistMapper;
 import com.nullpointer.domain.checklist.service.ChecklistService;
 import com.nullpointer.domain.checklist.vo.ChecklistVo;
+import com.nullpointer.global.common.SocketSender;
 import com.nullpointer.global.validator.CardValidator;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
@@ -18,8 +19,8 @@ import java.util.List;
 public class ChecklistServiceImpl implements ChecklistService {
 
     private final ChecklistMapper checklistMapper;
-    private final CardMapper cardMapper;
     private final CardValidator cardVal;
+    private final SocketSender socketSender;
 
     @Override
     @Transactional
@@ -33,7 +34,14 @@ public class ChecklistServiceImpl implements ChecklistService {
         // 체크리스트 추가
         checklistMapper.insertChecklist(checklistVo);
 
+        // 보드 ID 조회 및 소켓 전송
+        Long boardId = findBoardIdByCardId(cardId);
+        socketSender.sendSocketMessage(boardId,"CHECKLIST_CREATE", userId, null);
+
         return checklistVo.getId();
+    }
+
+    private Long findBoardIdByCardId(Long cardId) {
     }
 
     @Override
