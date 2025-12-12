@@ -202,7 +202,9 @@ function BoardHeader({ board }) {
       )}
 
       {/* 필터 팝업 컴포넌트 */}
-      {isFilterOpen && <BoardFilter onClose={() => setIsFilterOpen(false)} />}
+      {isFilterOpen && (
+        <BoardFilter board={board} onClose={() => setIsFilterOpen(false)} />
+      )}
     </>
   )
 }

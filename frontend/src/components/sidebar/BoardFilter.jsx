@@ -1,31 +1,64 @@
-import React, { useState } from 'react'
+import React, { useMemo, useState } from 'react'
 import {
   X,
   Search,
   Calendar,
-  CheckCircle2,
   AlertCircle,
   Clock,
-  User,
   SlidersHorizontal,
   Filter,
   Tag,
-  Paperclip,
-  AlignLeft,
   ArrowUpDown,
 } from 'lucide-react'
 // eslint-disable-next-line no-unused-vars
 import { motion, AnimatePresence } from 'framer-motion'
+import useBoardStore from '../../stores/useBoardStore'
 
-const BoardFilter = ({ onClose }) => {
+const BoardFilter = ({ board, onClose }) => {
+  const { filter, setFilter, resetFilter } = useBoardStore()
   const [activeTab, setActiveTab] = useState('properties')
-  const [keyword, setKeyword] = useState('')
   const [memberSearch, setMemberSearch] = useState('')
+  const activeBoard = board || null
 
-  // 정렬 상태 추가
-  const [sortBy, setSortBy] = useState('newest')
+  // 1. 현재 보드에 존재하는 모든 라벨 추출 (중복 제거)
+  const availableLabels = useMemo(() => {
+    if (!activeBoard?.columns) return []
+    const labelMap = new Map()
+    Object.values(activeBoard.columns).forEach((col) => {
+      col.tasks.forEach((task) => {
+        if (task.label) {
+          // 이름과 색상이 모두 같아야 같은 라벨로 취급
+          const key = `${task.label}-${task.labelColor}`
+          if (!labelMap.has(key)) {
+            labelMap.set(key, { name: task.label, color: task.labelColor })
+          }
+        }
+      })
+    })
+    return Array.from(labelMap.values())
+  }, [activeBoard])
 
-  // --- 더미 데이터 영역 ---
+  // 2. 멤버 리스트 (Assignee 필터용)
+  const members = activeBoard?.members || []
+  const filteredMembers = members.filter((m) =>
+    m.name.toLowerCase().includes(memberSearch.toLowerCase()),
+  )
+
+  // 핸들러: 필터 변경
+  const handleFilterChange = (key, value) => {
+    setFilter({ [key]: value })
+  }
+
+  // 핸들러: 다중 선택 (배열) 토글
+  const toggleArrayFilter = (key, itemValue) => {
+    const currentList = filter[key] || []
+    const newList = currentList.includes(itemValue)
+      ? currentList.filter((v) => v !== itemValue)
+      : [...currentList, itemValue]
+    setFilter({ [key]: newList })
+  }
+
+  // 우선순위 데이터
   const priorities = [
     {
       value: 'HIGH',
@@ -44,14 +77,7 @@ const BoardFilter = ({ onClose }) => {
     },
   ]
 
-  // [추가 1] 라벨 데이터
-  const labels = [
-    { id: 1, name: '디자인', color: 'bg-pink-500' },
-    { id: 2, name: '개발', color: 'bg-indigo-500' },
-    { id: 3, name: '기획', color: 'bg-emerald-500' },
-    { id: 4, name: '버그', color: 'bg-red-500' },
-  ]
-
+  // 마감일 데이터
   const dueDates = [
     {
       id: 'overdue',
@@ -71,45 +97,18 @@ const BoardFilter = ({ onClose }) => {
       icon: Calendar,
       color: 'text-gray-400',
     },
-    {
-      id: 'completed',
-      label: '완료됨',
-      icon: CheckCircle2,
-      color: 'text-green-500',
-    },
   ]
 
-  // [추가 2] 기타 속성 필터
-  const extraAttributes = [
-    { id: 'hasAttachments', label: '첨부파일 있음', icon: Paperclip },
-    { id: 'hasDescription', label: '상세 설명 있음', icon: AlignLeft },
-    {
-      id: 'incompleteChecklist',
-      label: '미완료 체크리스트',
-      icon: CheckCircle2,
-    },
-  ]
-
-  const members = [
-    {
-      id: 1,
-      name: '김철수',
-      email: 'kim@example.com',
-      avatarColor: 'bg-emerald-500',
-    },
-    {
-      id: 2,
-      name: '이영희',
-      email: 'lee@example.com',
-      avatarColor: 'bg-blue-500',
-    },
-    // ... 기존 멤버 데이터
-  ]
-  // ---------------------
+  const activeFilterCount =
+    (filter.keyword ? 1 : 0) +
+    filter.memberIds.length +
+    filter.labels.length +
+    filter.priorities.length +
+    filter.dueDates.length
 
   return (
     <div className="absolute top-12 right-0 z-50 flex max-h-[85vh] w-96 flex-col overflow-hidden rounded-xl border border-gray-200 bg-white shadow-2xl">
-      {/* 헤더 (동일) */}
+      {/* 헤더 */}
       <div className="flex shrink-0 items-center justify-between border-b border-gray-100 bg-white px-5 py-4">
         <div className="flex items-center gap-2 font-semibold text-gray-800">
           <Filter className="h-4 w-4 text-indigo-600" />
@@ -123,7 +122,7 @@ const BoardFilter = ({ onClose }) => {
         </button>
       </div>
 
-      {/* 탭 버튼 (동일) */}
+      {/* 탭 버튼 */}
       <div className="flex shrink-0 border-b border-gray-100 px-4 pt-2">
         <button
           onClick={() => setActiveTab('properties')}
@@ -163,16 +162,17 @@ const BoardFilter = ({ onClose }) => {
               transition={{ duration: 0.2 }}
               className="space-y-6"
             >
-              {/* [추가 3] 정렬 옵션 (상단 배치) */}
+              {/* 정렬 옵션 */}
               <div className="rounded-lg border border-gray-100 bg-gray-50 p-3">
                 <label className="mb-2 flex items-center gap-1 text-xs font-bold tracking-wider text-gray-500 uppercase">
                   <ArrowUpDown className="h-3 w-3" /> 정렬 기준
                 </label>
                 <select
-                  value={sortBy}
-                  onChange={(e) => setSortBy(e.target.value)}
+                  value={filter.sortBy}
+                  onChange={(e) => handleFilterChange('sortBy', e.target.value)}
                   className="block w-full rounded-md border border-gray-200 bg-white p-2 text-sm text-gray-700 focus:border-indigo-500 focus:ring-indigo-500"
                 >
+                  <option value="manual">기본 정렬</option>
                   <option value="newest">최신 생성순</option>
                   <option value="oldest">오래된순</option>
                   <option value="priority_high">우선순위 높은순</option>
@@ -180,55 +180,57 @@ const BoardFilter = ({ onClose }) => {
                 </select>
               </div>
 
-              {/* 1. 키워드 검색 */}
+              {/* 키워드 검색 */}
               <div className="space-y-2">
                 <label className="flex items-center gap-1 text-xs font-bold tracking-wider text-gray-500 uppercase">
                   <Search className="h-3 w-3" /> 키워드
                 </label>
                 <input
                   type="text"
-                  value={keyword}
-                  onChange={(e) => setKeyword(e.target.value)}
+                  value={filter.keyword}
+                  onChange={(e) =>
+                    handleFilterChange('keyword', e.target.value)
+                  }
                   placeholder="제목으로 검색..."
                   className="w-full rounded-lg border border-gray-200 bg-white px-3 py-2 text-sm transition-all focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/20 focus:outline-none"
                 />
               </div>
 
-              {/* [추가 1 적용] 라벨 필터 */}
+              {/* 라벨 필터 */}
               <div className="space-y-3">
                 <label className="flex items-center gap-1 text-xs font-bold tracking-wider text-gray-500 uppercase">
                   <Tag className="h-3 w-3" /> 라벨
                 </label>
                 <div className="space-y-2">
-                  <label className="flex cursor-pointer items-center rounded-lg p-1.5 transition-colors hover:bg-gray-50">
-                    <input
-                      type="checkbox"
-                      className="h-4 w-4 rounded border-gray-300 text-indigo-600 focus:ring-indigo-500"
-                    />
-                    <span className="ml-2 text-sm text-gray-600">
-                      라벨 없음
-                    </span>
-                  </label>
-                  {labels.map((label) => (
-                    <label
-                      key={label.id}
-                      className="flex cursor-pointer items-center rounded-lg p-1.5 transition-colors hover:bg-gray-50"
-                    >
-                      <input
-                        type="checkbox"
-                        className="h-4 w-4 rounded border-gray-300 text-indigo-600 focus:ring-indigo-500"
-                      />
-                      <div
-                        className={`ml-2 flex h-6 w-full items-center rounded px-2 text-xs font-medium text-white ${label.color}`}
+                  {availableLabels.length === 0 ? (
+                    <div className="text-sm text-gray-400">
+                      생성된 라벨이 없습니다.
+                    </div>
+                  ) : (
+                    availableLabels.map((lbl) => (
+                      <label
+                        key={`${lbl.name}-${lbl.color}`}
+                        className="flex cursor-pointer items-center rounded-lg p-1.5 transition-colors hover:bg-gray-50"
                       >
-                        {label.name}
-                      </div>
-                    </label>
-                  ))}
+                        <input
+                          type="checkbox"
+                          checked={filter.labels.includes(lbl.name)}
+                          onChange={() => toggleArrayFilter('labels', lbl.name)}
+                          className="h-4 w-4 rounded border-gray-300 text-indigo-600 focus:ring-indigo-500"
+                        />
+                        <div
+                          className={`ml-2 flex h-6 items-center rounded px-2 text-xs font-medium text-white`}
+                          style={{ backgroundColor: lbl.color || '#6366f1' }} // hex color 처리 필요시 style 사용
+                        >
+                          {lbl.name}
+                        </div>
+                      </label>
+                    ))
+                  )}
                 </div>
               </div>
 
-              {/* 2. 우선순위 (기존 동일) */}
+              {/* 우선순위 */}
               <div className="space-y-3">
                 <label className="flex items-center gap-1 text-xs font-bold tracking-wider text-gray-500 uppercase">
                   <SlidersHorizontal className="h-3 w-3" /> 우선순위
@@ -241,6 +243,10 @@ const BoardFilter = ({ onClose }) => {
                     >
                       <input
                         type="checkbox"
+                        checked={filter.priorities.includes(priority.value)}
+                        onChange={() =>
+                          toggleArrayFilter('priorities', priority.value)
+                        }
                         className="h-3.5 w-3.5 rounded-sm border-current text-current focus:ring-0"
                       />
                       {priority.label}
@@ -249,34 +255,10 @@ const BoardFilter = ({ onClose }) => {
                 </div>
               </div>
 
-              {/* [추가 2 적용] 기타 속성 (첨부파일 등) */}
+              {/* 마감일 */}
               <div className="space-y-3">
                 <label className="flex items-center gap-1 text-xs font-bold tracking-wider text-gray-500 uppercase">
-                  <Filter className="h-3 w-3" /> 상세 조건
-                </label>
-                <div className="grid grid-cols-1 gap-1">
-                  {extraAttributes.map((attr) => (
-                    <label
-                      key={attr.id}
-                      className="group flex cursor-pointer items-center rounded-lg p-2 transition-colors hover:bg-gray-50"
-                    >
-                      <input
-                        type="checkbox"
-                        className="h-4 w-4 rounded border-gray-300 text-indigo-600 focus:ring-indigo-500"
-                      />
-                      <div className="ml-3 flex items-center gap-2 text-sm text-gray-600 group-hover:text-gray-900">
-                        <attr.icon className="h-4 w-4 text-gray-400" />
-                        <span>{attr.label}</span>
-                      </div>
-                    </label>
-                  ))}
-                </div>
-              </div>
-
-              {/* 3. 마감일 (기존 동일) */}
-              <div className="space-y-3">
-                <label className="flex items-center gap-1 text-xs font-bold tracking-wider text-gray-500 uppercase">
-                  <Calendar className="h-3 w-3" /> 마감일
+                  <Calendar className="h-3 w-3" /> 마감일 & 상태
                 </label>
                 <div className="space-y-1">
                   {dueDates.map((option) => (
@@ -286,6 +268,10 @@ const BoardFilter = ({ onClose }) => {
                     >
                       <input
                         type="checkbox"
+                        checked={filter.dueDates.includes(option.id)}
+                        onChange={() =>
+                          toggleArrayFilter('dueDates', option.id)
+                        }
                         className="h-4 w-4 rounded border-gray-300 text-indigo-600 focus:ring-indigo-500"
                       />
                       <div className="ml-3 flex items-center gap-2 text-sm text-gray-600 group-hover:text-gray-900">
@@ -298,7 +284,7 @@ const BoardFilter = ({ onClose }) => {
               </div>
             </motion.div>
           ) : (
-            // 멤버 탭 (기존과 동일)
+            // 멤버 탭
             <motion.div
               key="members"
               initial={{ opacity: 0, x: 10 }}
@@ -307,7 +293,6 @@ const BoardFilter = ({ onClose }) => {
               transition={{ duration: 0.2 }}
               className="space-y-4"
             >
-              {/* ... 멤버 필터 내용 ... */}
               <div className="relative">
                 <Search className="absolute top-2.5 left-3 h-4 w-4 text-gray-400" />
                 <input
@@ -319,36 +304,69 @@ const BoardFilter = ({ onClose }) => {
                 />
               </div>
               <div className="space-y-1">
-                {/* 멤버 리스트 렌더링 로직 (기존 유지) */}
-                {members.map((m) => (
-                  <div key={m.id} className="flex items-center p-2">
-                    {/* 더미 렌더링 */}
-                    <div
-                      className={`h-8 w-8 rounded-full ${m.avatarColor} flex items-center justify-center text-xs text-white`}
-                    >
-                      {m.name[0]}
+                {filteredMembers.map((m) => (
+                  <label
+                    key={m.id}
+                    className="flex cursor-pointer items-center rounded-lg p-2 transition-colors hover:bg-gray-50"
+                  >
+                    <input
+                      type="checkbox"
+                      checked={filter.memberIds.includes(m.id)}
+                      onChange={() => toggleArrayFilter('memberIds', m.id)}
+                      className="h-4 w-4 rounded border-gray-300 text-indigo-600 focus:ring-indigo-500"
+                    />
+                    <div className="ml-3 flex items-center gap-3">
+                      {m.profileImg ? (
+                        <img
+                          src={m.profileImg}
+                          alt={m.name}
+                          className="h-8 w-8 rounded-full object-cover"
+                        />
+                      ) : (
+                        <div className="flex h-8 w-8 items-center justify-center rounded-full bg-indigo-100 text-xs font-bold text-indigo-600">
+                          {m.name[0]}
+                        </div>
+                      )}
+                      <div className="flex flex-col">
+                        <span className="text-sm font-medium text-gray-900">
+                          {m.name}
+                        </span>
+                        <span className="text-xs text-gray-500">{m.email}</span>
+                      </div>
                     </div>
-                    <span className="ml-3 text-sm">{m.name}</span>
-                  </div>
+                  </label>
                 ))}
+                {filteredMembers.length === 0 && (
+                  <div className="py-4 text-center text-sm text-gray-500">
+                    검색 결과가 없습니다.
+                  </div>
+                )}
               </div>
             </motion.div>
           )}
         </AnimatePresence>
       </div>
 
-      {/* 하단 버튼 (동일) */}
+      {/* 하단 버튼 */}
       <div className="flex shrink-0 items-center justify-between border-t border-gray-100 bg-gray-50 p-4">
         <div className="text-xs text-gray-500">
-          <span className="font-semibold text-indigo-600">3개</span>의 필터 적용
-          중
+          <span className="font-semibold text-indigo-600">
+            {activeFilterCount}개
+          </span>
+          의 필터 적용 중
         </div>
         <div className="flex gap-2">
-          <button className="rounded-md px-3 py-1.5 text-xs font-medium text-gray-500 transition-colors hover:bg-gray-200 hover:text-gray-700">
+          <button
+            onClick={resetFilter}
+            className="rounded-md px-3 py-1.5 text-xs font-medium text-gray-500 transition-colors hover:bg-gray-200 hover:text-gray-700"
+          >
             초기화
           </button>
-          <button className="rounded-md bg-indigo-600 px-3 py-1.5 text-xs font-medium text-white shadow-sm transition-colors hover:bg-indigo-700">
-            필터 적용
+          <button
+            onClick={onClose}
+            className="rounded-md bg-indigo-600 px-3 py-1.5 text-xs font-medium text-white shadow-sm transition-colors hover:bg-indigo-700"
+          >
+            닫기
           </button>
         </div>
       </div>
