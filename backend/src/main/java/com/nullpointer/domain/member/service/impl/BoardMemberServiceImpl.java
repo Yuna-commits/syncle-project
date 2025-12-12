@@ -14,6 +14,7 @@ import com.nullpointer.domain.member.vo.BoardMemberVo;
 import com.nullpointer.domain.member.vo.enums.Role;
 import com.nullpointer.domain.user.mapper.UserMapper;
 import com.nullpointer.domain.user.vo.UserVo;
+import com.nullpointer.global.common.SocketSender;
 import com.nullpointer.global.common.enums.ErrorCode;
 import com.nullpointer.global.exception.BusinessException;
 import com.nullpointer.global.validator.MemberValidator;
@@ -36,6 +37,7 @@ public class BoardMemberServiceImpl implements BoardMemberService {
     private final UserMapper userMapper;
     private final MemberValidator memberVal;
     private final ActivityService activityService;
+    private final SocketSender socketSender;
 
     /**
      * 보드 멤버 관리 권한
@@ -96,6 +98,9 @@ public class BoardMemberServiceImpl implements BoardMemberService {
         if (!toRestore.isEmpty()) {
             boardMemberMapper.restoreMembersBulk(boardId, toRestore);
         }
+
+        // 소켓 전송
+        socketSender.sendSocketMessage(boardId,"BOARD_MEMBER_INVITE", userId, null);
     }
 
     @Override
@@ -125,6 +130,9 @@ public class BoardMemberServiceImpl implements BoardMemberService {
 
         // 멤버 권한 변경 로그 저장
         changeRoleLog(teamId, boardId, memberId, userId, oldRole, req.getRole());
+
+        // 소켓 전송
+        socketSender.sendSocketMessage(boardId,"BOARD_MEMBER_UPDATED", userId, null);
     }
 
     @Override
@@ -157,6 +165,9 @@ public class BoardMemberServiceImpl implements BoardMemberService {
 
         // 탈퇴/강퇴 로그 저장
         kickMemberLog(boardId, memberId, ownerId);
+
+        // 소켓 전송
+        socketSender.sendSocketMessage(boardId,"BOARD_MEMBER_DELETED", userId, null);
     }
 
     /**

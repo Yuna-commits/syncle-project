@@ -36,7 +36,7 @@ public class WebSocketConfig implements WebSocketMessageBrokerConfigurer {
     public void registerStompEndpoints(StompEndpointRegistry registry) {
         // 클라이언트가 웹소켓 연결을 시작할 엔드포인트
         registry.addEndpoint("/ws") // ws://localhost:8080/ws
-                .setAllowedOrigins("http://localhost:5173") // 프론트엔드 origin 허용
-                .withSockJS();
+                .setAllowedOrigins("http://localhost:5173"); // 프론트엔드 origin 허용
+//                .withSockJS();
     }
 }
