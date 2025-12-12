@@ -103,4 +103,14 @@ public class RedisUtil {
         }).toList();
     }
 
+    // 리스트의 특정 인덱스 데이터 수정 (알림 읽음 처리용)
+    public <T> void updateListIndex(String key, int index, T data) {
+        try {
+            String value = objectMapper.writeValueAsString(data);
+            stringRedisTemplate.opsForList().set(key, index, value);
+        } catch (JsonProcessingException e) {
+            throw new RuntimeException("Redis 데이터 수정 실패 (JSON 변환 오류)", e);
+        }
+    }
+
 }
