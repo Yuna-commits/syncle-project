@@ -5,25 +5,28 @@ import lombok.Getter;
 @Getter
 public enum RedisKeyType {
 
-    // Auth
-    REFRESH_TOKEN("np:auth:refresh:%s", 1_209_600_000L), // 2주
+    // 인증 토큰
+    REFRESH_TOKEN("np:auth:refresh:%s", 60 * 60 * 24 * 14L), // 2주
     BLACKLIST("np:auth:blacklist:%s", 0L),
 
-    // Verification - 5분
-    VERIFICATION_CODE("np:auth:code:%s:%s", 300_000L),
-    EMAIL_LINK_TOKEN("np:auth:link:%s", 1_800_000L), // {token} -> userId
+    // 이메일 인증 코드/링크
+    VERIFICATION_CODE("np:auth:code:%s:%s", 60 * 5L), // 5분
+    EMAIL_LINK_TOKEN("np:auth:link:%s", 60 * 30L), // 30분
 
-    // Password Reset - 10분
-    PASSWORD_RESET_TOKEN("np:auth:pw-token:%s", 600_000L),
+    // 비밀번호 재설정 - 5분
+    PASSWORD_RESET_TOKEN("np:auth:pw-token:%s", 60 * 5L),
 
-    // INVITATION - 7일
-    INVITATION("np:team:invitation:%s", 604_800_000L);
+    // 팀 초대 - 7일
+    INVITATION("np:team:invitation:%s", 60 * 60 * 24 * 7L),
 
-    private final String pattern;
+    // 알림 - 30일
+    NOTIFICATION("np:notification:%s", 60 * 60 * 24 * 30L);
+
+    private final String prefix;
     private final long defaultTtl;
 
-    RedisKeyType(String pattern, long defaultTtl) {
-        this.pattern = pattern;
+    RedisKeyType(String prefix, long defaultTtl) {
+        this.prefix = prefix;
         this.defaultTtl = defaultTtl;
     }
 
@@ -32,7 +35,7 @@ public enum RedisKeyType {
      * ex) RedisKeyType.REFRESH_TOKEN.getKey(1L) -> "np:auth:refresh:1"
      */
     public String getKey(Object... args) {
-        return String.format(pattern, args);
+        return String.format(prefix, args);
     }
 
 }
