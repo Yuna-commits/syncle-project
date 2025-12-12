@@ -9,22 +9,43 @@ import CardActivity from '../../card/CardActivity'
 import CardChecklist from '../../card/CardChecklist'
 import CardDescription from '../../card/CardDescription'
 import CardSidebar from '../../card/CardSidebar'
-import { useBoardSocket } from '../../../hooks/board/useBoardSocket'
 
 export default function CardDetailModal() {
-  const { boardId } = useParams()
+  const { boardId: boardIdParam } = useParams()
+  const boardId = Number(boardIdParam)
+
   const { selectedCard, closeCardModal } = useBoardStore()
+
   const { data: activeBoard } = useBoardQuery(boardId)
   const { updateCard } = useCardMutations(activeBoard?.id)
+
+  // activeBoard가 갱신될 때 selectedCard 동기화
+  useEffect(() => {
+    if (activeBoard && selectedCard) {
+      // 1. 현재 보드의 모든 컬럼에서 보고 있는 카드(selectedCard.id)를 찾음
+      let updatedCard = null
+      const columns = Object.values(activeBoard.columns)
+
+      for (const col of columns) {
+        const found = col.tasks.find((t) => t.id === selectedCard.id)
+        if (found) {
+          updatedCard = found
+          break
+        }
+      }
+
+      // 2. 찾았으면 Store의 selectedCard를 최신 객체로 교체
+      if (updatedCard) {
+        useBoardStore.setState({ selectedCard: updatedCard })
+      }
+    }
+  }, [selectedCard, activeBoard, selectedCard?.id]) // activeBoard가 바뀔 때마다 실행
 
   // 체크리스트 표시 여부 상테
   // - 아이템이 있으면 자동 펼침
   const [showChecklist, setShowChecklist] = useState(
     selectedCard.checklists && selectedCard.checklists.length > 0,
   )
-
-  // 웹소켓 연결 및 실시간 감지
-  useBoardSocket(boardId)
 
   // 댓글 표시 여부 상태
   const [showComment, setShowComment] = useState(true)

@@ -5,7 +5,6 @@ import InviteBoardMemeberModal from '../modals/board/InviteBoardMemeberModal'
 import { useBoardMutations } from '../../hooks/board/useBoardMutations'
 import { Lock, Globe, MoreHorizontal, Plus, Share2, Star } from 'lucide-react'
 import BoardFilter from '../sidebar/BoardFilter'
-import { useBoardSocket } from '../../hooks/board/useBoardSocket'
 
 function BoardHeader({ board }) {
   // UI 상태 제어 함수 (Store)
@@ -17,9 +16,6 @@ function BoardHeader({ board }) {
 
   // 데이터 변형 훅 (React Query)
   const { toggleFavorite } = useBoardMutations(board.id)
-
-  // 웹소켓 연결 및 실시간 감지
-  useBoardSocket(board.id)
 
   // 모달 상태 관리
   const [isInviteModalOpen, setIsInviteModalOpen] = useState(false)
