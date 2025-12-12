@@ -1,8 +1,10 @@
-import React, { useState, useRef, useEffect } from 'react'
+import React, { useState, useRef, useEffect, useMemo } from 'react'
 import TaskCard from '../card/TaskCard'
 import { MoreHorizontal, Plus, X } from 'lucide-react'
 import { useCardMutations } from '../../hooks/card/useCardMutations'
 import { useListMutations } from '../../hooks/useListMutations'
+import useBoardStore from '../../stores/useBoardStore'
+import { filterAndSortTasks } from '../../utils/boardFilterUtils'
 
 /**
  * N개의 카드 작업을 담을 하나의 리스트 랜더링
@@ -10,6 +12,7 @@ import { useListMutations } from '../../hooks/useListMutations'
 function BoardList({ column, innerRef, boardId }) {
   const { addCard } = useCardMutations(boardId)
   const { deleteList, updateList } = useListMutations(boardId)
+  const { filter } = useBoardStore()
 
   const [isAdding, setIsAdding] = useState(false)
   const [cardTitle, setCardTitle] = useState('')
@@ -29,6 +32,10 @@ function BoardList({ column, innerRef, boardId }) {
     document.addEventListener('mousedown', handleClickOutside)
     return () => document.removeEventListener('mousedown', handleClickOutside)
   }, [])
+
+  const filteredAndSortedTasks = useMemo(() => {
+    return filterAndSortTasks(column.tasks, filter)
+  }, [column.tasks, filter])
 
   const handleAddCard = (e) => {
     e.preventDefault()
@@ -104,11 +111,6 @@ function BoardList({ column, innerRef, boardId }) {
             >
               {column.title}
             </h3>
-            <span
-              className={`flex h-5 min-w-5 items-center justify-center rounded-full px-1.5 text-xs font-medium ${isDoneList ? 'bg-green-200 text-green-700' : 'bg-gray-200 text-gray-600'}`}
-            >
-              {column.tasks.length}
-            </span>
           </div>
         )}
 
@@ -149,9 +151,14 @@ function BoardList({ column, innerRef, boardId }) {
         data-column-id={column.id}
         className="custom-scrollbar min-h-[50px] flex-1 overflow-y-auto px-1 py-0.5"
       >
-        {column.tasks.map((task) => (
+        {filteredAndSortedTasks.map((task) => (
           <TaskCard key={task.id} task={task} />
         ))}
+        {filteredAndSortedTasks.length === 0 && column.tasks.length > 0 && (
+          <div className="py-4 text-center text-xs text-gray-400">
+            조건에 맞는 카드가 없습니다.
+          </div>
+        )}
       </div>
 
       {/* === 카드 추가 입력 === */}
