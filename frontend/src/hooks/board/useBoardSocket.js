@@ -1,5 +1,5 @@
+// hooks/board/useBoardSocket.js
 import { useEffect, useRef } from 'react'
-import { Client } from '@stomp/stompjs'
 import { useQueryClient } from '@tanstack/react-query'
 import { useAuthQuery } from '../auth/useAuthQuery'
 import { socketClient } from '../../utils/socketClient'
@@ -7,15 +7,13 @@ import { socketClient } from '../../utils/socketClient'
 export const useBoardSocket = (boardId) => {
   const queryClient = useQueryClient()
   const { data: user, isLoading, refetch } = useAuthQuery()
-
-  // 구독 객체를 저장해뒀다가 언마운트시 해제
   const subscriptionRef = useRef(null)
 
   useEffect(() => {
-    // 1. 필수 데이터 확인
+    // 보드 ID 없으면 아무 것도 안 함
     if (!boardId) return
 
-    // 유저 정보가 없으면 refetch 시도 (새로고침 직후 등)
+    // 유저 정보가 없으면 refetch 시도 후 리턴
     if (!user) {
       if (!isLoading) {
         refetch()
@@ -23,55 +21,60 @@ export const useBoardSocket = (boardId) => {
       return
     }
 
-    // 2. 보드 구독
-    const trySubscribe = () => {
-      if (socketClient.isConnected()) {
-        console.log(`구독 중인 보드: ${boardId}`)
+    // 메시지 핸들러
+    const handleMessage = (message) => {
+      try {
+        const body = JSON.parse(message.body)
+        console.log('[Board Socket] message:', body)
 
-        // 기존 구독이 있다면 해제 후 재구독
-        if (subscriptionRef.current) subscriptionRef.current.unsubscribe()
+        // 내가 보낸 이벤트는 스킵 (senderId 비교)
+        if (body.senderId && String(body.senderId) !== String(user.id)) {
+          console.log(
+            `[Board Sync] 데이터 변경 감지 (Type: ${body.type}), 보드 ${boardId} 리패치`,
+          )
 
-        subscriptionRef.current = socketClient.subscribe(
-          `/topic/board/${boardId}`,
-          (message) => {
-            try {
-              const body = JSON.parse(message.body)
-
-              // 내가 보낸 메시지가 아닐 때만 갱신 (Optional)
-              // NotificationDto 구조에 senderId가 있다면 체크
-              if (body.senderId && String(body.senderId) !== String(user.id)) {
-                console.log(
-                  `[Board Sync] 데이터가 변경되었습니다. (Type: ${body.type})`,
-                )
-
-                // React Query 캐시 무효화 -> 최신 데이터 다시 받아오기
-                queryClient.invalidateQueries({
-                  queryKey: ['board', Number(boardId)],
-                })
-              }
-            } catch (error) {
-              console.error('소켓 메시지 파싱 오류: ', error)
-            }
-          },
-        )
+          queryClient.invalidateQueries({
+            queryKey: ['board', Number(boardId)],
+          })
+        }
+      } catch (e) {
+        console.error('[Board Socket] 메시지 파싱 에러:', e)
       }
     }
 
-    // 초기 실행
-    trySubscribe()
+    // 실제 구독 로직
+    const subscribe = () => {
+      // 이미 구독 중이면 중복 구독 방지
+      if (subscriptionRef.current) return
 
-    // 소켓 연결 대기 (새로고침 직후 등 연결 중일 때를 대비)
-    const interval = setInterval(() => {
-      if (!subscriptionRef.current && socketClient.isConnected) {
-        trySubscribe()
-      }
-    }, 500)
+      console.log(`[WebSocket] 보드 토픽 구독: /topic/board/${boardId}`)
 
-    // 언마운트 시 "해당 보드 구독만" 연결 해제 -> 소켓 연결은 유지
+      subscriptionRef.current = socketClient.subscribe(
+        `/topic/board/${boardId}`,
+        handleMessage,
+      )
+    }
+
+    // 1) 소켓이 이미 연결된 상태라면 바로 구독
+    if (socketClient.isConnected()) {
+      subscribe()
+    } else {
+      // 2) 연결 안 돼 있으면 connect 후 onConnect에서 구독
+      socketClient.connect({
+        onConnect: () => {
+          console.log('[WebSocket] 연결 완료, 보드 구독 시작')
+          subscribe()
+        },
+        onStompError: (frame) => {
+          console.error('[Board Socket] STOMP 에러:', frame.headers['message'])
+        },
+      })
+    }
+
+    // 정리(cleanup): 언마운트 / boardId 변경 / user 변경 시 구독 해제
     return () => {
-      clearInterval(interval)
       if (subscriptionRef.current) {
-        console.log(`${boardId}: 보드 구독 해제`)
+        console.log(`[WebSocket] 보드 구독 해제: ${boardId}`)
         subscriptionRef.current.unsubscribe()
         subscriptionRef.current = null
       }
