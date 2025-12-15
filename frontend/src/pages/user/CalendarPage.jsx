@@ -75,7 +75,7 @@ function CalendarPage() {
   // --- 핸들러 ---
   const handleEventClick = (info) => {
     const { boardId, cardId } = info.event.extendedProps
-    navigate(`/board/${boardId}/card/${cardId}`)
+    navigate(`/board/${boardId}?cardId=${cardId}`)
   }
 
   const handleTeamChange = (newTeamId) => {

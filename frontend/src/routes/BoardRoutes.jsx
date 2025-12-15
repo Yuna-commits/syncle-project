@@ -6,7 +6,6 @@ function BoardRoutes() {
   return (
     <Routes>
       <Route path=":boardId" element={<BoardPage />} />
-      <Route path=":boardId/card/:cardId" element={<BoardPage />} />
     </Routes>
   )
 }

@@ -80,7 +80,8 @@
 
     <!-- 내 일정 조회(캘린더) -->
     <select id="findCardsByAssigneeIdAndFilters" resultType="CardResponse">
-        SELECT c.id,
+        SELECT
+        c.id,
         c.assignee_id,
         c.title,
         c.description,
@@ -88,8 +89,8 @@
         c.priority,
         c.start_date,
         c.due_date,
-        c.label_color ,
-        c.list_id ,
+        c.label_color,
+        c.list_id,
         l.title AS listTitle,
         b.title AS boardTitle,
         b.id AS boardId,
@@ -109,6 +110,24 @@
         <if test="teamId != null">
             AND b.team_id = #{teamId}
         </if>
+
+        AND EXISTS (
+        SELECT 1
+        FROM team_member tm
+        WHERE tm.team_id = b.team_id
+        AND tm.user_id = #{userId}
+        )
+
+        AND (
+        b.visibility = 'TEAM'
+        OR
+        EXISTS (
+        SELECT 1
+        FROM board_member bm
+        WHERE bm.board_id = b.id
+        AND bm.user_id = #{userId}
+        )
+        )
 
         ORDER BY c.due_date ASC
     </select>
