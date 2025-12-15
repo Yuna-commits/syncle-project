@@ -14,7 +14,7 @@ function NotificationPage() {
   const tabs = [
     { id: 'ALL', label: '전체' },
     { id: 'CARD_ASSIGNED', label: '할당됨' },
-    { id: 'COMMENT_TAGGED', label: '멘션' },
+    { id: 'COMMENT_ALL', label: '댓글' }, // 댓글/답글/멘션 통합
     { id: 'TEAM_INVITE', label: '초대' },
   ]
 
@@ -25,6 +25,12 @@ function NotificationPage() {
   // 필터링 로직
   const filteredNotifications = notifications.filter((noti) => {
     if (activeTab === 'ALL') return true
+
+    // '댓글' 탭 선택 시: 타입 이름에 'COMMENT'가 포함된 모든 알림 필터링
+    if (activeTab === 'COMMENT_ALL') {
+      return noti.type && noti.type.includes('COMMENT')
+    }
+
     return noti.type === activeTab
   })
 
@@ -103,7 +109,7 @@ function NotificationPage() {
               <div className="flex h-16 w-16 items-center justify-center rounded-full bg-gray-100 text-gray-400">
                 <Bell size={32} />
               </div>
-              <h3 className="text-lg font-medium text-gray-900">
+              <h3 className="text-lg font-medium text-gray-800">
                 새로운 알림이 없습니다
               </h3>
               <p className="mt-1 text-sm text-gray-500">

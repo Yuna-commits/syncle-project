@@ -43,11 +43,13 @@ export default function NotificationItem({ notification, onClick }) {
   // 알림 타입에 따른 아이콘/스타일
   const getTypeConfig = () => {
     switch (type) {
-      case 'COMMENT_TAGGED': // 댓글 멘션
+      case 'COMMENT': // 댓글
+      case 'COMMENT_REPLY': // 답글
+      case 'COMMENT_TAGGED': // 멘션
         return {
           icon: <MessageSquareCode size={14} />,
           color: 'text-blue-600 bg-blue-50',
-          label: '멘션',
+          label: type === 'COMMENT' ? '댓글' : '답글',
         }
       case 'CARD_ASSIGNED': // 담당자 지정
         return {
@@ -90,10 +92,47 @@ export default function NotificationItem({ notification, onClick }) {
 
   const typeConfig = getTypeConfig()
 
+  const renderMessageContent = () => {
+    // 댓글/답글/멘션 타입인 경우 '알림 문구'와 '내용'을 분리
+    if (
+      type === 'COMMENT' ||
+      type === 'COMMENT_REPLY' ||
+      type === 'COMMENT_TAGGED'
+    ) {
+      const separatorIndex = message.indexOf(':') // 첫 번째 ':' 위치 찾음
+
+      if (separatorIndex > -1) {
+        const titlePart = message.slice(0, separatorIndex)
+        const contentPart = message.slice(separatorIndex + 1).trim()
+
+        return (
+          <div className="text-sm">
+            {/* 알림 문구 (Bold 처리) */}
+            <span className="text-medium font-semibold text-gray-700">
+              {titlePart}
+            </span>
+
+            {/* 실제 내용 (줄바꿈 처리(whitespace-pre-wrap) + 박스 스타일) */}
+            <div className="mt-1.5 border-l-2 border-gray-300 p-2 text-sm whitespace-pre-wrap text-gray-500">
+              {contentPart}
+            </div>
+          </div>
+        )
+      }
+    }
+
+    // 그 외 일반 알림
+    return (
+      <p className="border-l-2 border-gray-300 p-2 text-sm leading-relaxed break-keep whitespace-pre-wrap text-gray-500">
+        {message}
+      </p>
+    )
+  }
+
   return (
     <div
       onClick={onClick}
-      className={`group flex cursor-pointer items-start gap-4 border-b border-gray-100 p-5 transition-colors last:border-0 hover:bg-gray-50 ${
+      className={`group flex cursor-pointer items-start gap-4 border-b border-gray-100 p-5 transition-colors last:border-0 hover:bg-blue-50 ${
         !isRead ? 'bg-blue-50/40' : 'bg-white'
       }`}
     >
@@ -142,10 +181,7 @@ export default function NotificationItem({ notification, onClick }) {
         </div>
 
         {/* 3. 메시지 본문 */}
-        <p className="text-sm leading-relaxed break-keep text-gray-600">
-          {/* 닉네임 중복 제거 (선택적) */}
-          {message.replace(senderNickname || '', '').trim()}
-        </p>
+        {renderMessageContent()}
       </div>
     </div>
   )

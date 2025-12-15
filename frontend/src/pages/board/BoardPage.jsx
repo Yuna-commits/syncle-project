@@ -1,5 +1,5 @@
 import { useEffect, useRef } from 'react'
-import { useParams } from 'react-router-dom'
+import { useParams, useSearchParams } from 'react-router-dom'
 import Sortable from 'sortablejs'
 import BoardCanvas from '../../components/board/BoardCanvas'
 import BoardHeader from '../../components/board/BoardHeader'
@@ -21,7 +21,11 @@ function BoardPage() {
   const { boardId: boardIdParam } = useParams()
   const boardId = Number(boardIdParam)
 
-  const { selectedCard, isSettingsOpen, resetBoard } = useBoardStore()
+  const [searchParams, setSearchParams] = useSearchParams()
+  const cardIdFromUrl = searchParams.get('cardId')
+
+  const { selectedCard, isSettingsOpen, resetBoard, findAndSelectCard } =
+    useBoardStore()
 
   // 데이터 조회는 React Query 훅 사용
   const { data: activeBoard, isLoading, error } = useBoardQuery(boardId)
@@ -42,6 +46,17 @@ function BoardPage() {
 
   // 리스트 컨테이너 Ref
   const listContainerRef = useRef(null)
+
+  // 알림 페이지 -> 카드 상세 이동 시
+  // url에 cardId가 있고 보드 데이터가 로드되면 모달도 함께 열기
+  useEffect(() => {
+    if (cardIdFromUrl && activeBoard) {
+      // 카드 모달 열기
+      findAndSelectCard(activeBoard, Number(cardIdFromUrl))
+      // URL 파라미터 제거 (replac: true로 무한 루프 제거)
+      setSearchParams({}, { replace: true })
+    }
+  }, [cardIdFromUrl, activeBoard, findAndSelectCard, setSearchParams])
 
   // 4. 언마운트 시 스토어 초기화
   useEffect(() => {

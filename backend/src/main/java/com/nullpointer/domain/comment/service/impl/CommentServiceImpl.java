@@ -1,16 +1,21 @@
 package com.nullpointer.domain.comment.service.impl;
 
-import com.nullpointer.domain.checklist.vo.ChecklistVo;
+import com.nullpointer.domain.card.mapper.CardMapper;
+import com.nullpointer.domain.card.vo.CardVo;
 import com.nullpointer.domain.comment.dto.CommentRequest;
 import com.nullpointer.domain.comment.dto.CommentResponse;
 import com.nullpointer.domain.comment.mapper.CommentMapper;
 import com.nullpointer.domain.comment.service.CommentService;
 import com.nullpointer.domain.comment.vo.CommentVo;
+import com.nullpointer.domain.notification.event.CardEvent;
+import com.nullpointer.domain.user.mapper.UserMapper;
+import com.nullpointer.domain.user.vo.UserVo;
 import com.nullpointer.global.common.SocketSender;
 import com.nullpointer.global.common.enums.ErrorCode;
 import com.nullpointer.global.exception.BusinessException;
 import com.nullpointer.global.validator.CardValidator;
 import lombok.RequiredArgsConstructor;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -24,8 +29,13 @@ import java.util.Map;
 public class CommentServiceImpl implements CommentService {
 
     private final CommentMapper commentMapper;
+    private final CardMapper cardMapper;
+    private final UserMapper userMapper;
+
     private final SocketSender socketSender;
     private final CardValidator cardVal;
+
+    private final ApplicationEventPublisher publisher; // 이벤트 발행기
 
     // 목록 조회
     @Transactional(readOnly = true)
@@ -71,8 +81,49 @@ public class CommentServiceImpl implements CommentService {
         // 저장 (request객체에 id가 담김)
         commentMapper.insertComment(request);
 
-        // 소켓 전송
+        // 알림 반환용 데이터 조회
+        // 댓글 작성자 정보
+        UserVo actor = userMapper.findById(userId)
+                .orElseThrow(() -> new BusinessException(ErrorCode.USER_NOT_FOUND));
+
+        // 카드 정보 (제목, 담당자, 보드 id)
+        CardVo card = cardMapper.findById(cardId)
+                .orElseThrow(() -> new BusinessException(ErrorCode.CARD_NOT_FOUND));
+
         Long boardId = cardVal.findBoardIdByCardId(cardId);
+
+        // 기본 설정 (새 댓글인 경우)
+        CardEvent.EventType eventType = CardEvent.EventType.COMMENT;
+        Long targetUserId = null; // 일반 댓글은 카드 담당자에게만 알림
+
+        // 댓글 타입 판별
+        if (request.getParentId() != null) {
+            // 답글인 경우 '원댓글 작성자'를 찾아서 알림 타겟으로 지정
+            eventType = CardEvent.EventType.REPLY;
+            CommentVo parentComment = commentMapper.findById(request.getParentId()).orElse(null);
+            if (parentComment != null) {
+                targetUserId = parentComment.getWriterId();
+            }
+        }
+
+        // [이벤트] 댓글 알림 발행
+        CardEvent event = CardEvent.builder()
+                .cardId(cardId)
+                .cardTitle(card.getTitle())
+                .boardId(boardId)
+                .listId(card.getListId())
+                .eventType(eventType) // COMMENT || REPLY
+                .commentContent(request.getContent())
+                .actorId(actor.getId()) // 댓글 작성자
+                .actorNickname(actor.getNickname())
+                .actorProfileImg(actor.getProfileImg())
+                .assigneeId(card.getAssigneeId()) // 담당자에게 알림
+                .targetUserId(targetUserId) // !null이면 원댓글 작성자에게도 알림
+                .build();
+
+        publisher.publishEvent(event);
+
+        // 소켓 전송
         socketSender.sendSocketMessage(boardId, "CHECKLIST_CREATE", userId, null);
 
         // 저장된 데이터를 Full 정보(작성자 포함)로 다시 조회해서 리턴

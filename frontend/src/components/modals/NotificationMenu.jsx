@@ -74,6 +74,40 @@ function NotificationMenu({ onClose, anchorEl }) {
     return `${date.getMonth() + 1}월 ${date.getDate()}일`
   }
 
+  const renderMessageContent = (noti) => {
+    const { message, type } = noti
+    // 댓글/답글/멘션 타입인 경우 '알림 문구'와 '내용'을 분리
+    if (type && type.includes('COMMENT')) {
+      const separatorIndex = message.indexOf(':') // 첫 번째 ':' 위치 찾음
+
+      if (separatorIndex > -1) {
+        const titlePart = message.slice(0, separatorIndex)
+        const contentPart = message.slice(separatorIndex + 1).trim()
+
+        return (
+          <div className="text-sm">
+            {/* 알림 문구 (Bold 처리) */}
+            <span className="text-medium font-semibold text-gray-700">
+              {titlePart}
+            </span>
+
+            {/* 실제 내용 (줄바꿈 처리(whitespace-pre-wrap) + 박스 스타일) */}
+            <div className="mt-1 border-l-2 border-gray-300 p-2 text-sm whitespace-pre-wrap text-gray-500">
+              {contentPart}
+            </div>
+          </div>
+        )
+      }
+    }
+
+    // 그 외 일반 알림
+    return (
+      <p className="border-l-2 border-gray-300 p-2 text-sm leading-relaxed break-keep whitespace-pre-wrap text-gray-500">
+        {message}
+      </p>
+    )
+  }
+
   return (
     <div
       ref={refs.setFloating}
@@ -114,30 +148,31 @@ function NotificationMenu({ onClose, anchorEl }) {
               <li
                 key={noti.id}
                 onClick={() => handleItemClick(noti)}
-                className={`group relative flex cursor-pointer items-start gap-4 px-4 py-4 transition-colors hover:bg-blue-50 ${
+                className={`group relative flex cursor-pointer items-start gap-4 px-2 py-2 transition-colors hover:bg-blue-50 ${
                   !noti.isRead ? 'bg-blue-50/30' : 'bg-white'
                 }`}
               >
-                {/* 읽지 않음 표시 (파란 점) */}
-                {!noti.isRead && (
-                  <span className="absolute top-4 left-2 h-2 w-2 rounded-full bg-blue-500 ring-2 ring-white"></span>
-                )}
-
-                <div className="relative h-10 w-10 shrink-0 overflow-hidden rounded-full border border-gray-200 bg-gray-100">
-                  <img
-                    src={noti.senderProfileImg || defaultProfile}
-                    alt=""
-                    className="h-full w-full object-cover"
-                    // 이미지 로드 실패 시 숨기고 배경색만 보이게 하거나 기본 아이콘 노출
-                    onError={(e) => {
-                      e.target.style.display = 'none'
-                      e.target.parentElement.classList.add(
-                        'flex',
-                        'items-center',
-                        'justify-center',
-                      )
-                    }}
-                  />
+                <div className="relative shrink-0">
+                  <div className="h-10 w-10 overflow-hidden rounded-full border border-gray-200 bg-gray-100">
+                    <img
+                      src={noti.senderProfileImg || defaultProfile}
+                      alt=""
+                      className="h-full w-full object-cover"
+                      // 이미지 로드 실패 시 숨기고 배경색만 보이게 하거나 기본 아이콘 노출
+                      onError={(e) => {
+                        e.target.style.display = 'none'
+                        e.target.parentElement.classList.add(
+                          'flex',
+                          'items-center',
+                          'justify-center',
+                        )
+                      }}
+                    />
+                    {/* 읽지 않음 표시 (파란 점) */}
+                    {!noti.isRead && (
+                      <span className="absolute -top-0.5 -right-0.5 h-3.5 w-3.5 rounded-full border-2 border-white bg-blue-500 shadow-sm"></span>
+                    )}
+                  </div>
                 </div>
 
                 <div className="flex min-w-0 flex-1 flex-col gap-1">
@@ -152,9 +187,7 @@ function NotificationMenu({ onClose, anchorEl }) {
                   </div>
 
                   {/* 하단: 메시지 내용 */}
-                  <p className="text-sm leading-relaxed break-keep text-gray-600">
-                    {noti.message.replace(noti.senderNickname || '', '').trim()}
-                  </p>
+                  {renderMessageContent(noti)}
                 </div>
               </li>
             ))}

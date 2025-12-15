@@ -20,11 +20,16 @@ public class CardEvent {
     private Long actorId; // 행동한 사람
     private String actorNickname; // 행동한 사람의 닉네임
     private String actorProfileImg;
-    private Long assigneeId; // 담당자
+
+    private Long assigneeId; // 카드 담당자 (기본 수신자)
 
     private Boolean isComplete; // 완료 여부
     private Priority priority; // 중요도
     private LocalDateTime dueDate; // 마감일
+
+    private String commentContent; // 댓글
+    private Long commentId;
+    private Long targetUserId; // 타겟 수신자 id (답글, 멘션용)
 
     // 변경된 속성 목록
     private Set<String> changedFields;
@@ -32,6 +37,11 @@ public class CardEvent {
     private EventType eventType;
 
     public enum EventType {
-        ASSIGNED, MOVED, UPDATED
+        ASSIGNED,
+        MOVED,
+        UPDATED,
+        COMMENT,
+        REPLY,
+        MENTION
     }
 }
