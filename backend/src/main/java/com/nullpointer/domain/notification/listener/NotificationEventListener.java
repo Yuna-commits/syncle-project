@@ -12,6 +12,7 @@ import org.springframework.messaging.simp.SimpMessagingTemplate;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Component;
 
+import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.Set;
 
@@ -24,7 +25,7 @@ public class NotificationEventListener {
     private final SimpMessagingTemplate messagingTemplate;
 
     /**
-     * 카드 이벤트 처리 리스터
+     * 카드 이벤트 처리 리스너
      */
     @Async
     @EventListener
@@ -47,8 +48,8 @@ public class NotificationEventListener {
             case ASSIGNED:
                 type = NotificationType.CARD_ASSIGNED; // 담당자 지정
                 message = String.format(
-                        "'%s'님이 회원님을 '%s' 카드의 담당자로 지정하였습니다.",
-                        event.getActorNickname(), event.getCardTitle());
+                        "'%s' 카드의 담당자로 지정되었습니다.",
+                        event.getCardTitle());
                 break;
             case MOVED:
                 type = NotificationType.CARD_MOVED;
@@ -82,6 +83,7 @@ public class NotificationEventListener {
                 .message(message)
                 .targetUrl("/board/" + event.getBoardId()) // 클릭 시 해당 보드로 이동
                 .isRead(false)
+                .createdAt(LocalDateTime.now())
                 .build();
 
         // Redis 저장

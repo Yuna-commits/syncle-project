@@ -51,10 +51,17 @@ function NotificationMenu({ onClose, anchorEl }) {
   }
 
   // 날짜 포맷팅
-  const formatTime = (dateString) => {
-    if (!dateString) return ''
+  const formatTime = (dateData) => {
+    if (!dateData) return ''
 
-    const date = new Date(dateString)
+    let date
+    if (Array.isArray(dateData)) {
+      const [year, month, day, hour = 0, minute = 0, second = 0] = dateData
+      date = new Date(year, month - 1, day, hour, minute, second)
+    } else {
+      date = new Date(dateData)
+    }
+
     const now = new Date()
     const diffMin = Math.floor((now - date) / (1000 * 60))
 
@@ -72,7 +79,7 @@ function NotificationMenu({ onClose, anchorEl }) {
       ref={refs.setFloating}
       style={floatingStyles}
       {...getFloatingProps()}
-      className="animate-in fade-in z-50 w-96 rounded-xl border border-gray-200 bg-white shadow-xl"
+      className="z-50 w-96 rounded-xl border border-gray-200 bg-white shadow-xl"
     >
       {/* 상단 영역 */}
       <div className="flex items-center justify-between rounded-t-xl border-b border-gray-100 bg-gray-50/50 px-4 py-3">
