@@ -1,0 +1,175 @@
+import { useState } from 'react'
+import { useCommentMutations } from '../../hooks/card/useCommentMutations'
+import defaultProfile from '../../assets/images/default.png'
+import MentionRenderer from '../mention/MentionRenderer'
+import { CornerDownRight } from 'lucide-react'
+import MentionEditor from '../mention/MentionEditor'
+
+export default function CommentItem({
+  comment,
+  cardId,
+  listId,
+  boardId,
+  currentUser,
+}) {
+  const { createComment, updateComment, deleteComment } =
+    useCommentMutations(boardId)
+
+  const [isEditing, setIsEditing] = useState(false)
+  const [isReplying, setIsReplying] = useState(false)
+
+  const isMyComment = currentUser?.id === comment.writerId
+
+  // 수정 (Update)
+  const onUpdate = (text) => {
+    if (text !== comment.content) {
+      updateComment({
+        cardId,
+        listId,
+        commentId: comment.id,
+        updates: { content: text },
+      })
+    }
+    setIsEditing(false)
+  }
+
+  // 답글 (Create Reply)
+  const onReply = (text) => {
+    createComment(
+      { cardId, listId, content: text, parentId: comment.id }, // parentId 추가
+      { onSuccess: () => setIsReplying(false) },
+    )
+  }
+
+  // 삭제 (Delete)
+  const onDelete = () => {
+    if (window.confirm('삭제하시겠습니까?')) {
+      deleteComment({ cardId, listId, commentId: comment.id })
+    }
+  }
+
+  // 날짜 포맷팅 (ex: 5분 전)
+  const formatTime = (dateData) => {
+    if (!dateData) return ''
+
+    let date
+    if (Array.isArray(dateData)) {
+      const [year, month, day, hour = 0, minute = 0, second = 0] = dateData
+      // Date 객체의 Month는 0부터 시작
+      date = new Date(year, month - 1, day, hour, minute, second)
+    } else {
+      date = new Date(dateData)
+    }
+
+    const now = new Date()
+    // (현재 시간 - 알림 시간)(ms) / 1분(ms)
+    const diffMin = Math.floor((now - date) / (1000 * 60))
+
+    if (diffMin < 1) return '방금 전'
+    if (diffMin < 60) return `${diffMin}분 전`
+
+    const diffHour = Math.floor(diffMin / 60)
+    if (diffHour < 24) return `${diffHour}시간 전`
+
+    return `${date.getMonth() + 1}월 ${date.getDate()}일`
+  }
+
+  return (
+    <div className="flex gap-3">
+      {/* 프로필 이미지 */}
+      <img
+        src={comment.writerProfileImg || defaultProfile}
+        alt={comment.writerName}
+        className="mt-1 h-8 w-8 rounded-full bg-gray-100 object-cover"
+      />
+
+      <div className="min-w-0 flex-1">
+        <div className="group">
+          {/* 헤더 */}
+          <div className="mb-1 flex items-center justify-between">
+            <div className="flex items-center gap-2">
+              <span className="text-sm font-bold text-gray-900">
+                {comment.writerName}
+              </span>
+              <span className="text-xs text-gray-400">
+                {formatTime(comment.createdAt)}
+              </span>
+            </div>
+
+            {/* 수정/삭제 버튼 (내 글일 때만) */}
+            {!isEditing && isMyComment && (
+              <div className="flex gap-2 opacity-0 transition-opacity group-hover:opacity-100">
+                <button
+                  onClick={() => setIsEditing(true)}
+                  className="text-gray-400 hover:text-blue-600"
+                >
+                  <Edit2 size={12} />
+                </button>
+                <button
+                  onClick={onDelete}
+                  className="text-gray-400 hover:text-red-600"
+                >
+                  <Trash2 size={12} />
+                </button>
+              </div>
+            )}
+          </div>
+
+          {/* 본문 영역 (수정 모드 vs 보기 모드) */}
+          {isEditing ? (
+            <MentionEditor
+              initialValue={comment.content}
+              onSubmit={onUpdate}
+              onCancel={() => setIsEditing(false)}
+              submitLabel="수정"
+              minHeight={44}
+              autoFocus={true}
+            />
+          ) : (
+            <div>
+              <div
+                onClick={() => setIsReplying(!isReplying)}
+                className="cursor-pointer rounded-lg px-3 py-2 text-sm whitespace-pre-wrap text-gray-700 transition-colors hover:bg-gray-100"
+              >
+                <MentionRenderer content={comment.content} />
+              </div>
+            </div>
+          )}
+        </div>
+
+        {/* 답글 입력창 */}
+        {isReplying && (
+          <div className="mt-3 flex gap-2 pl-2">
+            <div className="pt-2 text-gray-300">
+              <CornerDownRight size={16} />
+            </div>
+            <MentionEditor
+              placeholder="답글을 입력하세요..."
+              onSubmit={onReply}
+              onCancel={() => setIsReplying(false)}
+              submitLabel="등록"
+              minHeight={44}
+              autoFocus={true}
+            />
+          </div>
+        )}
+
+        {/* 대댓글 리스트 */}
+        {comment.replies && comment.replies.length > 0 && (
+          <div className="mt-2 pl-4">
+            {comment.replies.map((reply) => (
+              <CommentItem
+                key={reply.id}
+                comment={reply}
+                cardId={cardId}
+                listId={listId}
+                boardId={boardId}
+                currentUser={currentUser}
+              />
+            ))}
+          </div>
+        )}
+      </div>
+    </div>
+  )
+}

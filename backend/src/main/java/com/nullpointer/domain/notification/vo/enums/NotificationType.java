@@ -11,7 +11,8 @@ public enum NotificationType {
 
     COMMENT("새 댓글"),
     COMMENT_REPLY("답글"),
-    COMMENT_TAGGED("댓글 멘션"),
+
+    MENTION("멘션"),
 
     DEADLINE_NEAR("마감 임박"),
     TEAM_INVITE("팀 초대");

@@ -1,78 +1,79 @@
-import React, { useEffect, useState } from 'react'
+import React, { useState } from 'react'
 import useBoardStore from '../../stores/useBoardStore'
 import { AlignLeft } from 'lucide-react'
 import { useCardMutations } from '../../hooks/card/useCardMutations'
 import { useParams } from 'react-router-dom'
+import MentionEditor from '../mention/MentionEditor'
+import MentionRenderer from '../mention/MentionRenderer'
 
 function CardDescription() {
   const { boardId } = useParams()
   const { selectedCard } = useBoardStore()
   const { updateCard } = useCardMutations(boardId)
 
-  const [description, setDescription] = useState('')
-  const [isEditingDesc, setIsEditingDesc] = useState(false)
+  const [isEditing, setIsEditing] = useState(false)
 
-  // 카드가 바뀔 때마다 설명 초기화
-  useEffect(() => {
-    if (selectedCard) {
-      setDescription(selectedCard.description || '')
-    }
-  }, [selectedCard])
+  if (!selectedCard) return null
 
-  const handleSaveDescription = () => {
-    setIsEditingDesc(false)
+  const handleSaveDescription = (newDescription) => {
     updateCard({
       cardId: selectedCard.id,
       listId: selectedCard.listId,
       updates: {
-        description,
+        description: newDescription,
       },
     })
+    setIsEditing(false)
   }
 
   return (
     <section>
-      <div className="mb-3 flex items-center gap-3">
-        <AlignLeft size={20} className="text-gray-600" />
-        <h3 className="text-base font-semibold text-gray-800">설명</h3>
+      <div className="mb-3 flex items-center justify-between">
+        <div className="flex items-center gap-3">
+          <AlignLeft size={20} className="text-gray-600" />
+          <h3 className="text-base font-semibold text-gray-800">설명</h3>
+        </div>
+
+        {!isEditing && selectedCard.description && (
+          <button
+            onClick={() => setIsEditing(true)}
+            className="rounded-md bg-gray-50 px-3 py-1.5 text-sm font-medium text-gray-500 hover:cursor-pointer hover:bg-blue-100"
+          >
+            편집
+          </button>
+        )}
       </div>
+
       <div className="pl-8">
-        {isEditingDesc ? (
-          <div className="space-y-2">
-            <textarea
-              className="w-full resize-none rounded-xl border border-gray-200 p-3 text-sm text-gray-700 outline-none focus:border-transparent focus:ring-2 focus:ring-blue-500"
-              value={description}
-              onChange={(e) => setDescription(e.target.value)}
-              autoFocus
+        {isEditing ? (
+          <div className="w-full">
+            <MentionEditor
+              initialValue={selectedCard.description || ''}
+              onSubmit={handleSaveDescription}
+              onCancel={() => setIsEditing(false)}
+              placeholder="이 카드에 대한 상세 설명을 추가하려면 클릭하세요... (@멤버 멘션 가능)"
+              submitLabel="저장"
+              minHeight={120} // 설명창은 더 높게 설정
+              autoFocus={true}
             />
-            <div className="flex gap-2">
-              <button
-                onClick={handleSaveDescription}
-                className="rounded-lg bg-blue-600 px-3 py-1.5 text-sm font-medium text-white transition-colors hover:bg-blue-700"
-              >
-                저장
-              </button>
-              <button
-                onClick={() => setIsEditingDesc(false)}
-                className="rounded-lg px-3 py-1.5 text-sm font-medium text-gray-600 transition-colors hover:bg-gray-200"
-              >
-                취소
-              </button>
-            </div>
           </div>
         ) : (
           <div
-            onClick={() => setIsEditingDesc(true)}
-            className={`min-h-20 cursor-pointer rounded-xl p-4 transition-colors ${
-              description
-                ? 'bg-transparent font-medium text-gray-600 hover:bg-gray-200'
-                : 'bg-gray-50 text-gray-500 hover:bg-gray-200'
+            onClick={() => setIsEditing(true)}
+            className={`min-h-20 cursor-pointer rounded-xl p-3 transition-colors ${
+              selectedCard.description
+                ? 'hover:bg-gray-50'
+                : 'flex items-center bg-gray-50 text-gray-400 hover:bg-gray-100'
             }`}
           >
-            <p className="text-sm leading-relaxed whitespace-pre-wrap">
-              {description ||
-                '이 카드에 대한 상세 설명을 추가하려면 클릭하세요...'}
-            </p>
+            {selectedCard.description ? (
+              <MentionRenderer content={selectedCard.description} />
+            ) : (
+              <p className="text-sm">
+                이 카드에 대한 상세 설명을 추가하려면 클릭하세요... (@멤버 멘션
+                가능)
+              </p>
+            )}
           </div>
         )}
       </div>

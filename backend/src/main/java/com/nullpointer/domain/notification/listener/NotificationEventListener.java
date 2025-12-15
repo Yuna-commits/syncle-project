@@ -72,9 +72,12 @@ public class NotificationEventListener {
                 message = String.format("회원님의 댓글에 답글이 달렸습니다.:%s",
                         getSafeSubstring(event.getCommentContent(), 20));
                 break;
-            /**
-             * TODO) 그 외 알림 대상 추가
-             */
+            case MENTION:
+                receiverId = event.getTargetUserId(); // 멘션된 사람
+                type = NotificationType.MENTION;
+                message = String.format("'%s'님이 회원님을 언급했습니다:%s",
+                        event.getActorNickname(), getSafeSubstring(event.getCommentContent(), 20));
+                break;
             default:
                 return;
         }

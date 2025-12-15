@@ -29,6 +29,9 @@ public interface UserMapper {
     // email로 사용자 조회 (로그인)
     Optional<UserVo> findByEmail(String email);
 
+    // 닉네임으로 사용자 조회
+    Optional<UserVo> findByNickname(String nickname);
+
     // 사용자 인증 상태 조건부 업데이트
     int updateVerifyStatusIfCurrent(Long id, VerifyStatus currentStatus, VerifyStatus newStatus);
 
