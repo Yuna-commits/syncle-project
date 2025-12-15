@@ -45,6 +45,9 @@ public class CardResponse {
     // 댓글 필드
     private List<CommentResponse> comments;
 
+    // 보드 ID
+    private Long boardId;
+
     public static CardResponse of(CardVo c, String assigneeName, String assigneeProfileImg, Integer commentCount, List<ChecklistVo> checklists) {
         return CardResponse.builder()
                 .id(c.getId())

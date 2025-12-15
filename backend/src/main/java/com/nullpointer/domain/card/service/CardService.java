@@ -23,4 +23,6 @@ public interface CardService {
 
     // 카드 삭제
     void deleteCard(Long cardId, Long userId);
+
+    List<CardResponse> getMyCards(Long userId, Long teamId, Long boardId);
 }

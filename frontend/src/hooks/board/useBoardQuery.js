@@ -175,13 +175,25 @@ const normalizeBoardData = (dto) => {
 
 export const useBoardQuery = (boardId) => {
   return useQuery({
-    queryKey: ['board', Number(boardId)], // 이 키가 캐시의 이름표가 됩니다.
+    queryKey: ['board', Number(boardId)],
     queryFn: async () => {
       const response = await boardApi.fetchBoard(boardId)
-      console.log('📌 [RAW SERVER DATA]', response.data.data)
+      console.log('[RAW SERVER DATA]', response.data.data)
       return normalizeBoardData(response.data.data)
     },
 
-    staleTime: 1000 * 60, // 1분 동안은 "신선한 데이터"로 취급 (API 재호출 안 함)
+    staleTime: 1000 * 60, // 1분간 캐시 유지
+  })
+}
+
+// 내가 속한 보드 목록 조회 (캘린더 필터용)
+export const useMyBoardsQuery = () => {
+  return useQuery({
+    queryKey: ['myBoards'],
+    queryFn: async () => {
+      const response = await boardApi.fetchMyBoards()
+      return response.data.data || []
+    },
+    staleTime: 1000 * 60 * 5, // 5분간 캐시 유지
   })
 }

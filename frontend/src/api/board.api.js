@@ -3,6 +3,8 @@ import api from './AxiosInterceptor'
 export const boardApi = {
   // 보드 상세 조회
   fetchBoard: (boardId) => api.get(`/boards/${boardId}/view`),
+  // 내 보드 목록 조회
+  fetchMyBoards: () => api.get('/boards/me'),
   // 보드 생성
   createBoard: (teamId, data) => api.post(`/teams/${teamId}/boards`, data),
   // 보드 수정
@@ -38,7 +40,8 @@ export const boardApi = {
   // 리스트 이동
   moveList: (boardId, payload) =>
     api.patch(`/boards/${boardId}/lists/order`, payload),
-
+  // 카드 조회(캘린더)
+  fetchMyCards: (params) => api.get('/cards/me', { params }),
   // 카드 추가
   addCard: (listId, title) =>
     api.post(`/lists/${listId}/cards`, {

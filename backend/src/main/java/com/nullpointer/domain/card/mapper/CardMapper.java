@@ -51,4 +51,7 @@ public interface CardMapper {
 
     // 라벨 초기화
     void deleteCardLabel(Long cardId);
+
+    // 내 일정 조회(캘린더)
+    List<CardResponse> findCardsByAssigneeIdAndFilters(Long userId, Long teamId, Long boardId);
 }

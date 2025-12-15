@@ -29,7 +29,7 @@ function MainLayout() {
         {/* 사이드바 */}
         <Sidebar />
         {/* 메인 콘텐츠 영역 */}
-        <main className="flex-1 overflow-auto bg-gray-50 p-6">
+        <main className="flex-1 overflow-auto bg-white p-6">
           <Outlet />
         </main>
       </div>

@@ -78,6 +78,41 @@
           AND deleted_at IS NULL
     </select>
 
+    <!-- 내 일정 조회(캘린더) -->
+    <select id="findCardsByAssigneeIdAndFilters" resultType="CardResponse">
+        SELECT c.id,
+        c.assignee_id,
+        c.title,
+        c.description,
+        c.is_complete,
+        c.priority,
+        c.start_date,
+        c.due_date,
+        c.label_color ,
+        c.list_id ,
+        l.title AS listTitle,
+        b.title AS boardTitle,
+        b.id AS boardId,
+        b.team_id
+        FROM card c
+        JOIN list l ON c.list_id = l.id
+        JOIN board b ON l.board_id = b.id
+        WHERE c.deleted_at IS NULL
+        AND l.deleted_at IS NULL
+        AND b.deleted_at IS NULL
+        AND (c.start_date IS NOT NULL OR c.due_date IS NOT NULL)
+
+        <if test="boardId != null">
+            AND b.id = #{boardId}
+        </if>
+
+        <if test="teamId != null">
+            AND b.team_id = #{teamId}
+        </if>
+
+        ORDER BY c.due_date ASC
+    </select>
+
     <!-- 카드 상세 조회 -->
     <select id="findCardDetailById" parameterType="Long" resultType="CardResponse">
         SELECT c.id,

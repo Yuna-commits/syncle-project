@@ -68,6 +68,13 @@ public class CardServiceImpl implements CardService {
         return cardMapper.findCardsWithDetailsByListId(listId);
     }
 
+    // 내 일정 조회(캘린더)
+    @Override
+    @Transactional(readOnly = true)
+    public List<CardResponse> getMyCards(Long userId, Long teamId, Long boardId) {
+        return cardMapper.findCardsByAssigneeIdAndFilters(userId, teamId, boardId);
+    }
+
     // 카드 이동
     @Override
     @Transactional

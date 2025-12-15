@@ -3,24 +3,3 @@
   font-family: Outfit, sans-serif;
   background-color: oklch(0.97 0 0);
 }
-
-.fc-event-title {
-  white-space: nowrap !important;
-  text-overflow: ellipsis;
-  word-break: break-word;
-}
-.fc-event-time {
-  font-weight: 600;
-}
-
-@layer components {
-  /* 드래그 중인 카드: 약간 커지고, 그림자가 생기며, 살짝 기울어짐 -> "집어 올린" 느낌 */
-  .kanban-drag {
-    @apply z-50 scale-105 rotate-2 cursor-grabbing bg-white opacity-100 shadow-2xl ring-1 ring-blue-500;
-  }
-
-  /* 카드가 들어갈 자리: 투명도를 주고 점선 테두리 -> "들어갈 곳" 암시 */
-  .kanban-ghost {
-    @apply rounded-lg border-2 border-dashed border-gray-300 bg-gray-100 opacity-40;
-  }
-}

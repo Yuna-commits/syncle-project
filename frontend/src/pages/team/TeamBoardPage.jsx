@@ -54,16 +54,16 @@ function TeamBoardPage() {
             {team.members &&
               team.members.map((member) => (
                 <div
-                  key={member.id}
+                  key={member.userId}
                   className="relative flex h-10 w-10 cursor-pointer items-center justify-center rounded-full border-2 border-white bg-gray-200 text-sm font-bold text-gray-600 transition-transform hover:z-10 hover:scale-110"
-                  title={`${member.name} (${member.email})`}
+                  title={`${member.nickname} (${member.email})`}
                 >
                   {/* 프로필 이미지가 없으면 텍스트 표시 */}
                   {member.profileImg ? (
                     <img
                       src={member.profileImg}
-                      alt={member.name}
-                      title={member.name}
+                      alt={member.nickname}
+                      title={member.nickname}
                       className="h-10 w-10 rounded-full object-cover ring-2 ring-white"
                     />
                   ) : (
