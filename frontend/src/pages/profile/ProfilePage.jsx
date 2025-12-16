@@ -8,15 +8,16 @@ import { authApi } from '../../api/auth.api'
 import ProfileHeader from '../../components/profile/ProfileHeader'
 import ProfileDetails from '../../components/profile/ProfileDetails'
 import ProfileStats from '../../components/profile/ProfileStats'
+import { useFileMutations } from '../../hooks/file/useFileMutations' // 훅 임포트
+import { compressImage } from '../../utils/fileUtils'
 
 export default function ProfilePage() {
   // 로그인 사용자 정보 조회
   const { data: user, isLoading } = useAuthQuery()
-
   const { updateProfile } = useUserMutations()
+  const { uploadFile } = useFileMutations()
 
   const [isEditProfileOpen, setEditProfileOpen] = useState(false)
-
   // 중복 검사 상태
   const [checkStatus, setCheckStatus] = useState({
     nickname: { loading: false, message: '', isValid: false },
@@ -38,19 +39,14 @@ export default function ProfilePage() {
       updateNicknameStatus(false, '', false)
       return false
     }
-
     updateNicknameStatus(true, '', false) // 로딩 시작
-
     try {
       const response = await authApi.checkNickname(nickname)
       const isDuplicate = response.data.data
-
       const message = isDuplicate
         ? '이미 사용 중인 닉네임입니다.'
         : '사용 가능한 닉네임입니다.'
-
       const isValid = !isDuplicate
-
       updateNicknameStatus(false, message, isValid)
       return isValid
     } catch (error) {
@@ -60,7 +56,43 @@ export default function ProfilePage() {
     }
   }
 
-  // 프로필 수정 제출 핸들러
+  // 이미지 선택 즉시 변경 핸들러
+  const handleImageChange = async (file) => {
+    if (!file) return
+
+    try {
+      // 이미지 압축
+      const compressedFile = await compressImage(file)
+
+      // 파일 업로드
+      const uploadResponse = await uploadFile({
+        file: compressedFile,
+        fileType: 'profiles',
+      })
+      const newProfileImgUrl = uploadResponse.data.data.url
+
+      // 프로필 정보(이미지) 업데이트
+      updateProfile(
+        {
+          nickname: user.nickname,
+          description: user.description,
+          position: user.position,
+          profileImg: newProfileImgUrl,
+        },
+        {
+          onSuccess: () => {
+            // 별도 알림이 필요하다면 여기에 추가 (예: Toast)
+            console.log('프로필 사진 변경 완료')
+          },
+        },
+      )
+    } catch (error) {
+      console.error('프로필 사진 변경 실패:', error)
+      alert('프로필 사진 변경 중 오류가 발생했습니다.')
+    }
+  }
+
+  // 텍스트 정보 수정 핸들러
   const handleUpdateProfile = (formData) => {
     // 닉네임이 변경되었고, 중복 확인을 통과하지 못했다면 차단 (선택 사항)
     if (formData.nickname !== user.nickname && !checkStatus.nickname.isValid) {
@@ -68,7 +100,15 @@ export default function ProfilePage() {
       return
     }
 
-    updateProfile(formData, {
+    // 이미지는 기존 값 그대로 사용
+    const updatePayload = {
+      nickname: formData.nickname,
+      description: formData.description,
+      position: formData.position,
+      profileImg: user.profileImg,
+    }
+
+    updateProfile(updatePayload, {
       onSuccess: () => {
         // 1. 모달 닫기
         setEditProfileOpen(false)
@@ -97,13 +137,17 @@ export default function ProfilePage() {
   return (
     <div className="animate-fade-in pb-20">
       {/* 1. 프로필 헤더 섹션 */}
-      <ProfileHeader user={user} onEdit={() => setEditProfileOpen(true)} />
+      {/* ProfileHeader에 onImageChange 전달 */}
+      <ProfileHeader
+        user={user}
+        onEdit={() => setEditProfileOpen(true)}
+        onImageChange={handleImageChange}
+      />
 
       {/* 2. 상세 정보 그리드 (비율 : 1:1) */}
       <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
         {/* 좌측: 개인 정보 */}
         <ProfileDetails user={user} />
-
         {/* 우측: 활동 통계 */}
         <ProfileStats user={user} />
       </div>
@@ -113,6 +157,7 @@ export default function ProfilePage() {
         <FormModal
           title="프로필 수정"
           fields={[
+            // 파일 입력 필드 제거됨
             {
               label: '닉네임',
               name: 'nickname',

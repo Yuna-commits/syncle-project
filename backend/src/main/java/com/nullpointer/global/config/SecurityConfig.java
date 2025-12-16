@@ -41,6 +41,8 @@ public class SecurityConfig {
                         // Swagger 경로 허용
                         .requestMatchers("/v3/api-docs/**", "/swagger-ui/**", "/swagger-ui.html").permitAll()
                         .requestMatchers("/ws/**").permitAll()
+                        // 파일 업로드 테스트를 위해 임시 허용
+                        .requestMatchers("/api/files/**").permitAll()
                         .anyRequest().authenticated()
                 )
                 // UsernamePasswordAuthenticationFilter 사용 전에 JWT 필터 등록

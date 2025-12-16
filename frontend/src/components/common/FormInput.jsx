@@ -20,6 +20,7 @@ export default function FormInput({
   const [showPassword, setShowPassword] = useState(false)
   const isPassword = type === 'password'
   const inputType = isPassword && showPassword ? 'text' : type
+  const isFile = type === 'file'
 
   const getBorderColor = () => {
     if (error)
@@ -43,7 +44,7 @@ export default function FormInput({
           id={name}
           name={name}
           type={inputType}
-          value={value}
+          value={isFile ? undefined : value}
           onChange={onChange}
           placeholder={placeholder}
           className={`h-11 w-full rounded-lg border bg-transparent px-4 py-2.5 text-sm text-gray-800 shadow-sm placeholder:text-gray-400 focus:ring-2 focus:outline-none ${className} ${onCheck ? 'pr-20' : ''} ${getBorderColor()}`}

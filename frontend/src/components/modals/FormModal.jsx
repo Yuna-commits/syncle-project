@@ -17,8 +17,9 @@ export default function FormModal({ title, fields, onSubmit, onClose }) {
 
   // 입력 시 상태 업데이트
   const handleChange = (e) => {
-    const { name, value } = e.target
-    setFormData((prev) => ({ ...prev, [name]: value }))
+    const { name, value, files } = e.target
+    const newValue = files ? files[0] : value
+    setFormData((prev) => ({ ...prev, [name]: newValue }))
 
     // 필드 정의에 커스텀 onChange가 있다면 실행 (상태 초기화 등에 사용)
     const fieldConfig = fields.find((f) => f.name === name)
