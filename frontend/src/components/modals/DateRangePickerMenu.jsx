@@ -79,7 +79,32 @@ export default function DateRangePickerMenu({
           </button>
           <button
             onClick={() => {
-              onApply(range)
+              if (range && range.length > 0) {
+                // 1. 원본 range 복사 (불변성 유지)
+                const newRange = [...range]
+                const selection = { ...newRange[0] }
+
+                // 2. endDate를 23시 59분 59초로 설정
+                if (selection.endDate) {
+                  const newEndDate = new Date(selection.endDate)
+                  newEndDate.setHours(23, 59, 59, 999) // 시, 분, 초, 밀리초
+                  selection.endDate = newEndDate
+                }
+
+                // 3. (권장) startDate는 00시 00분 00초로 설정하여 하루 전체를 포함하도록 함
+                if (selection.startDate) {
+                  const newStartDate = new Date(selection.startDate)
+                  newStartDate.setHours(0, 0, 0, 0)
+                  selection.startDate = newStartDate
+                }
+
+                // 4. 변경된 날짜로 업데이트 후 전달
+                newRange[0] = selection
+                onApply(newRange)
+              } else {
+                // 선택된 range가 없으면 그대로 전달
+                onApply(range)
+              }
               onClose()
             }}
             className="rounded-md bg-blue-500 px-3 py-1.5 text-xs font-medium text-white hover:cursor-pointer hover:bg-blue-600"

@@ -49,7 +49,6 @@ public class NotificationEventListener {
                         "'%s' 카드의 담당자로 지정되었습니다.",
                         event.getCardTitle());
                 break;
-
             case MOVED:
                 receiverId = event.getAssigneeId(); // 담당자에게 알림
                 type = NotificationType.CARD_MOVED;
@@ -87,6 +86,11 @@ public class NotificationEventListener {
                     message = String.format("담당 카드 '%s'의 항목을 완료했습니다.:%s",
                             event.getCardTitle(), getSafeSubstring(event.getChecklistContent(), 20));
                 }
+                break;
+            case DEADLINE_NEAR:
+                receiverId = event.getAssigneeId(); // 담당자에게 알림
+                type = NotificationType.DEADLINE_NEAR;
+                message = String.format("담당 카드 '%s'의 마감이 임박했습니다.", event.getCardTitle());
                 break;
             default:
                 return;
@@ -126,7 +130,7 @@ public class NotificationEventListener {
     @Async
     @EventListener
     public void handleInvitationEvent(InvitationEvent event) {
-        log.info("초대 이벤트 수신: type={}, cardId={}", event.getType(), event.getTargetId());
+        log.info("초대 이벤트 수신: type={}, targetId={}", event.getType(), event.getTargetId());
 
         String message = "";
         String targetUrl = "";

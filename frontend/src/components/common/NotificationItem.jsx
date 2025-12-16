@@ -15,6 +15,7 @@ import {
   UserX,
 } from 'lucide-react'
 import defaultProfile from '../../assets/images/default.png'
+import systemLogo from '../../assets/images/logo.png'
 import { useState } from 'react'
 import { useInvitationMutations } from '../../hooks/team/useInvitationMutations'
 import { useNavigate } from 'react-router-dom'
@@ -31,6 +32,15 @@ export default function NotificationItem({
   const [processed, setProcessed] = useState(false) // 처리 여부
   const { markAsRead } = useNotificationMutations() // 읽음 처리 함수
   const navigate = useNavigate()
+
+  // 프로필 이미지 소스 결정 함수
+  const getProfileSrc = () => {
+    if (notification.senderProfileImg === 'SYNCLE_LOGO') {
+      return systemLogo
+    }
+    // 일반 사용자 이미지 || 기본 이미지
+    return notification.senderProfileImg || defaultProfile
+  }
 
   // 날짜 포맷팅 (ex: 5분 전)
   const formatTime = (dateData) => {
@@ -245,7 +255,7 @@ export default function NotificationItem({
       <div className="relative shrink-0 pt-1">
         <div className="h-9 w-9 overflow-hidden rounded-full border border-gray-200 bg-gray-100">
           <img
-            src={notification.senderProfileImg || defaultProfile}
+            src={getProfileSrc()}
             alt=""
             className="h-full w-full object-cover"
             onError={(e) => (e.target.style.display = 'none')}

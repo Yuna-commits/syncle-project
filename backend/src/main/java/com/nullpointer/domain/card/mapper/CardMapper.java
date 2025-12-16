@@ -5,6 +5,7 @@ import com.nullpointer.domain.card.vo.CardVo;
 import org.apache.ibatis.annotations.Mapper;
 import org.apache.ibatis.annotations.Param;
 
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
 
@@ -54,4 +55,10 @@ public interface CardMapper {
 
     // 내 일정 조회(캘린더)
     List<CardResponse> findCardsByAssigneeIdAndFilters(Long userId, Long teamId, Long boardId);
+
+    // 마감일 임박 카드 조회
+    List<CardVo> findCardsDueBetween(@Param("start") LocalDateTime start, @Param("end") LocalDateTime end);
+
+    // 담당자 조회
+    Long findAssigneeIdByCardId(Long cardId);
 }

@@ -219,7 +219,26 @@
     <!-- 라벨 초기화 -->
     <update id="deleteCardLabel">
         UPDATE card
-        SET label = NULL, label_color = NULL
-        WHERE id = #{cardId} AND deleted_at IS NULL
+        SET label       = NULL,
+            label_color = NULL
+        WHERE id = #{cardId}
+          AND deleted_at IS NULL
     </update>
+
+    <!-- 마감 임박 카드 조회 -->
+    <select id="findCardsDueBetween">
+        SELECT *
+        FROM card
+        WHERE due_date BETWEEN #{start} AND #{end}
+          AND is_complete = false
+          AND deleted_at IS NULL
+    </select>
+
+    <!-- 카드 담당자 id 조회 -->
+    <select id="findAssigneeIdByCardId" resultType="Long">
+        SELECT assignee_id
+        FROM card
+        WHERE id = #{cardId}
+          AND deleted_at IS NULL
+    </select>
 </mapper>

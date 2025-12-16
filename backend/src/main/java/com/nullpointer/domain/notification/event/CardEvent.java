@@ -46,6 +46,7 @@ public class CardEvent {
         COMMENT,
         REPLY,
         MENTION,
-        CHECKLIST
+        CHECKLIST,
+        DEADLINE_NEAR
     }
 }

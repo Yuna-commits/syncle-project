@@ -20,7 +20,11 @@ public enum RedisKeyType {
     INVITATION("np:team:invitation:%s", 60 * 60 * 24 * 7L),
 
     // 알림 - 30일
-    NOTIFICATION("np:notification:%s", 60 * 60 * 24 * 30L);
+    NOTIFICATION("np:notification:%s", 60 * 60 * 24 * 30L),
+
+    // 마감 임박 알림 발송 여부 확인 - 2일
+    // 중복 알림 발송하지 않기 위해 사용
+    DEADLINE_ALERT("np:notification:deadline:%s", 60 * 60 * 48L);
 
     private final String prefix;
     private final long defaultTtl;
