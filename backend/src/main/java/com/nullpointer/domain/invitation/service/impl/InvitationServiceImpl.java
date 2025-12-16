@@ -186,6 +186,9 @@ public class InvitationServiceImpl implements InvitationService {
         // 5. 실제 멤버로 등록 (신규 멤버 추가 or 탈퇴 멤버 복구)
         teamMemberService.addMember(invitation.getTeamId(), loginUserId, Role.MEMBER);
 
+        // [알림] 초대 수락 알림 발송
+        publishResponseEvent(invitation, NotificationType.INVITE_ACCEPTED);
+
         // 팀 멤버 초대 로그 저장
         inviteMemberLog(invitation.getTeamId(), loginUserId);
 
@@ -210,6 +213,9 @@ public class InvitationServiceImpl implements InvitationService {
             invitation.setStatus(Status.REJECTED);
             invitationMapper.updateStatus(invitation);
         }
+
+        // [알림] 초대 거절 알림 발송
+        publishResponseEvent(invitation, NotificationType.INVITE_REJECTED);
 
         redisUtil.deleteData(RedisKeyType.INVITATION.getKey(token));
     }
@@ -292,6 +298,28 @@ public class InvitationServiceImpl implements InvitationService {
                 .targetName(targetName)
                 .type(NotificationType.TEAM_INVITE)
                 .token(token)
+                .build();
+
+        publisher.publishEvent(event);
+    }
+
+    // [이벤트] 초대 응답 이벤트 발행
+    private void publishResponseEvent(InvitationVo invitation, NotificationType type) {
+        // 수락/거절한 사람 (현재 로그인한 사람)
+        UserVo actor = userMapper.findById(invitation.getInviteeId())
+                .orElseThrow(() -> new BusinessException(ErrorCode.USER_NOT_FOUND));
+
+        // 알림을 받을 사람 (초대를 보낸 사람)
+        Long receiverId = invitation.getInviterId();
+
+        InvitationEvent event = InvitationEvent.builder()
+                .senderId(actor.getId())
+                .senderNickname(actor.getNickname())
+                .senderProfileImg(actor.getProfileImg())
+                .receiverId(receiverId)
+                .targetId(invitation.getTeamId())
+                .targetName(invitation.getTeamName())
+                .type(type)
                 .build();
 
         publisher.publishEvent(event);

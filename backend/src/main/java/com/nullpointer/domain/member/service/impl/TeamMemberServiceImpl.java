@@ -3,14 +3,16 @@ package com.nullpointer.domain.member.service.impl;
 import com.nullpointer.domain.activity.dto.request.ActivitySaveRequest;
 import com.nullpointer.domain.activity.service.ActivityService;
 import com.nullpointer.domain.activity.vo.enums.ActivityType;
-import com.nullpointer.domain.board.mapper.BoardMapper;
 import com.nullpointer.domain.member.dto.team.TeamMemberResponse;
 import com.nullpointer.domain.member.dto.team.TeamRoleUpdateRequest;
-import com.nullpointer.domain.member.mapper.BoardMemberMapper;
 import com.nullpointer.domain.member.mapper.TeamMemberMapper;
 import com.nullpointer.domain.member.service.TeamMemberService;
 import com.nullpointer.domain.member.vo.TeamMemberVo;
 import com.nullpointer.domain.member.vo.enums.Role;
+import com.nullpointer.domain.notification.event.InvitationEvent;
+import com.nullpointer.domain.notification.vo.enums.NotificationType;
+import com.nullpointer.domain.team.mapper.TeamMapper;
+import com.nullpointer.domain.team.vo.TeamVo;
 import com.nullpointer.domain.user.mapper.UserMapper;
 import com.nullpointer.domain.user.vo.UserVo;
 import com.nullpointer.global.common.SocketSender;
@@ -18,6 +20,7 @@ import com.nullpointer.global.common.enums.ErrorCode;
 import com.nullpointer.global.exception.BusinessException;
 import com.nullpointer.global.validator.MemberValidator;
 import lombok.RequiredArgsConstructor;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -27,11 +30,13 @@ import java.util.List;
 @RequiredArgsConstructor
 public class TeamMemberServiceImpl implements TeamMemberService {
 
+    private final TeamMapper teamMapper;
     private final TeamMemberMapper teamMemberMapper;
     private final UserMapper userMapper;
     private final MemberValidator memberVal;
     private final ActivityService activityService;
     private final SocketSender socketSender;
+    private final ApplicationEventPublisher publisher;
 
     // 멤버 추가 (초대 수락 시 호출됨)
     @Override
@@ -87,18 +92,29 @@ public class TeamMemberServiceImpl implements TeamMemberService {
     @Override
     @Transactional
     public void deleteTeamMember(Long teamId, Long memberId, Long userId) {
-        Long ownerId = null;
+        Long ownerId = null; // 로그 기록용 (나중에 수정)
+
+        TeamVo team = teamMapper.findTeamByTeamId(teamId);
+        UserVo actor = userMapper.findById(userId)
+                .orElseThrow(() -> new BusinessException(ErrorCode.USER_NOT_FOUND));
 
         // 1. 대상 멤버 존재 확인
         if (!teamMemberMapper.existsByTeamIdAndUserId(teamId, memberId)) {
             throw new BusinessException(ErrorCode.MEMBER_NOT_FOUND);
         }
 
-        // 2. 권한 로직: 본인 탈퇴 or OWNER의 강제 추방
+        // 2. 추방/탈퇴 분기
         if (!userId.equals(memberId)) {
-            // userId가 OWNER인지 확인
+            // OWNER 추방
             memberVal.validateTeamOwner(teamId, userId, ErrorCode.MEMBER_DELETE_FORBIDDEN);
             ownerId = userId;
+
+            // [알림] 대상자에게 추방 알림 발송
+            publishMemberEvent(actor, memberId, team, NotificationType.TEAM_MEMBER_KICKED);
+        } else {
+            // 본인 탈퇴
+            ownerId = findTeamOwnerId(teamId);
+            publishMemberEvent(actor, ownerId, team, NotificationType.TEAM_MEMBER_LEFT);
         }
 
         // 3. 탈퇴 처리
@@ -144,6 +160,34 @@ public class TeamMemberServiceImpl implements TeamMemberService {
                         .targetName(targetUser.getNickname())
                         .description(targetUser.getNickname() + "님이 " + (ownerId != null ? "OWNER에 의해 팀에서 강퇴되었습니다." : "팀에서 탈퇴했습니다."))
                         .build());
+    }
+
+    /**
+     * Helper Methods
+     */
+
+    // 팀 OWNER id 조회
+    private Long findTeamOwnerId(Long teamId) {
+        return teamMemberMapper.findMembersByTeamId(teamId).stream()
+                .filter(m -> m.getRole() == Role.OWNER)
+                .map(TeamMemberResponse::getUserId)
+                .findFirst()
+                .orElseThrow(() -> new BusinessException(ErrorCode.USER_NOT_FOUND));
+    }
+
+    // [이벤트] 멤버 추방/탈퇴 이벤트 발행
+    private void publishMemberEvent(UserVo sender, Long receiverId, TeamVo team, NotificationType type) {
+        InvitationEvent event = InvitationEvent.builder()
+                .senderId(sender.getId())
+                .senderNickname(sender.getNickname())
+                .senderProfileImg(sender.getProfileImg())
+                .receiverId(receiverId)
+                .targetId(team.getId())
+                .targetName(team.getName())
+                .type(type)
+                .build();
+
+        publisher.publishEvent(event);
     }
 
 }

@@ -13,6 +13,7 @@ import java.time.LocalDateTime;
 public class InvitationVo {
     private Long id;
     private Long teamId;
+    private String teamName;
     private Long inviterId;      // 보낸 사람 ID
     private Long inviteeId; // 받는 사람 ID
     private String token; // Redis 검증용 토큰

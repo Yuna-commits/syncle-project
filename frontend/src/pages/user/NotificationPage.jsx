@@ -18,16 +18,17 @@ function NotificationPage() {
   // 탭 목록
   const tabs = [
     { id: 'ALL', label: '전체' },
-    { id: 'ME', label: '나' }, // 멘션, 할당, 답글, 초대
+    { id: 'ME', label: '나' }, // 멘션, 할당, 답글, 초대 등
     { id: 'COMMENT', label: '댓글' }, // 댓글 관련
     { id: 'WORK', label: '업무' }, // 상태 변경, 체크리스트 등
+    { id: 'NOTICE', label: '알림' },
   ]
 
   // 탭 id에 따른 실제 알림 타입 매핑
   const getFilterTypes = (tabId) => {
     switch (tabId) {
       case 'ME':
-        return ['MENTION', 'CARD_ASSIGNED', 'TEAM_INVITE', 'COMMENT_REPLY']
+        return ['MENTION', 'CARD_ASSIGNED', 'COMMENT_REPLY']
       case 'COMMENT':
         return ['COMMENT', 'COMMENT_REPLY', 'MENTION']
       case 'WORK':
@@ -36,6 +37,18 @@ function NotificationPage() {
           'CARD_UPDATED',
           'CHECKLIST_COMPLETED',
           'DEADLINE_NEAR',
+        ]
+      case 'NOTICE':
+        return [
+          'TEAM_INVITE',
+          'BOARD_INVITE',
+          'INVITE_ACCEPTED',
+          'INVITE_REJECTED',
+
+          'TEAM_MEMBER_KICKED',
+          'TEAM_MEMBER_LEFT',
+          'BOARD_MEMBER_KICKED',
+          'BOARD_MEMBER_LEFT',
         ]
       default:
         return [] // ALL인 경우

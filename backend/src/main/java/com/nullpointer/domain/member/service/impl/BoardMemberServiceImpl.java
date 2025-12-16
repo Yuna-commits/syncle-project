@@ -146,6 +146,10 @@ public class BoardMemberServiceImpl implements BoardMemberService {
     public void deleteBoardMember(Long boardId, Long memberId, Long userId) {
         Long ownerId = null;
 
+        BoardVo board = boardMapper.findBoardByBoardId(boardId);
+        UserVo actor = userMapper.findById(userId)
+                .orElseThrow(() -> new BusinessException(ErrorCode.USER_NOT_FOUND));
+
         // 1. 멤버 존재 확인
         if (!boardMemberMapper.existsByBoardIdAndUserId(boardId, memberId)) {
             throw new BusinessException(ErrorCode.MEMBER_NOT_FOUND);
@@ -156,15 +160,25 @@ public class BoardMemberServiceImpl implements BoardMemberService {
             // 강퇴시키는 경우 -> OWNER 권한 확인
             memberVal.validateBoardManager(boardId, userId);
             ownerId = userId;
+
+            // [알림] 대상자에게 추방 알림 발송
+            publishMemberEvent(actor, memberId, board, NotificationType.BOARD_MEMBER_KICKED);
         } else { // 본인 탈퇴인 경우 -> 보드에 OWNER 최소 한 명 이상 존재해야 함
             BoardMemberVo me = boardMemberMapper.findMember(boardId, userId);
-            // 마지막 남은 OWNER인지 확인
+            // OWNER가 탈퇴하는 경우 마지막 관리자인지 확인
             if (me.getRole() == Role.OWNER) {
                 // 현재 보드의 OWNER 수 count
                 long ownerCount = boardMemberMapper.countBoardOwner();
                 if (ownerCount <= 1) {
                     throw new BusinessException(ErrorCode.LAST_OWNER_CANNOT_LEAVE);
                 }
+            }
+
+            // 남아있는 관리자들에게 알림 전송
+            List<Long> ownerIds = findBoardOwnerIds(boardId);
+            for (Long remainingOwnerId : ownerIds) {
+                if (remainingOwnerId.equals(userId)) continue; // 본인 제외
+                publishMemberEvent(actor, remainingOwnerId, board, NotificationType.BOARD_MEMBER_LEFT);
             }
         }
 
@@ -235,6 +249,14 @@ public class BoardMemberServiceImpl implements BoardMemberService {
      * Helper Methods
      */
 
+    // 보드 OWNER id 목록 조회
+    private List<Long> findBoardOwnerIds(Long boardId) {
+        return boardMemberMapper.findMembersByBoardId(boardId).stream()
+                .filter(m -> m.getRole() == Role.OWNER)
+                .map(BoardMemberResponse::getUserId)
+                .collect(Collectors.toList());
+    }
+
     // [이벤트] 초대 이벤트 발행
     private void publishInviteEvent(UserVo sender, Long receiverId, Long targetId, String targetName) {
         InvitationEvent event = InvitationEvent.builder()
@@ -245,6 +267,21 @@ public class BoardMemberServiceImpl implements BoardMemberService {
                 .targetId(targetId)
                 .targetName(targetName)
                 .type(NotificationType.BOARD_INVITE)
+                .build();
+
+        publisher.publishEvent(event);
+    }
+
+    // [이벤트] 멤버 추방/탈퇴 이벤트 발행
+    private void publishMemberEvent(UserVo sender, Long receiverId, BoardVo board, NotificationType type) {
+        InvitationEvent event = InvitationEvent.builder()
+                .senderId(sender.getId())
+                .senderNickname(sender.getNickname())
+                .senderProfileImg(sender.getProfileImg())
+                .receiverId(receiverId)
+                .targetId(board.getId())
+                .targetName(board.getTitle())
+                .type(type)
                 .build();
 
         publisher.publishEvent(event);

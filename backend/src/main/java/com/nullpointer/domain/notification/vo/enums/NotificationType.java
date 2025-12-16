@@ -16,9 +16,16 @@ public enum NotificationType {
     MENTION("멘션"),
 
     DEADLINE_NEAR("마감 임박"),
-    
+
     TEAM_INVITE("팀 초대"),
-    BOARD_INVITE("보드 초대");
+    INVITE_ACCEPTED("초대 수락"),
+    INVITE_REJECTED("초대 거절"),
+    TEAM_MEMBER_KICKED("팀 멤버 추방"),
+    TEAM_MEMBER_LEFT("팀 멤버 탈퇴"),
+
+    BOARD_INVITE("보드 초대"),
+    BOARD_MEMBER_KICKED("보드 멤버 추방"),
+    BOARD_MEMBER_LEFT("보드 멤버 탈퇴");
 
     private final String label;
 

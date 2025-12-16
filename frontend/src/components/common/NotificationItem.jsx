@@ -6,9 +6,13 @@ import {
   Clock,
   KanbanSquare,
   ListChecks,
+  LogOut,
   MessageSquareCode,
   User,
+  UserCheck,
+  UserMinus,
   UserPlus,
+  UserX,
 } from 'lucide-react'
 import defaultProfile from '../../assets/images/default.png'
 import { useState } from 'react'
@@ -102,6 +106,28 @@ export default function NotificationItem({
         return {
           icon: <KanbanSquare size={14} />,
           color: 'text-pink-600 bg-pink-50',
+        }
+      case 'INVITE_ACCEPTED':
+        return {
+          icon: <UserCheck size={14} />,
+          color: 'text-green-600 bg-green-50',
+        }
+      case 'INVITE_REJECTED':
+        return {
+          icon: <UserX size={14} />,
+          color: 'text-gray-600 bg-gray-100',
+        }
+      case 'TEAM_MEMBER_KICKED':
+      case 'BOARD_MEMBER_KICKED':
+        return {
+          icon: <UserMinus size={14} />,
+          color: 'text-red-600 bg-red-50', // 경고의 의미로 빨간색
+        }
+      case 'TEAM_MEMBER_LEFT':
+      case 'BOARD_MEMBER_LEFT':
+        return {
+          icon: <LogOut size={14} />,
+          color: 'text-gray-600 bg-gray-100', // 중립적인 색상
         }
       default:
         return {

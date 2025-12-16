@@ -143,6 +143,32 @@ public class NotificationEventListener {
                         event.getSenderNickname(), event.getTargetName());
                 targetUrl = "/board/" + event.getTargetId(); // 해당 보드로 이동
                 break;
+            case INVITE_ACCEPTED:
+                message = String.format("'%s'님이 '%s' 팀 초대를 수락했습니다.",
+                        event.getSenderNickname(), event.getTargetName());
+                targetUrl = "/teams/" + event.getTargetId() + "/members"; // 팀 멤버 목록 페이지로 이동
+                break;
+            case INVITE_REJECTED:
+                message = String.format("'%s'님이 '%s' 팀 초대를 거절했습니다.",
+                        event.getSenderNickname(), event.getTargetName());
+                targetUrl = "/teams/" + event.getTargetId() + "/members"; // 팀 멤버 목록 페이지로 이동
+                break;
+            case TEAM_MEMBER_KICKED:
+                message = String.format("'%s' 팀에서 제외되었습니다.", event.getTargetName());
+                break;
+            case TEAM_MEMBER_LEFT:
+                message = String.format("'%s'님이 '%s' 팀을 떠났습니다.",
+                        event.getSenderNickname(), event.getTargetName());
+                targetUrl = "/teams/" + event.getTargetId() + "/members"; // 팀 멤버 목록 페이지로 이동
+                break;
+            case BOARD_MEMBER_KICKED:
+                message = String.format("'%s' 보드에서 제외되었습니다.", event.getTargetName());
+                break;
+            case BOARD_MEMBER_LEFT:
+                message = String.format("'%s'님이 '%s' 보드를 떠났습니다.",
+                        event.getSenderNickname(), event.getTargetName());
+                targetUrl = "/board/" + event.getTargetId(); // 해당 보드로 이동
+                break;
             default:
                 return;
         }
