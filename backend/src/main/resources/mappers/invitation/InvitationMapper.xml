@@ -12,9 +12,11 @@
 
     <!-- 토큰으로 초대장 조회 -->
     <select id="findByToken" parameterType="string" resultType="InvitationVo">
-        SELECT *
-        FROM invitation
-        WHERE token = #{token}
+        SELECT i.*,
+               t.name AS team_name
+        FROM invitation i
+                 JOIN team t ON i.team_id = t.id
+        WHERE i.token = #{token}
     </select>
 
     <!-- ID로 초대장 조회 -->
