@@ -80,7 +80,7 @@ const MentionEditor = ({
           placeholder={placeholder}
           style={customInputStyle}
           autoFocus={autoFocus}
-          allySuggestionsListLabel={'Suggested mentions'}
+          a11ySuggestionsListLabel={'Suggested mentions'}
           classNames={{
             input: 'focus:outline-none rounded-xl', // 기본 outline 제거
           }}
