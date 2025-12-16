@@ -8,6 +8,11 @@ export const invitationApi = {
     api.post('/invitations/accept', null, {
       params: { token },
     }),
+  // 초대 거절
+  rejectInvitation: (token) =>
+    api.post('/invitations/reject', null, {
+      params: { token },
+    }),
   // 초대 취소
   cancelInvitation: (invitationId) =>
     api.delete(`/invitations/${invitationId}`),

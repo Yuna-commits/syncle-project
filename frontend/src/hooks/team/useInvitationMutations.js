@@ -1,10 +1,8 @@
 import { useMutation, useQueryClient } from '@tanstack/react-query'
 import { invitationApi } from '../../api/invitation.api'
-import { useNavigate } from 'react-router-dom'
 
 export const useInvitationMutations = () => {
   const queryClient = useQueryClient()
-  const navigate = useNavigate()
 
   // 팀 멤버 초대 (이메일 발송)
   const inviteToTeamMutation = useMutation({
@@ -36,16 +34,29 @@ export const useInvitationMutations = () => {
       // 팀 목록 및 대시보드 데이터 갱신
       queryClient.invalidateQueries({ queryKey: ['teams'] })
       queryClient.invalidateQueries({ queryKey: ['dashboard'] })
+      // 알림 목록 갱신
+      queryClient.invalidateQueries({ queryKey: ['notifications'] })
 
       alert('초대가 성공적으로 수락되었습니다.')
-      navigate('/dashboard')
     },
     onError: (err) => alert(err.response?.data?.message || '초대 수락 실패'),
+  })
+
+  // 초대 거절
+  const rejectInvitationMutation = useMutation({
+    mutationFn: invitationApi.rejectInvitation,
+    onSuccess: () => {
+      // 알림 목록 갱신
+      queryClient.invalidateQueries({ queryKey: ['notifications'] })
+      alert('초대를 거절했습니다.')
+    },
+    onError: (err) => alert(err.response?.data?.message || '초대 거절 실패'),
   })
 
   return {
     inviteToTeam: inviteToTeamMutation.mutate,
     cancelInvitation: cancelInvitationMutation.mutate,
     acceptInvitation: acceptInvitationMutation.mutate,
+    rejectInvitation: rejectInvitationMutation.mutate,
   }
 }

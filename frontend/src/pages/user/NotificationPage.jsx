@@ -76,7 +76,7 @@ function NotificationPage() {
           {/* 모두 읽음 버튼 */}
           <button
             onClick={() => markAllAsRead()}
-            className="flex cursor-pointer items-center gap-1.5 rounded-lg bg-white px-4 py-2 text-sm font-medium text-gray-600 shadow-sm ring-1 ring-gray-300 transition-all hover:bg-blue-50 hover:text-blue-600 active:scale-95"
+            className="flex cursor-pointer items-center gap-1.5 rounded-lg bg-white px-4 py-2 text-sm font-medium text-gray-600 shadow-sm ring-1 ring-gray-300 transition-all hover:bg-gray-50 hover:text-blue-600 active:scale-95"
           >
             <Check size={16} />
             모두 읽음
@@ -113,6 +113,7 @@ function NotificationPage() {
                   key={noti.id}
                   notification={noti}
                   onClick={() => handleNotificationClick(noti)}
+                  isMenu={false}
                 />
               ))}
             </div>

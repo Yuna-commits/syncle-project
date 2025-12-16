@@ -10,7 +10,7 @@ import {
   useFloating,
   useInteractions,
 } from '@floating-ui/react'
-import defaultProfile from '../../assets/images/default.png'
+import NotificationItem from '../common/NotificationItem'
 
 function NotificationMenu({ onClose, anchorEl }) {
   const navigate = useNavigate()
@@ -50,74 +50,12 @@ function NotificationMenu({ onClose, anchorEl }) {
     }
   }
 
-  // 날짜 포맷팅
-  const formatTime = (dateData) => {
-    if (!dateData) return ''
-
-    let date
-    if (Array.isArray(dateData)) {
-      const [year, month, day, hour = 0, minute = 0, second = 0] = dateData
-      date = new Date(year, month - 1, day, hour, minute, second)
-    } else {
-      date = new Date(dateData)
-    }
-
-    const now = new Date()
-    const diffMin = Math.floor((now - date) / (1000 * 60))
-
-    if (diffMin < 1) return '방금 전'
-    if (diffMin < 60) return `${diffMin}분 전`
-
-    const diffHour = Math.floor(diffMin / 60)
-    if (diffHour < 24) return `${diffHour}시간 전`
-
-    return `${date.getMonth() + 1}월 ${date.getDate()}일`
-  }
-
-  const renderMessageContent = (noti) => {
-    const { message, type } = noti
-    // 댓글/답글/멘션/체크리스트 타입인 경우 '알림 문구'와 '내용'을 분리
-    if (
-      type &&
-      (type.includes('COMMENT') ||
-        type === 'MENTION' ||
-        type === 'CHECKLIST_COMPLETED')
-    ) {
-      const separatorIndex = message.indexOf(':') // 첫 번째 ':' 위치 찾음
-
-      if (separatorIndex > -1) {
-        const titlePart = message.slice(0, separatorIndex)
-        const contentPart = message.slice(separatorIndex + 1).trim()
-
-        return (
-          <div className="text-sm">
-            {/* 알림 문구 (Bold 처리) */}
-            <span className="text-medium font-semibold text-gray-700">
-              {titlePart}
-            </span>
-
-            {/* 실제 내용 (줄바꿈 처리(whitespace-pre-wrap) + 박스 스타일) */}
-            <div className="mt-1 border-l-2 border-gray-300 p-2 text-sm whitespace-pre-wrap text-gray-500 transition-colors hover:border-gray-400 hover:bg-gray-100 hover:text-gray-600">
-              {contentPart}
-            </div>
-          </div>
-        )
-      }
-    }
-
-    // 그 외 일반 알림
-    return (
-      <p className="border-l-2 border-gray-300 p-2 text-sm leading-relaxed break-keep whitespace-pre-wrap text-gray-500 transition-colors hover:border-gray-400 hover:bg-gray-100 hover:text-gray-600">
-        {message}
-      </p>
-    )
-  }
-
   return (
     <div
       ref={refs.setFloating}
       style={floatingStyles}
       {...getFloatingProps()}
+      onClick={(e) => e.stopPropagation()}
       className="z-50 w-96 rounded-xl border border-gray-200 bg-white shadow-xl"
     >
       {/* 상단 영역 */}
@@ -150,62 +88,26 @@ function NotificationMenu({ onClose, anchorEl }) {
         ) : (
           <ul className="divide-y divide-gray-50">
             {notifications.map((noti) => (
-              <li
+              <NotificationItem
                 key={noti.id}
-                onClick={() => handleItemClick(noti)}
-                className="group relative flex cursor-pointer items-start gap-4 px-2 py-2"
-              >
-                <div className="relative shrink-0">
-                  <div className="h-10 w-10 overflow-hidden rounded-full border border-gray-200 bg-gray-100">
-                    <img
-                      src={noti.senderProfileImg || defaultProfile}
-                      alt=""
-                      className="h-full w-full object-cover"
-                      // 이미지 로드 실패 시 숨기고 배경색만 보이게 하거나 기본 아이콘 노출
-                      onError={(e) => {
-                        e.target.style.display = 'none'
-                        e.target.parentElement.classList.add(
-                          'flex',
-                          'items-center',
-                          'justify-center',
-                        )
-                      }}
-                    />
-                    {/* 읽지 않음 표시 (파란 점) */}
-                    {!noti.isRead && (
-                      <span className="absolute -top-0.5 -right-0.5 h-3.5 w-3.5 rounded-full border-2 border-white bg-blue-500 shadow-sm"></span>
-                    )}
-                  </div>
-                </div>
-
-                <div className="flex min-w-0 flex-1 flex-col gap-1">
-                  {/* 상단: 닉네임 + 시간 */}
-                  <div className="flex items-center justify-between">
-                    <span className="text-sm font-bold text-gray-800">
-                      {noti.senderNickname || '알 수 없음'}
-                    </span>
-                    <span className="text-xs whitespace-nowrap text-gray-400">
-                      {formatTime(noti.createdAt)}
-                    </span>
-                  </div>
-
-                  {/* 하단: 메시지 내용 */}
-                  {renderMessageContent(noti)}
-                </div>
-              </li>
+                notification={noti}
+                onClick={handleItemClick}
+                onClose={onClose}
+                isMenu={true}
+              />
             ))}
           </ul>
         )}
       </div>
 
       {/* 하단 영역 */}
-      <div className="rounded-b-xl border-t border-gray-100 bg-gray-50/50 p-2 text-center">
+      <div className="border-t border-gray-100 bg-gray-50 p-2">
         <button
           onClick={() => {
             navigate('/notifications')
-            onClose?.()
+            onClose()
           }}
-          className="w-full rounded-lg py-2 text-xs font-semibold text-gray-600 transition-colors hover:cursor-pointer hover:bg-blue-100 hover:text-gray-800"
+          className="w-full rounded-md border border-gray-200 bg-white py-1.5 text-xs font-medium text-gray-600 shadow-sm transition-colors hover:cursor-pointer hover:bg-gray-200 hover:text-gray-800"
         >
           모든 알림 보기
         </button>

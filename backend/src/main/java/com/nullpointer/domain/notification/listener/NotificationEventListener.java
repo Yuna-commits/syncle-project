@@ -1,6 +1,7 @@
 package com.nullpointer.domain.notification.listener;
 
 import com.nullpointer.domain.notification.event.CardEvent;
+import com.nullpointer.domain.notification.event.InvitationEvent;
 import com.nullpointer.domain.notification.vo.NotificationDto;
 import com.nullpointer.domain.notification.vo.enums.NotificationType;
 import com.nullpointer.global.common.enums.RedisKeyType;
@@ -115,23 +116,54 @@ public class NotificationEventListener {
                 .createdAt(LocalDateTime.now())
                 .build();
 
-        // Redis 저장
-        // key: "np:notification:{userId}"
-        String key = RedisKeyType.NOTIFICATION.getKey(String.valueOf(receiverId));
-        redisUtil.addList(key, noti, RedisKeyType.NOTIFICATION.getDefaultTtl());
+        // redis 저장, 소켓 전송
+        saveAndSendNotification(noti);
+    }
 
-        // 용량 관리 (최근 50개만 유지)
-        redisUtil.trimList(key, 50);
+    /**
+     * 초대 이벤트 리스너
+     */
+    @Async
+    @EventListener
+    public void handleInvitationEvent(InvitationEvent event) {
+        log.info("초대 이벤트 수신: type={}, cardId={}", event.getType(), event.getTargetId());
 
-        // WebSocket 실시간 전송
-        // 구독 경로: /queue/notifications/{userId}
-        // 프론트엔드가 이 경로를 구독해야 함
-        messagingTemplate.convertAndSendToUser(
-                String.valueOf(receiverId),
-                "/queue/notifications",
-                noti);
+        String message = "";
+        String targetUrl = "";
 
-        log.info("알림 발송 완료: receiverId={}", receiverId);
+        // 메시지 및 링크 생성
+        switch (event.getType()) {
+            case TEAM_INVITE:
+                message = String.format("'%s'님이 회원님을 '%s' 팀에 초대했습니다.",
+                        event.getSenderNickname(), event.getTargetName());
+                targetUrl = "/teams/" + event.getTargetId() + "/boards"; // 팀 페이지로 이동
+                break;
+            case BOARD_INVITE:
+                message = String.format("'%s'님이 회원님을 '%s' 보드에 추가했습니다.",
+                        event.getSenderNickname(), event.getTargetName());
+                targetUrl = "/board/" + event.getTargetId(); // 해당 보드로 이동
+                break;
+            default:
+                return;
+        }
+
+        // 알림 객체 생성
+        NotificationDto noti = NotificationDto.builder()
+                .id(System.currentTimeMillis())
+                .receiverId(event.getReceiverId())
+                .senderId(event.getSenderId())
+                .senderNickname(event.getSenderNickname())
+                .senderProfileImg(event.getSenderProfileImg())
+                .type(event.getType())
+                .message(message)
+                .targetUrl(targetUrl)
+                .isRead(false)
+                .createdAt(LocalDateTime.now())
+                .token(event.getToken())
+                .build();
+
+        // redis 저장, 소켓 전송
+        saveAndSendNotification(noti);
     }
 
     /**
@@ -175,6 +207,27 @@ public class NotificationEventListener {
 
         // 그 외 (제목, 설명 등)
         return String.format("담당 카드 '%s'의 내용이 수정되었습니다.", cardTitle);
+    }
+
+    // Redis 저장, 소켓 전송
+    private void saveAndSendNotification(NotificationDto noti) {
+        // Redis 저장
+        // key: "np:notification:{userId}"
+        String key = RedisKeyType.NOTIFICATION.getKey(String.valueOf(noti.getReceiverId()));
+        redisUtil.addList(key, noti, RedisKeyType.NOTIFICATION.getDefaultTtl());
+
+        // 용량 관리 (최근 50개만 유지)
+        redisUtil.trimList(key, 50);
+
+        // WebSocket 실시간 전송
+        // 구독 경로: /queue/notifications/{userId}
+        // 프론트엔드가 이 경로를 구독해야 함
+        messagingTemplate.convertAndSendToUser(
+                String.valueOf(noti.getReceiverId()),
+                "/queue/notifications",
+                noti);
+
+        log.info("알림 발송 완료: receiverId={}", noti.getReceiverId());
     }
 
 }

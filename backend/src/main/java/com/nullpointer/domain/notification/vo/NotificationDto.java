@@ -30,4 +30,6 @@ public class NotificationDto {
     private Boolean isRead; // 읽음 여부
     private LocalDateTime createdAt;
 
+    private String token; // 팀 초대 토큰
+
 }

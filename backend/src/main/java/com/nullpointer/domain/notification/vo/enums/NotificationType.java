@@ -16,7 +16,9 @@ public enum NotificationType {
     MENTION("멘션"),
 
     DEADLINE_NEAR("마감 임박"),
-    TEAM_INVITE("팀 초대");
+    
+    TEAM_INVITE("팀 초대"),
+    BOARD_INVITE("보드 초대");
 
     private final String label;
 

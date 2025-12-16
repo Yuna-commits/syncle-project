@@ -14,6 +14,8 @@ import com.nullpointer.domain.invitation.vo.enums.Status;
 import com.nullpointer.domain.member.mapper.TeamMemberMapper;
 import com.nullpointer.domain.member.service.TeamMemberService;
 import com.nullpointer.domain.member.vo.enums.Role;
+import com.nullpointer.domain.notification.event.InvitationEvent;
+import com.nullpointer.domain.notification.vo.enums.NotificationType;
 import com.nullpointer.domain.team.mapper.TeamMapper;
 import com.nullpointer.domain.team.vo.TeamVo;
 import com.nullpointer.domain.user.mapper.UserMapper;
@@ -25,6 +27,7 @@ import com.nullpointer.global.util.RedisUtil;
 import com.nullpointer.global.validator.MemberValidator;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.util.UriComponentsBuilder;
@@ -45,6 +48,7 @@ public class InvitationServiceImpl implements InvitationService {
     private final MemberValidator memberValidator;
     private final ActivityService activityService;
     private final TeamMemberMapper teamMemberMapper;
+    private final ApplicationEventPublisher publisher;
 
     @Value("${app.domain.frontend}")
     private String frontendUrl;
@@ -71,7 +75,7 @@ public class InvitationServiceImpl implements InvitationService {
 
         // 데이터 일괄 조회
         // 1. 초대할 사용자 정보, ID 조회
-        List<UserVo> targetUsers = userMapper.findAllByIds(targetIds);
+        List<UserVo> receivers = userMapper.findAllByIds(targetIds);
 
         // 2. 이미 팀 멤버인 사용자 ID 조회
         List<Long> existingMemberIds = teamMemberMapper.findExistingMemberUserIds(teamId, targetIds);
@@ -87,8 +91,8 @@ public class InvitationServiceImpl implements InvitationService {
         // 초대가 발송될 사용자 ID 목록 (이전 기록 삭제용)
         List<Long> finalTargetIds = new ArrayList<>();
 
-        for (UserVo target : targetUsers) {
-            Long userId = target.getId();
+        for (UserVo receiver : receivers) {
+            Long userId = receiver.getId();
 
             // 검증
             if (userId.equals(inviterId)) continue; // 본인 제외 초대
@@ -129,7 +133,10 @@ public class InvitationServiceImpl implements InvitationService {
                     .build()
                     .toUriString();
 
-            emailService.sendInvitationEmail(target.getEmail(), inviteUrl, team.getName(), inviter.getNickname());
+            emailService.sendInvitationEmail(receiver.getEmail(), inviteUrl, team.getName(), inviter.getNickname());
+
+            // [알림] 초대 알림 발송
+            publishInviteEvent(inviter, receiver.getId(), team.getId(), team.getName(), token);
         }
 
 
@@ -268,5 +275,25 @@ public class InvitationServiceImpl implements InvitationService {
         if (invitation.getToken() != null) {
             redisUtil.deleteData(RedisKeyType.INVITATION.getKey(invitation.getToken()));
         }
+    }
+
+    /**
+     * Helper Methods
+     */
+
+    // [이벤트] 초대 이벤트 발행
+    private void publishInviteEvent(UserVo sender, Long receiverId, Long targetId, String targetName, String token) {
+        InvitationEvent event = InvitationEvent.builder()
+                .senderId(sender.getId())
+                .senderNickname(sender.getNickname())
+                .senderProfileImg(sender.getProfileImg())
+                .receiverId(receiverId)
+                .targetId(targetId)
+                .targetName(targetName)
+                .type(NotificationType.TEAM_INVITE)
+                .token(token)
+                .build();
+
+        publisher.publishEvent(event);
     }
 }

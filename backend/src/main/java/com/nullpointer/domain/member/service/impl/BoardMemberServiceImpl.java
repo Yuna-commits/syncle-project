@@ -12,6 +12,8 @@ import com.nullpointer.domain.member.mapper.BoardMemberMapper;
 import com.nullpointer.domain.member.service.BoardMemberService;
 import com.nullpointer.domain.member.vo.BoardMemberVo;
 import com.nullpointer.domain.member.vo.enums.Role;
+import com.nullpointer.domain.notification.event.InvitationEvent;
+import com.nullpointer.domain.notification.vo.enums.NotificationType;
 import com.nullpointer.domain.user.mapper.UserMapper;
 import com.nullpointer.domain.user.vo.UserVo;
 import com.nullpointer.global.common.SocketSender;
@@ -19,6 +21,7 @@ import com.nullpointer.global.common.enums.ErrorCode;
 import com.nullpointer.global.exception.BusinessException;
 import com.nullpointer.global.validator.MemberValidator;
 import lombok.RequiredArgsConstructor;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -38,6 +41,7 @@ public class BoardMemberServiceImpl implements BoardMemberService {
     private final MemberValidator memberVal;
     private final ActivityService activityService;
     private final SocketSender socketSender;
+    private final ApplicationEventPublisher publisher;
 
     /**
      * 보드 멤버 관리 권한
@@ -49,8 +53,9 @@ public class BoardMemberServiceImpl implements BoardMemberService {
         // 1. 요청자가 초대 권한(OWNER)이 있는지 확인
         memberVal.validateBoardManager(boardId, userId);
 
-        // 로그 저장을 위해 보드가 소속한 팀 id 필요
+        // 알림용 보드, 초대자 정보 조회
         BoardVo board = boardMapper.findBoardByBoardId(boardId);
+        UserVo inviter = userMapper.findById(userId).orElseThrow(() -> new BusinessException(ErrorCode.USER_NOT_FOUND));
 
         if (board == null) {
             throw new BusinessException(ErrorCode.BOARD_NOT_FOUND);
@@ -59,10 +64,10 @@ public class BoardMemberServiceImpl implements BoardMemberService {
         Long teamId = board.getTeamId();
 
         // refactor) for문 안에서 쿼리 사용 -> 한 번만 사용하여 일괄 처리되도록 변경
-        List<Long> targetIds = req.getUserIds();
+        List<Long> receiverIds = req.getUserIds();
 
         // 기존 맴버 이력 일괄 조회
-        List<BoardMemberVo> histories = boardMemberMapper.findAllByBoardIdAndUserIdsIncludeDeleted(boardId, targetIds);
+        List<BoardMemberVo> histories = boardMemberMapper.findAllByBoardIdAndUserIdsIncludeDeleted(boardId, receiverIds);
 
         // Map 변환
         Map<Long, BoardMemberVo> historyMap = histories.stream()
@@ -72,22 +77,24 @@ public class BoardMemberServiceImpl implements BoardMemberService {
         List<Long> toRestore = new ArrayList<>();
 
         // 신규/복구/중복 분류
-        for (Long targetId : targetIds) {
-            BoardMemberVo existing = historyMap.get(targetId);
+        for (Long receiverId : receiverIds) {
+            BoardMemberVo existing = historyMap.get(receiverId);
 
             if (existing == null) {
                 // 신규 멤버 -> INSERT
-                toInsert.add(req.toVo(boardId, targetId));
+                toInsert.add(req.toVo(boardId, receiverId));
             } else if (existing.getDeletedAt() != null) {
                 // 탈퇴 멤버 -> UPDATE
-                toRestore.add(targetId);
+                toRestore.add(receiverId);
             } else {
                 // 이미 활동 중인 멤버 -> 예외처리
                 throw new BusinessException(ErrorCode.MEMBER_ALREADY_EXISTS);
             }
 
+            publishInviteEvent(inviter, receiverId, board.getId(), board.getTitle());
+
             // 로그 저장
-            inviteMemberLog(targetId, userId, boardId, teamId);
+            inviteMemberLog(receiverId, userId, boardId, teamId);
         }
 
         // DB 저장/업데이트
@@ -100,7 +107,7 @@ public class BoardMemberServiceImpl implements BoardMemberService {
         }
 
         // 소켓 전송
-        socketSender.sendSocketMessage(boardId,"BOARD_MEMBER_INVITE", userId, null);
+        socketSender.sendSocketMessage(boardId, "BOARD_MEMBER_INVITE", userId, null);
     }
 
     @Override
@@ -132,7 +139,7 @@ public class BoardMemberServiceImpl implements BoardMemberService {
         changeRoleLog(teamId, boardId, memberId, userId, oldRole, req.getRole());
 
         // 소켓 전송
-        socketSender.sendSocketMessage(boardId,"BOARD_MEMBER_UPDATED", userId, null);
+        socketSender.sendSocketMessage(boardId, "BOARD_MEMBER_UPDATED", userId, null);
     }
 
     @Override
@@ -167,7 +174,7 @@ public class BoardMemberServiceImpl implements BoardMemberService {
         kickMemberLog(boardId, memberId, ownerId);
 
         // 소켓 전송
-        socketSender.sendSocketMessage(boardId,"BOARD_MEMBER_DELETED", userId, null);
+        socketSender.sendSocketMessage(boardId, "BOARD_MEMBER_DELETED", userId, null);
     }
 
     /**
@@ -224,4 +231,22 @@ public class BoardMemberServiceImpl implements BoardMemberService {
                         .build());
     }
 
+    /**
+     * Helper Methods
+     */
+
+    // [이벤트] 초대 이벤트 발행
+    private void publishInviteEvent(UserVo sender, Long receiverId, Long targetId, String targetName) {
+        InvitationEvent event = InvitationEvent.builder()
+                .senderId(sender.getId())
+                .senderNickname(sender.getNickname())
+                .senderProfileImg(sender.getProfileImg())
+                .receiverId(receiverId)
+                .targetId(targetId)
+                .targetName(targetName)
+                .type(NotificationType.BOARD_INVITE)
+                .build();
+
+        publisher.publishEvent(event);
+    }
 }

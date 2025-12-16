@@ -13,7 +13,6 @@ import com.nullpointer.domain.board.mapper.BoardMapper;
 import com.nullpointer.domain.board.service.BoardService;
 import com.nullpointer.domain.board.vo.BoardVo;
 import com.nullpointer.domain.board.vo.enums.Visibility;
-import com.nullpointer.domain.card.mapper.CardMapper;
 import com.nullpointer.domain.list.mapper.ListMapper;
 import com.nullpointer.domain.list.vo.ListVo;
 import com.nullpointer.domain.member.dto.board.BoardMemberResponse;
@@ -171,7 +170,7 @@ public class BoardServiceImpl implements BoardService {
         updateBoardLog(userId, boardVo.getTeamId(), boardVo);
 
         // 소켓 전송
-        socketSender.sendSocketMessage(boardId,"BOARD_UPDATED", userId, null);
+        socketSender.sendSocketMessage(boardId, "BOARD_UPDATED", userId, null);
     }
 
     @Override
@@ -192,7 +191,7 @@ public class BoardServiceImpl implements BoardService {
         deleteBoardLog(userId, teamId, boardId, boardTitle);
 
         // 소켓 전송
-        socketSender.sendSocketMessage(boardId,"BOARD_DELETED", userId, null);
+        socketSender.sendSocketMessage(boardId, "BOARD_DELETED", userId, null);
     }
 
     private ListVo createDefaultList(Long boardId, String title, int orderIndex) {
