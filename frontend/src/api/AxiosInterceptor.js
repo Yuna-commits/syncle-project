@@ -104,8 +104,10 @@ api.interceptors.response.use(
   async (error) => {
     const originalRequest = error.config
 
-    // 401 에러이고, 아직 재시도를 안 한 요청(_retry가 없음/false)인 경우
-    if (error.response?.status === 401 && !originalRequest._retry) {
+    const status = error.response?.status
+
+    // 401 또는 403 에러이고, 아직 재시도를 안 한 요청(_retry가 없음/false)인 경우
+    if ((status === 401 || status === 403) && !originalRequest._retry) {
       // ---------------------------------------------------
       // Case A: 이미 다른 요청에 의해 재발급이 진행 중인 경우
       // ---------------------------------------------------
@@ -163,6 +165,8 @@ api.interceptors.response.use(
         // Promise : 비동기 결과를 다루는 객체
         // Promise.reject : 강제 실패 상태 (비동기)
         return Promise.reject(refreshError)
+      } finally {
+        isRefreshing = false
       }
     }
     // 401이 아니거나 재시도 실패 시 에러 그대로 반환

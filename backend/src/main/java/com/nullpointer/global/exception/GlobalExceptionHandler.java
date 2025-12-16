@@ -7,6 +7,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.http.converter.HttpMessageNotReadableException;
+import org.springframework.security.access.AccessDeniedException;
 import org.springframework.validation.BindException;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
@@ -89,17 +90,17 @@ public class GlobalExceptionHandler {
                 .body(ApiResponse.error(ErrorCode.INVALID_TYPE_VALUE));
     }
 
-//    /**
-//     * 7) Spring Security 인가 예외 (권한 부족)
-//     */
-//    @ExceptionHandler(AccessDeniedException.class)
-//    public ResponseEntity<ApiResponse<Void>> handleAccessDeniedException(AccessDeniedException ex) {
-//        log.warn("권한이 없는 접근: {}", ex.getMessage());
-//
-//        ApiResponse<Void> body = ApiResponse.error(ErrorCode.ACCESS_DENIED);
-//        return new ResponseEntity<>(body, ErrorCode.ACCESS_DENIED.getStatus());
-//    }
+    /**
+     * 7) Spring Security 인가 예외 (권한 부족)
+     */
+    @ExceptionHandler(AccessDeniedException.class)
+    public ResponseEntity<ApiResponse<Void>> handleAccessDeniedException(AccessDeniedException ex) {
+        log.warn("권한이 없는 접근: {}", ex.getMessage());
 
+        return ResponseEntity
+                .status(HttpStatus.FORBIDDEN)
+                .body(ApiResponse.error(ErrorCode.UNAUTHORIZED_ACCESS));
+    }
 
     /**
      * 8) 나머지 예외 처리 (서버 오류)
