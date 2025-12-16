@@ -34,10 +34,26 @@ function CalendarPage() {
 
   // 내 담당 카드 로직
   const filteredEvents = useMemo(() => {
-    if (!onlyMyCards) return events
+    // 1. 날짜 보정 (endDate + 1일)
+    // 원본 events 배열을 변형하지 않기 위해 map으로 새로운 객체 생성
+    const adjustedEvents = events.map((e) => {
+      // end 날짜가 있는 경우에만 처리
+      if (e.end) {
+        const date = new Date(e.end)
+        date.setDate(date.getDate() + 1) // 하루 더하기
+
+        return {
+          ...e,
+          // YYYY-MM-DD 형식으로 변환 (시간 정보가 필요 없다면)
+          end: date.toISOString().split('T')[0],
+        }
+      }
+      return e
+    })
+    if (!onlyMyCards) return adjustedEvents
     if (!user?.id) return []
 
-    return events.filter((e) => e.extendedProps?.assigneeId === user.id)
+    return adjustedEvents.filter((e) => e.extendedProps?.assigneeId === user.id)
   }, [events, onlyMyCards, user])
 
   // 필터링된 보드 목록

@@ -39,7 +39,8 @@ export default function AppRoutes() {
           <Route path="/dashboard/*" element={<DashboardPage />} />
           <Route path="/notifications/*" element={<NotificationPage />} />
           <Route path="/calendar/*" element={<CalendarPage />} />
-
+          {/* 위에서 매칭되지 않은 모든 경로는 여기로 떨어집니다. */}
+          <Route path="*" element={<Navigate to="/dashboard" replace />} />
           {/* 팀 관련 라우트 */}
           <Route path="/teams/*" element={<TeamRoutes />} />
         </Route>

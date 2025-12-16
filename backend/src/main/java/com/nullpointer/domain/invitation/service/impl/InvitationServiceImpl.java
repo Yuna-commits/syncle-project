@@ -84,6 +84,9 @@ public class InvitationServiceImpl implements InvitationService {
         // 초대장 생성
         List<InvitationVo> invitationsToInsert = new ArrayList<>();
 
+        // 초대가 발송될 사용자 ID 목록 (이전 기록 삭제용)
+        List<Long> finalTargetIds = new ArrayList<>();
+
         for (UserVo target : targetUsers) {
             Long userId = target.getId();
 
@@ -91,6 +94,13 @@ public class InvitationServiceImpl implements InvitationService {
             if (userId.equals(inviterId)) continue; // 본인 제외 초대
             if (existingMemberSet.contains(userId)) continue; // 이미 멤버인 경우
             if (pendingInviteeSet.contains(userId)) continue; // 이미 초대된 경우
+
+
+            // 초대하는 멤버 ID 수집
+            finalTargetIds.add(userId);
+
+            // 새로 초대하는 인원들에 대해, 기존의 '만료됨(EXPIRED)' 또는 '거절됨(REJECTED)' 상태인 내역 삭제
+            invitationMapper.deletePreviousInvitations(teamId, finalTargetIds);
 
             // 초대장 객체 생성
             String token = UUID.randomUUID().toString();
@@ -121,6 +131,7 @@ public class InvitationServiceImpl implements InvitationService {
 
             emailService.sendInvitationEmail(target.getEmail(), inviteUrl, team.getName(), inviter.getNickname());
         }
+
 
         // DB에 한 번에 저장 (Bulk Insert)
         if (!invitationsToInsert.isEmpty()) {

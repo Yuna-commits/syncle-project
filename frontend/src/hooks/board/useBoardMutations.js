@@ -88,8 +88,15 @@ export const useBoardMutations = (boardId) => {
   // 보드 삭제
   const deleteBoardMutation = useMutation({
     mutationFn: () => boardApi.deleteBoard(boardId),
-    // 성공 후 페이지 이동은 컴포넌트(UI)에서 처리하는 것이 자연스럽습니다.
-    // 여기서는 onSuccess를 비워두거나 필요한 공통 로직만 넣습니다.
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['dashboard'] })
+      queryClient.invalidateQueries({ queryKey: ['team'] })
+      queryClient.removeQueries({ queryKey: ['board', Number(boardId)] })
+    },
+    onError: (err) => {
+      alert('보드 삭제에 실패했습니다.')
+      console.log(err.response?.data?.message)
+    },
   })
 
   return {

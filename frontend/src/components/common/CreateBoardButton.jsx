@@ -3,10 +3,10 @@ import CreateBoardMenu from '../modals/board/CreateBoardMenu'
 import useUiStore from '../../stores/useUiStore'
 
 function CreateBoardButton({ teamId, onBoardCreated }) {
-  const { openedMenu, toggleMenu, closeAll } = useUiStore()
+  const { activeMenu, toggleMenu, closeAll } = useUiStore()
 
   const menuId = `createBoard_${teamId}`
-  const isOpen = openedMenu === menuId
+  const isOpen = activeMenu === menuId
 
   return (
     <div className="relative">

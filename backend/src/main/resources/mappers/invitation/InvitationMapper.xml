@@ -42,6 +42,17 @@
                         AND status = #{status})
     </select>
 
+    <!-- 다시 초대 시, 기존의 만료되거나 거절된 초대 내역 삭제  -->
+    <delete id="deletePreviousInvitations">
+        DELETE FROM invitation
+        WHERE team_id = #{teamId}
+        AND invitee_id IN
+        <foreach collection="userIds" item="id" open="(" separator="," close=")">
+            #{id}
+        </foreach>
+        AND status IN ('EXPIRED', 'REJECTED')
+    </delete>
+
     <!-- 이미 초대 받은 여러 명의 멤버들 조회 - Param List -->
     <select id="findPendingInviteeIds" resultType="long">
         SELECT invitee_id
