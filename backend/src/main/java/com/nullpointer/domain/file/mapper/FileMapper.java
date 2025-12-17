@@ -9,9 +9,6 @@ public interface FileMapper {
     // 파일 정보 저장
     void insertFile(FileVo fileVo);
 
-    // 카드 별 첨부파일 목록 조회
-    List<FileVo> findAllByBoardId(Long boardId);
-
     // 파일 조회
     FileVo findById(Long fileId);
     

@@ -75,4 +75,15 @@ export const boardApi = {
     api.patch(`/comments/${commentId}`, updates),
   // 댓글 삭제
   deleteComment: (commentId) => api.delete(`/comments/${commentId}`),
+
+  // 파일 업로드
+  uploadFile: (cardId, file) => {
+    const formData = new FormData()
+    formData.append('file', file)
+    return api.post(`/files/card/${cardId}`, formData, {
+      headers: { 'Content-Type': 'multipart/form-data' },
+    })
+  },
+  // 파일 삭제
+  deleteFile: (fileId) => api.delete(`/files/${fileId}`),
 }

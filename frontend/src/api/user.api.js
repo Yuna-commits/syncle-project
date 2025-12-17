@@ -18,4 +18,17 @@ export const userApi = {
 
   // 사용자 검색
   searchUsers: (keyword) => api.get('/users/search', { params: { keyword } }),
+
+  // 프로필 이미지 변경
+  uploadImage: (file, fileType) => {
+    const formData = new FormData()
+    formData.append('file', file)
+    formData.append('fileType', fileType)
+
+    return api.post('/files/upload', formData, {
+      headers: {
+        'Content-Type': 'multipart/form-data',
+      },
+    })
+  },
 }

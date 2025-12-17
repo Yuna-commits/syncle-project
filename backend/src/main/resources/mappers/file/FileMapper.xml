@@ -3,35 +3,22 @@
         PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
         "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
 
-<mapper namespace="com.nullpointer.domain.card.mapper.FileMapper">
+<mapper namespace="com.nullpointer.domain.file.mapper.FileMapper">
 
     <insert id="insertFile" parameterType="FileVo" useGeneratedKeys="true" keyProperty="fileId">
         INSERT INTO file (card_id,
                           uploader_id,
+                          file_name,
                           file_path,
-                          original_name,
                           file_size,
-                          content_type,
                           created_at)
         VALUES (#{cardId},
                 #{uploaderId},
                 #{filePath},
-                #{originalName},
+                #{file_path},
                 #{fileSize},
-                #{contentType},
                 NOW())
     </insert>
-
-    <select id="findAllByBoardId" parameterType="long" resultType="FileVo">
-        SELECT *
-        FROM file f
-                 INNER JOIN
-             card c ON f.card_id = c.id
-                 INNER JOIN
-             list l ON c.list_id = l.id
-        WHERE c.board_id = #{boardId}
-          AND f.deleted_at IS NULL
-    </select>
 
     <select id="findById" parameterType="long" resultType="FileVo">
         SELECT *
@@ -39,13 +26,10 @@
         WHERE file_id = #{fileId}
     </select>
 
-    <delete id="deleteById" parameterType="long">
-        DELETE FROM file
-        WHERE file_id = #{fileId}
-    </delete>
+    <update id="deleteById" parameterType="long">
+        UPDATE file
+        SET deleted_at = NOW()
+        WHERE id = #{id}
+    </update>
 
-    <delete id="deleteByCardId" parameterType="long">
-        DELETE FROM file
-        WHERE card_id = #{cardId}
-    </delete>
 </mapper>

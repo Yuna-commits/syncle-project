@@ -7,6 +7,8 @@ import com.nullpointer.domain.file.mapper.FileMapper;
 import com.nullpointer.domain.file.service.FileService;
 import com.nullpointer.domain.file.service.FileStorageService;
 import com.nullpointer.domain.file.vo.FileVo;
+import com.nullpointer.domain.list.mapper.ListMapper;
+import com.nullpointer.domain.list.vo.ListVo;
 import com.nullpointer.global.common.enums.ErrorCode;
 import com.nullpointer.global.exception.BusinessException;
 import com.nullpointer.global.validator.MemberValidator;
@@ -21,6 +23,7 @@ public class FileServiceImpl implements FileService {
 
     private final FileMapper fileMapper;
     private final CardMapper cardMapper;
+    private final ListMapper listMapper;
     private final FileStorageService fileStorageService;
     private final MemberValidator memberValidator;
 
@@ -32,6 +35,7 @@ public class FileServiceImpl implements FileService {
                 .orElseThrow(() -> new BusinessException(ErrorCode.CARD_NOT_FOUND));
 
         // 2. 권한 검증
+        validateCardAndPermission(cardId, userId);
 
         // 3. S3에 파일 저장
         String filePath = fileStorageService.storeFile(file, userId, "attachments");
@@ -50,13 +54,7 @@ public class FileServiceImpl implements FileService {
         // 5. 응답 반환
         // CloudFront URL 생성
         String fullUrl = fileStorageService.getFileUrl(filePath);
-        return new FileResponse(
-                fileVo.getFileId(),
-                fileVo.getCardId(),
-                fileVo.getFileName(),
-                fileVo.getFileSize(),
-                fullUrl
-        );
+        return FileResponse.of(fileVo, fullUrl);
     }
 
     @Override
@@ -68,11 +66,36 @@ public class FileServiceImpl implements FileService {
         }
 
         // 권한 검증
+        validateCardAndPermission(fileVo.getCardId(), userId);
 
         // S3에서 삭제
         fileStorageService.deleteFile(fileVo.getFilePath());
 
         // DB 삭제
         fileMapper.deleteById(fileId);
+    }
+
+
+    /**
+     * Helper Methods
+     */
+
+// 카드 -> 리스트 -> 보드 순으로 id를 찾고 권한 검증
+    private Long validateCardAndPermission(Long cardId, Long userId) {
+        CardVo card = cardMapper.findById(cardId)
+                .orElseThrow(() -> new BusinessException(ErrorCode.CARD_NOT_FOUND));
+
+        ListVo list = listMapper.findById(card.getListId())
+                .orElseThrow(() -> new BusinessException(ErrorCode.BOARD_NOT_FOUND));
+
+        Long boardId = list.getBoardId();
+
+//    if (readOnly) {
+//        memberVal.validateBoardViewer(boardId, userId); // 조회 시 VIEWER 이상
+//    } else {
+//        memberVal.validateBoardEditor(boardId, userId); // 쓰기 시 MEMBER 이상
+//    }
+
+        return boardId;
     }
 }

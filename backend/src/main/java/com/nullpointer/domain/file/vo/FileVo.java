@@ -8,7 +8,7 @@ import java.time.LocalDateTime;
 @Getter
 @Builder
 public class FileVo {
-    private Long fileId;
+    private Long id;
     private Long cardId;
     private Long uploaderId;
     private String fileName;
