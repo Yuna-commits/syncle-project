@@ -10,14 +10,12 @@
                           uploader_id,
                           file_name,
                           file_path,
-                          file_size,
-                          created_at)
+                          file_size)
         VALUES (#{cardId},
                 #{uploaderId},
                 #{fileName},
                 #{filePath},
-                #{fileSize},
-                NOW())
+                #{fileSize})
     </insert>
 
     <select id="findById" parameterType="long" resultType="FileVo">
