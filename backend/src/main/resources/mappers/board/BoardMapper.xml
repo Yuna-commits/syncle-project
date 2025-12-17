@@ -174,6 +174,12 @@
                ck.title       AS check_title,
                ck.done        AS check_done,
 
+               -- 첨부파일 (file 테이블 조인)
+               f.id           AS file_id,
+               f.card_id      AS file_card_id,
+               f.file_name    AS file_file_name,
+               f.file_path    AS file_file_path,
+               f.file_size    AS file_file_size,
 
                -- 댓글 (comment 테이블 조인)
                cmt.id         AS comment_id,
@@ -211,7 +217,10 @@
                  LEFT JOIN check_list ck
                            ON c.id = ck.card_id
                                AND ck.deleted_at IS NULL
-
+            -- 파일 LEFT JOIN
+                 LEFT JOIN file f
+                           ON c.id = f.card_id
+                               AND f.deleted_at IS NULL
             -- 댓글 LEFT JOIN
                  LEFT JOIN comment cmt
                            ON c.id = cmt.card_id

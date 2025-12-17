@@ -56,12 +56,16 @@ public class S3FileStorageServiceImpl implements FileStorageService {
 
             s3Client.putObject(putOb, RequestBody.fromInputStream(file.getInputStream(), file.getSize()));
 
-            // CloudFront URL 반환
-            return domain + "/" + key;
+            return key;
         } catch (IOException e) {
             log.error("S3 Upload Fail", e);
             throw new BusinessException(ErrorCode.INTERNAL_SERVER_ERROR);
         }
+    }
+
+    // Full URL 생성을 위한 메서드
+    public String getFileUrl(String key) {
+        return domain + "/" + key;
     }
 
     // 파일 삭제

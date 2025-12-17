@@ -7,7 +7,8 @@ import lombok.Getter;
 @AllArgsConstructor
 public class FileResponse {
     private Long id;
-    private String fileName;
-    private String filePath;
     private Long cardId;
+    private String fileName;
+    private Long fileSize;
+    private String fullUrl;
 }

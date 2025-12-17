@@ -12,6 +12,9 @@ public interface FileMapper {
     // 카드 별 첨부파일 목록 조회
     List<FileVo> findAllByBoardId(Long boardId);
 
+    // 파일 조회
+    FileVo findById(Long fileId);
+    
     // 파일 삭제
     void deleteById(Long fileId);
 
@@ -20,4 +23,5 @@ public interface FileMapper {
 
     // 카드 삭제 시 해당 카드의 모든 파일 삭제
     void deleteByCardId(Long cardId);
+    
 }

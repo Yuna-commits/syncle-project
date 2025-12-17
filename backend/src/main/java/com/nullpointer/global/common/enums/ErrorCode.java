@@ -78,7 +78,10 @@ public enum ErrorCode {
     CARD_DELETED(HttpStatus.GONE, "CD002", "삭제된 카드입니다."),
 
     // 체크리스트
-    CHECKLIST_NOT_FOUND(HttpStatus.NOT_FOUND, "CL001", "존재하지 않는 체크리스트입니다.");
+    CHECKLIST_NOT_FOUND(HttpStatus.NOT_FOUND, "CL001", "존재하지 않는 체크리스트입니다."),
+
+    // 파일
+    FILE_NOT_FOUND(HttpStatus.NOT_FOUND, "F001", "존재하지 않는 파일입니다.");
 
     private final HttpStatus status;
     private final String code;

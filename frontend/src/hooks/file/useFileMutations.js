@@ -4,12 +4,12 @@ import { useMutation } from '@tanstack/react-query'
 import { fileApi } from '../../api/file.api'
 
 export const useFileMutations = () => {
-  const uploadFileMutation = useMutation({
-    mutationFn: ({ file, fileType }) => fileApi.uploadFile(file, fileType),
+  const uploadImageMutation = useMutation({
+    mutationFn: ({ file, fileType }) => fileApi.uploadImage(file, fileType),
   })
 
   return {
-    uploadFile: uploadFileMutation.mutateAsync,
-    isUploading: uploadFileMutation.isPending,
+    uploadImage: uploadImageMutation.mutateAsync,
+    isUploading: uploadImageMutation.isPending,
   }
 }
