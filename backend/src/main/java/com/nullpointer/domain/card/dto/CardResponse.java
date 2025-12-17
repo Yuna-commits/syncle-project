@@ -5,6 +5,7 @@ import com.nullpointer.domain.card.vo.CardVo;
 import com.nullpointer.domain.card.vo.enums.Priority;
 import com.nullpointer.domain.checklist.vo.ChecklistVo;
 import com.nullpointer.domain.comment.dto.CommentResponse;
+import com.nullpointer.domain.file.dto.FileResponse;
 import lombok.*;
 
 import java.time.LocalDateTime;
@@ -48,7 +49,14 @@ public class CardResponse {
     // 보드 ID
     private Long boardId;
 
-    public static CardResponse of(CardVo c, String assigneeName, String assigneeProfileImg, Integer commentCount, List<ChecklistVo> checklists) {
+    // 첨부파일 필드
+    private List<FileResponse> files;
+
+    public static CardResponse of(CardVo c,
+                                  String assigneeName,
+                                  String assigneeProfileImg,
+                                  Integer commentCount,
+                                  List<ChecklistVo> checklists) {
         return CardResponse.builder()
                 .id(c.getId())
                 .listId(c.getListId())

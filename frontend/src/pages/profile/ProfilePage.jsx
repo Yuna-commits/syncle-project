@@ -15,7 +15,7 @@ export default function ProfilePage() {
   // 로그인 사용자 정보 조회
   const { data: user, isLoading } = useAuthQuery()
   const { updateProfile } = useUserMutations()
-  const { uploadFile } = useFileMutations()
+  const { uploadImage } = useFileMutations()
 
   const [isEditProfileOpen, setEditProfileOpen] = useState(false)
   // 중복 검사 상태
@@ -65,7 +65,7 @@ export default function ProfilePage() {
       const compressedFile = await compressImage(file)
 
       // 파일 업로드
-      const uploadResponse = await uploadFile({
+      const uploadResponse = await uploadImage({
         file: compressedFile,
         fileType: 'profiles',
       })
