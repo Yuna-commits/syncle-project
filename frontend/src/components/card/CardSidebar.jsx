@@ -52,14 +52,30 @@ function CardSidebar({
 
   // 카드가 선택될 때마다 기존 설정된 날짜로 초기화
   useEffect(() => {
+    // DB 저장: 2025-12-16 15:00:00(타임존 저장 x)
+    const parseDate = (dateStr) => {
+      if (!dateStr) return new Date()
+
+      // 2025-12-16T15:00:00로 변환
+      let normalized = dateStr.replace(' ', 'T')
+
+      // 2025-12-16T15:00:00Z로 변환
+      if (!normalized.endsWith('Z') && !normalized.includes('+')) {
+        normalized += 'Z'
+      }
+
+      // UTC 16일 15시 +9시간 -> 한국 시간 17일 00시로 변환
+      return new Date(normalized)
+    }
+
     if (selectedCard) {
       setDateRange([
         {
           startDate: selectedCard.startDate
-            ? new Date(selectedCard.startDate)
+            ? parseDate(selectedCard.startDate)
             : new Date(),
           endDate: selectedCard.dueDate
-            ? new Date(selectedCard.dueDate)
+            ? parseDate(selectedCard.dueDate)
             : new Date(),
           key: 'selection',
         },
@@ -110,15 +126,19 @@ function CardSidebar({
       })
     } else {
       const { startDate, endDate } = item[0]
+      // 시작일: 00시 00분 00초 (KST)
       const adjustedStartDate = new Date(startDate)
-      adjustedStartDate.setHours(12, 0, 0, 0)
+      adjustedStartDate.setHours(0, 0, 0, 0)
+
+      // 마감일: 23시 59분 59초 (KST)
       const adjustedEndDate = new Date(endDate)
-      adjustedEndDate.setHours(12, 0, 0, 0)
+      adjustedEndDate.setHours(23, 59, 59, 999)
 
       updateCard({
         cardId: selectedCard.id,
         listId: selectedCard.listId,
         updates: {
+          // UTC 기준으로 저장
           startDate: adjustedStartDate.toISOString(),
           dueDate: adjustedEndDate.toISOString(),
         },
@@ -252,6 +272,7 @@ function CardSidebar({
             setRange={setDateRange}
             onApply={handleDateApply}
             position={datePopupPos}
+            buttonRef={dateButtonRef}
           />
 
           {/* 체크리스트 버튼 */}

@@ -61,10 +61,22 @@ export default function ActivityPage() {
   // 날짜 적용 핸들러 (적용 버튼 클릭 시 실행)
   const handleDateApply = (newRange) => {
     if (newRange && newRange[0].startDate && newRange[0].endDate) {
+      const { startDate, endDate } = newRange[0]
+
+      // 시작일: 00시 00분 00초 (KST)
+      const adjustedStartDate = new Date(startDate)
+      adjustedStartDate.setHours(0, 0, 0, 0)
+
+      // 종료일: 23시 59분 59초 (KST)
+      const adjustedEndDate = new Date(endDate)
+      adjustedEndDate.setHours(23, 59, 59, 999)
+
       setFilter({
-        startDate: format(newRange[0].startDate, 'yyyy-MM-dd'),
-        endDate: format(newRange[0].endDate, 'yyyy-MM-dd'),
+        // format 함수가 로컬 시간 기준 'yyyy-MM-dd' 문자열 생성
+        startDate: format(adjustedStartDate, 'yyyy-MM-dd'),
+        endDate: format(adjustedEndDate, 'yyyy-MM-dd'),
       })
+
       setLocalRange(newRange)
     } else {
       setFilter({ startDate: null, endDate: null })
@@ -176,7 +188,7 @@ export default function ActivityPage() {
                   onClick={toggleCalendar}
                   className={`flex items-center gap-2 rounded-lg border bg-gray-50 px-3 py-2 text-sm font-medium transition-colors hover:cursor-pointer hover:bg-gray-200 ${
                     filter.startDate
-                      ? 'border-blue-200 bg-blue-50 text-blue-700'
+                      ? 'border-blue-200 bg-blue-50 text-blue-600'
                       : 'border-gray-300 bg-white text-gray-700 hover:bg-gray-50'
                   }`}
                 >
@@ -194,6 +206,7 @@ export default function ActivityPage() {
                   setRange={setLocalRange}
                   onApply={handleDateApply}
                   position={calendarPos}
+                  buttonRef={calendarButtonRef}
                 />
               </div>
             </div>
