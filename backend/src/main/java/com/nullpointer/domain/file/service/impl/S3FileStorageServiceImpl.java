@@ -24,6 +24,7 @@ import java.net.URLDecoder;
 import java.net.URLEncoder;
 import java.nio.charset.StandardCharsets;
 import java.time.Duration;
+import java.util.Set;
 import java.util.UUID;
 
 @Slf4j
@@ -41,10 +42,24 @@ public class S3FileStorageServiceImpl implements S3FileStorageService {
     @Value("${cloud.aws.cloudfront.domain}")
     private String domain;
 
+    // 허용할 확장자 리스트 정의 (Whitelist 방식)
+    private static final Set<String> ALLOWED_EXTENSIONS = Set.of(
+            // 이미지
+            "jpg", "jpeg", "png", "gif", "webp", "svg",
+            // 문서
+            "pdf", "txt", "md", "csv",
+            "doc", "docx", "xls", "xlsx", "ppt", "pptx",
+            // 압축 파일
+            "zip"
+    );
+
     // 파일 저장
     @Override
     public String storeFile(MultipartFile file, Long userId, String fileType) {
         if (file.isEmpty()) throw new BusinessException(ErrorCode.INVALID_INPUT_VALUE);
+
+        // 파일명 및 확장자 검증 로직 호출
+        validateFileExtension(file.getOriginalFilename());
 
         String uuid = UUID.randomUUID().toString();
         String extension = getExtension(file.getOriginalFilename());
@@ -123,6 +138,22 @@ public class S3FileStorageServiceImpl implements S3FileStorageService {
         } catch (Exception e) {
             log.error("파일 다운로드 URL 생성 실패", e);
             throw new BusinessException(ErrorCode.FILE_DOWNLOAD_FAILED);
+        }
+    }
+
+
+    /**
+     * Helper 메소드
+     */
+
+    // 확장자 검증 메서드
+    private void validateFileExtension(String filename) {
+        String extension = getExtension(filename).toLowerCase();
+
+        // 확장자가 없거나, 허용 목록에 없으면 예외 발생
+        if (!StringUtils.hasText(extension) || !ALLOWED_EXTENSIONS.contains(extension)) {
+            log.warn("허용되지 않는 파일 확장자 업로드 시도: {}", filename);
+            throw new BusinessException(ErrorCode.INVALID_FILE_EXTENSION);
         }
     }
 

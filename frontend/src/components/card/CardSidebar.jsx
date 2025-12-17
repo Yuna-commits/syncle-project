@@ -58,6 +58,32 @@ function CardSidebar({
   // -- 파일 인풋 Ref --
   const fileInputRef = useRef(null)
 
+  // 업로드 가능한 확장자
+  const allowedExtensions = [
+    // 이미지
+    'image/jpeg',
+    'image/png',
+    'image/gif',
+    'image/webp',
+    'image/svg+xml',
+
+    // 문서
+    'application/pdf',
+    'text/plain', // .txt
+    'text/markdown', // .md
+    'text/csv',
+    'application/msword',
+    'application/msword', // .doc
+    'application/vnd.openxmlformats-officedocument.wordprocessingml.document', // .docx
+    'application/vnd.ms-excel', // .xls
+    'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet', // .xlsx
+    'application/vnd.ms-powerpoint', // .ppt
+    'application/vnd.openxmlformats-officedocument.presentationml.presentation', // .pptx
+
+    // 압축
+    'application/zip',
+  ]
+
   // 카드가 선택될 때마다 기존 설정된 날짜로 초기화
   useEffect(() => {
     // DB 저장: 2025-12-16 15:00:00(타임존 저장 x)
@@ -128,6 +154,19 @@ function CardSidebar({
   const handleFileChange = (e) => {
     const file = e.target.files?.[0]
     if (!file) return
+
+    // 용량 체크
+    const MAX_SIZE = 5 * 1024 * 1024
+    if (file.size > MAX_SIZE) {
+      alert('파일 크기는 5MB를 넘을 수 없습니다.')
+      return
+    }
+
+    // 확장자 체크
+    if (!allowedExtensions.includes(file.type)) {
+      alert('지원하지 않은 파일 확장자입니다..')
+      return
+    }
 
     uploadFile({
       cardId: selectedCard.id,

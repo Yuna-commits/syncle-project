@@ -11,7 +11,6 @@ import com.nullpointer.domain.list.mapper.ListMapper;
 import com.nullpointer.domain.list.vo.ListVo;
 import com.nullpointer.global.common.enums.ErrorCode;
 import com.nullpointer.global.exception.BusinessException;
-import com.nullpointer.global.validator.MemberValidator;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -27,7 +26,6 @@ public class FileServiceImpl implements FileService {
     private final CardMapper cardMapper;
     private final ListMapper listMapper;
     private final S3FileStorageService fileStorageService;
-    private final MemberValidator memberValidator;
 
     @Override
     @Transactional

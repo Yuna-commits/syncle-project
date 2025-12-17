@@ -5,6 +5,8 @@ import { Camera, Pencil } from 'lucide-react'
 function ProfileHeader({ user, onEdit, onImageChange }) {
   const fileInputRef = useRef(null)
 
+  const allowedExtensions = ['image/jpeg', 'image/png', 'image/webp']
+
   // 카메라 아이콘 클릭 시 파일 선택창 열기
   const handleCameraClick = () => {
     fileInputRef.current.click()
@@ -13,9 +15,22 @@ function ProfileHeader({ user, onEdit, onImageChange }) {
   // 파일 선택 시 부모 컴포넌트로 전달
   const handleFileSelect = (e) => {
     const file = e.target.files[0]
-    if (file) {
-      onImageChange(file)
+    if (!file) return
+
+    // 용량 체크
+    const MAX_SIZE = 500 * 1024
+    if (file.size > MAX_SIZE) {
+      alert('파일 크기는 500KB를 넘을 수 없습니다.')
+      return
     }
+
+    // 확장자 체크
+    if (!allowedExtensions.includes(file.type)) {
+      alert('jpg, png, webp 이미지 파일만 업로드 가능합니다.')
+      return
+    }
+
+    onImageChange(file)
 
     // 같은 파일을 다시 선택할 수 있도록 value 초기화
     e.target.value = ''
