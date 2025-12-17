@@ -10,6 +10,7 @@ import MainMenuView from './view/MainMenuView'
 import MembersView from './view/MembersView'
 import PermissionsView from './view/PermissionsView'
 import VisibilityView from './view/VisibilityView'
+import FilesView from './view/FilesView'
 
 function BoardSettings({ board }) {
   const navigate = useNavigate()
@@ -84,6 +85,8 @@ function BoardSettings({ board }) {
         return '권한 설정'
       case 'MEMBERS':
         return '멤버 관리'
+      case 'FILES':
+        return '파일 관리'
       case 'ARCHIVE':
         return '보관된 항목'
       default:
@@ -112,6 +115,8 @@ function BoardSettings({ board }) {
         return <PermissionsView board={board} isOwner={isOwner} />
       case 'MEMBERS':
         return <MembersView board={board} isOwner={isOwner} />
+      case 'FILES':
+        return <FilesView board={board} />
       case 'ARCHIVE':
         return <ArchiveView board={board} />
       default:
