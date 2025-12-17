@@ -3,31 +3,48 @@ import useSignUpStore from '../../../stores/auth/useSignUpStore'
 import FormInput from '../../../components/common/FormInput'
 import FormButton from '../../../components/common/FormButton'
 import { useAuthMutations } from '../../../hooks/auth/useAuthMutations'
+import { useForm } from 'react-hook-form'
 
 export default function Step2Form() {
+  const {
+    register,
+    handleSubmit,
+    setError,
+    setFocus,
+    setValue,
+    formState: { errors, isValid },
+  } = useForm({
+    mode: 'onChange',
+    defaultValues: { authCode: '' },
+  })
+
   // Zustand Store에서 상태와 액션 꺼내기
   const {
-    formData,
-    authCode: storeAuthCode, // formData.authCod3
-    setAuthCode,
+    email,
     timeLeft,
     decreaseTime,
     setStep, // 뒤로가기
-    errors,
   } = useSignUpStore()
 
-  const { verifySignup, resendSignupCode, isVerifySignupPending } =
-    useAuthMutations()
+  const {
+    verifySignup,
+    resendSignupCode,
+    isVerifySignupPending,
+    isResendSignupPending,
+  } = useAuthMutations()
 
   // 타이머 (2단계일 때만 동작)
   useEffect(() => {
-    if (timeLeft > 0) {
-      const timerId = setInterval(decreaseTime, 1000)
-      return () => clearInterval(timerId)
-    } else if (timeLeft === 0) {
-      alert('인증 시간이 만료되었습니다.')
+    if (timeLeft <= 0) {
+      alert('입력 시간이 초과되었습니다.')
       setStep(1)
     }
+
+    const timerId = setInterval(() => {
+      decreaseTime() // 스토어의 시간을 1초씩 감소
+    }, 1000)
+
+    return () => clearInterval(timerId)
   }, [timeLeft, decreaseTime, setStep])
 
   // 시간 포맷팅 (300 -> "05:00")
@@ -37,57 +54,87 @@ export default function Step2Form() {
     return `${String(minutes).padStart(2, '0')}:${String(seconds).padStart(2, '0')}`
   }
 
-  const handleSubmit = async (e) => {
-    e.preventDefault()
-    verifySignup({ email: formData.email, authCode: formData.authCode })
+  // 재전송 핸들러
+  const handleResend = () => {
+    resendSignupCode(email)
+  }
+
+  // 제출 핸들러
+  const onSubmit = (data) => {
+    if (timeLeft <= 0) {
+      alert('입력 시간이 초과되었습니다.')
+      setStep(1)
+    }
+    verifySignup(
+      { email, authCode: data.authCode },
+      {
+        onError: (error) => {
+          const errorCode = error.response?.data?.errorCode
+
+          if (errorCode === 'A004') {
+            setError('authCode', {
+              type: 'manual',
+              message: '인증번호가 일치하지 않습니다.',
+            })
+            setValue('authCode', '')
+            setFocus('authCode')
+          }
+        },
+      },
+    )
   }
 
   return (
-    <form onSubmit={handleSubmit} className="space-y-6">
+    <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
+      {/* 안내 문구 */}
+      <div className="text-center">
+        <p className="text-sm text-gray-500">
+          <span className="font-bold text-blue-600">{email}</span> 으로
+          <br />
+          인증번호가 발송되었습니다.
+        </p>
+      </div>
+
       {/* 인증번호 입력 구역 */}
-      <div className="relative">
+      <div className="space-y-1">
         <FormInput
-          name="authCode"
-          label="인증번호"
-          value={storeAuthCode}
-          onChange={(e) => setAuthCode(e.target.value)}
-          placeholder={'인증번호 6자리를 입력해주세요.'}
+          type="text"
+          placeholder="인증번호 6자리"
           maxLength={6}
-          error={errors?.authCode}
-          className="text-center text-lg tracking-widest"
+          error={errors.authCode?.message}
+          className="pr-2 text-center text-lg tracking-[0.2em]"
+          {...register('authCode', {
+            required: '인증번호를 입력해주세요.',
+            pattern: {
+              value: /^[0-9]{6}$/,
+              message: '숫자 6자리를 입력해주세요.',
+            },
+          })}
         >
           {/* 타이머 */}
-          <div className="absolute top-1/2 right-4 -translate-y-1/2 text-sm font-medium text-red-500 tabular-nums">
+          <span className="absolute top-1/2 right-4 -translate-y-1/2 font-mono text-sm font-semibold text-red-500 tabular-nums">
             {formatTime(timeLeft)}
-          </div>
+          </span>
         </FormInput>
       </div>
 
       {/* 버튼 구역 */}
       <div className="grid grid-cols-2 gap-4">
+        {/* 재전송 */}
+        <FormButton
+          type="button"
+          text={`${isResendSignupPending ? '전송 중...' : '재전송'}`}
+          variant="secondary"
+          onClick={handleResend}
+          isLoading={isResendSignupPending}
+        />
         <FormButton
           type="submit"
           text="인증하기"
           isLoading={isVerifySignupPending}
-          disabled={timeLeft === 0}
-        />
-        {/* 재전송 */}
-        <FormButton
-          type="button"
-          text="재전송"
-          variant="secondary"
-          onClick={() => resendSignupCode(formData.email)}
+          disabled={!isValid || timeLeft === 0}
         />
       </div>
-
-      {/* 뒤로가기 */}
-      <button
-        type="button"
-        onClick={() => setStep(1)}
-        className="w-full text-sm text-gray-500 underline hover:cursor-pointer hover:text-gray-700"
-      >
-        이메일을 잘못 입력하셨나요?
-      </button>
     </form>
   )
 }

@@ -5,23 +5,18 @@ export default function FormInput({
   name,
   label,
   type = 'text',
-  value,
-  onChange,
-  placeholder,
   error,
   success,
   description,
-  onCheck, // 중복 확인 핸들러
-  isChecking, // 중복 확인 상태
   className = '', // 외부 스타일 주입
-  children,
-  ...props // 기타 속성
+  children, // 타이머 등
+  ...props // register에서 오는 ref, onChange, onBlur 등
 }) {
   const [showPassword, setShowPassword] = useState(false)
   const isPassword = type === 'password'
   const inputType = isPassword && showPassword ? 'text' : type
-  const isFile = type === 'file'
 
+  // 테두리 색상 결정
   const getBorderColor = () => {
     if (error)
       return 'border-red-500 focus:border-red-500 focus:ring-red-500/20'
@@ -44,24 +39,9 @@ export default function FormInput({
           id={name}
           name={name}
           type={inputType}
-          value={isFile ? undefined : value}
-          onChange={onChange}
-          placeholder={placeholder}
-          className={`h-11 w-full rounded-lg border bg-transparent px-4 py-2.5 text-sm text-gray-800 shadow-sm placeholder:text-gray-400 focus:ring-2 focus:outline-none ${className} ${onCheck ? 'pr-20' : ''} ${getBorderColor()}`}
+          className={`block w-full rounded-lg border bg-white px-4 py-2.5 text-sm text-gray-900 shadow-sm transition-all placeholder:text-gray-400 focus:ring-4 focus:outline-none disabled:bg-gray-50 disabled:text-gray-500 ${getBorderColor()} ${className}`}
           {...props} // 나머지 속성 전달 (maxLength 등)
         />
-
-        {/* 중복 확인 버튼 */}
-        {onCheck && (
-          <button
-            type="button"
-            onClick={onCheck}
-            disabled={isChecking || !value}
-            className={`absolute top-1/2 right-2 -translate-y-1/2 rounded bg-gray-200 px-2 py-1 text-xs font-medium text-gray-700 transition hover:bg-gray-300 ${isChecking || !value ? 'cursor-not-allowed opacity-50' : 'cursor-pointer'}`}
-          >
-            {isChecking ? '확인 중..' : '중복확인'}
-          </button>
-        )}
 
         {/* 비밀번호 토글 */}
         {isPassword && (

@@ -14,7 +14,6 @@ export const useAuthMutations = () => {
     setTimeLeft: setSignUpTime,
     setErrors: setSignUpErrors,
     setSuccesses: setSignUpSuccesses,
-    setAuthCode: setSignUpAuthCode, // 인증번호 초기화용
   } = useSignUpStore()
 
   const {
@@ -194,7 +193,7 @@ export const useAuthMutations = () => {
         alert('인증 시간이 만료되었습니다. 처음부터 다시 시도해주세요.')
         setTimeout(() => setSignUpStep(1), 2000)
       } else if (errorCode === 'A004') {
-        setSignUpErrors({ authCode: '인증번호가 일치하지 않습니다.' })
+        return
       } else {
         alert('인증에 실패했습니다. 다시 시도해주세요.')
       }
@@ -206,7 +205,6 @@ export const useAuthMutations = () => {
     mutationFn: (email) => authApi.sendCode(email, 'SIGNUP', true),
     onSuccess: () => {
       setSignUpTime(300)
-      setSignUpAuthCode('')
       alert('인증번호가 재발송되었습니다.')
     },
     onError: (err) => {
@@ -321,7 +319,10 @@ export const useAuthMutations = () => {
     // Pending States (UI 로딩용)
     isLoginPending: loginMutation.isPending,
     isSignupPending: requestSignupCodeMutation.isPending,
+
     isVerifySignupPending: verifySignupMutation.isPending,
+    isResendSignupPending: resendSignupCodeMutation.isPending,
+
     isRequestResetPending: requestResetCodeMutation.isPending,
     isVerifyResetPending: verifyResetCodeMutation.isPending,
     isResendResetPending: resendResetCodeMutation.isPending,

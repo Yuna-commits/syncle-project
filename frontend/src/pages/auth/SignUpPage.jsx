@@ -33,7 +33,10 @@ export default function SignUp() {
       {/* 로그인 링크 */}
       <p className="mt-5 text-left text-sm text-gray-700">
         이미 계정이 있으신가요?{' '}
-        <Link to="/auth/signin" className="text-blue-500 hover:text-blue-600">
+        <Link
+          to="/auth/signin"
+          className="font-semibold text-blue-500 hover:text-blue-600"
+        >
           로그인하러 가기
         </Link>
       </p>

@@ -37,7 +37,9 @@
         SELECT EXISTS(SELECT 1
                       FROM user
                       WHERE email = #{email}
-                        AND deleted_at IS NULL)
+                        AND deleted_at IS NULL
+                        AND verify_status = 'VERIFIED'
+                        AND user_status = 'ACTIVATED')
     </select>
 
     <!-- 닉네임 중복 확인 -->
@@ -45,7 +47,9 @@
         SELECT EXISTS(SELECT 1
                       FROM user
                       WHERE nickname = #{nickname}
-                        AND deleted_at IS NULL)
+                        AND deleted_at IS NULL
+                        AND verify_status = 'VERIFIED'
+                        AND user_status = 'ACTIVATED')
     </select>
 
     <!-- 사용자 조회 -->
