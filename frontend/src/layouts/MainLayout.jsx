@@ -1,6 +1,6 @@
 import React, { useState } from 'react'
 import Header from '../components/common/Header'
-import Sidebar from '../components/common/Sidebar'
+import Sidebar from '../components/sidebar/Sidebar'
 import { Outlet } from 'react-router-dom'
 import TeamCreateModal from '../components/modals/team/TeamCreateModal'
 import useUiStore from '../stores/useUiStore'

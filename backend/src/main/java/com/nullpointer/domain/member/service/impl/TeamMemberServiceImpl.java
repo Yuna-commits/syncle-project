@@ -71,29 +71,54 @@ public class TeamMemberServiceImpl implements TeamMemberService {
 
     @Override
     @Transactional
-    public void changeTeamRole(Long teamId, Long memberId, TeamRoleUpdateRequest req, Long userId) {
+    public void changeTeamRole(Long teamId, Long targetId, TeamRoleUpdateRequest req, Long ownerId) {
         // 1. 요청자가 OWNER인지 확인
-        memberVal.validateTeamOwner(teamId, userId, ErrorCode.MEMBER_UPDATE_FORBIDDEN);
+        memberVal.validateTeamOwner(teamId, ownerId, ErrorCode.MEMBER_UPDATE_FORBIDDEN);
 
         // 2. 대상 멤버 존재 확인
-        if (!teamMemberMapper.existsByTeamIdAndUserId(teamId, memberId)) {
+        if (!teamMemberMapper.existsByTeamIdAndUserId(teamId, targetId)) {
             throw new BusinessException(ErrorCode.MEMBER_NOT_FOUND);
         }
 
-        // 3. 업데이트
-        TeamMemberVo vo = req.toVo(teamId, memberId);
-        Role oldRole = vo.getRole();
-        teamMemberMapper.updateTeamRole(vo);
+        Role newRole = req.getRole();
+
+        // 추가) OWNER 권한 위임 로직
+        if (newRole == Role.OWNER) {
+            // 1. 나(OWNER)를 MEMBER로 강등
+            TeamMemberVo me = TeamMemberVo.builder()
+                    .teamId(teamId)
+                    .userId(ownerId)
+                    .role(Role.MEMBER)
+                    .build();
+
+            teamMemberMapper.updateTeamRole(me);
+
+            // 2. 대상(targetId)를 OWNER로 승격
+            TeamMemberVo target = TeamMemberVo.builder()
+                    .teamId(teamId)
+                    .userId(targetId)
+                    .role(Role.OWNER)
+                    .build();
+
+            teamMemberMapper.updateTeamRole(target);
+        } else {
+            // 일반적인 권한 변경 (MEMBER <-> VIEWER)
+            // OWNER가 스스로 MEMBER로 내리는 것은 불가능
+            if (ownerId.equals(targetId)) {
+                throw new BusinessException(ErrorCode.OWNER_CANNOT_DOWNGRADE_SELF);
+            }
+
+            TeamMemberVo vo = req.toVo(teamId, targetId);
+            teamMemberMapper.updateTeamRole(vo);
+        }
 
         // 멤버 권한 변경 로그 저장
-        changeRoleLog(teamId, memberId, userId, oldRole, req.getRole());
+        // changeRoleLog(teamId, memberId, userId, oldRole, req.getRole());
     }
 
     @Override
     @Transactional
     public void deleteTeamMember(Long teamId, Long memberId, Long userId) {
-        Long ownerId = null; // 로그 기록용 (나중에 수정)
-
         TeamVo team = teamMapper.findTeamByTeamId(teamId);
         UserVo actor = userMapper.findById(userId)
                 .orElseThrow(() -> new BusinessException(ErrorCode.USER_NOT_FOUND));
@@ -105,15 +130,19 @@ public class TeamMemberServiceImpl implements TeamMemberService {
 
         // 2. 추방/탈퇴 분기
         if (!userId.equals(memberId)) {
-            // OWNER 추방
+            // [추방] OWNER가 멤버 추방
             memberVal.validateTeamOwner(teamId, userId, ErrorCode.MEMBER_DELETE_FORBIDDEN);
-            ownerId = userId;
-
             // [알림] 대상자에게 추방 알림 발송
             publishMemberEvent(actor, memberId, team, NotificationType.TEAM_MEMBER_KICKED);
         } else {
-            // 본인 탈퇴
-            ownerId = findTeamOwnerId(teamId);
+            // [탈퇴] 본인 탈퇴
+            // 추가) 본인이 OWNER이면 탈퇴 불가
+            TeamMemberVo me = teamMemberMapper.findMember(teamId, userId);
+            if (me.getRole() == Role.OWNER) {
+                throw new BusinessException(ErrorCode.OWNER_MUST_TRANSFER_BEFORE_LEAVE);
+            }
+
+            Long ownerId = findTeamOwnerId(teamId);
             publishMemberEvent(actor, ownerId, team, NotificationType.TEAM_MEMBER_LEFT);
         }
 
@@ -121,7 +150,7 @@ public class TeamMemberServiceImpl implements TeamMemberService {
         teamMemberMapper.deleteTeamMember(teamId, memberId);
 
         // 탈퇴/강퇴 로그 저장
-        kickMemberLog(teamId, memberId, ownerId);
+        // kickMemberLog(teamId, memberId, ownerId);
     }
 
     /**

@@ -1,17 +1,13 @@
-import React, { useEffect, useState } from 'react'
-import defaultProfile from '../../assets/images/default.png'
+import React, { useState } from 'react'
 import { useParams } from 'react-router-dom'
 import InviteMemberModal from '../../components/modals/team/InviteMemberModal'
 import { useAuthQuery } from '../../hooks/auth/useAuthQuery'
 import { useTeamDetailQuery } from '../../hooks/team/useTeamQuery'
-import { useMemberMutations } from '../../hooks/useMemberMutations'
-import { useQueryClient } from '@tanstack/react-query'
-import { teamApi } from '../../api/team.api'
+import MemberTable from '../../components/team/MemberTable'
 
 export default function TeamMembersPage() {
   const { teamId } = useParams()
   const [isInviteModalOpen, setIsInviteModalOpen] = useState(false)
-  const queryClient = useQueryClient() // 캐시 업데이트용
 
   // 현재 로그인한 사용자 정보 가져오기
   const { data: user } = useAuthQuery()
@@ -20,315 +16,43 @@ export default function TeamMembersPage() {
   const { data: team, isLoading } = useTeamDetailQuery(teamId)
   const members = team?.members || []
 
-  // 멤버 역할 변경, 추방/탈퇴
-  const { changeMemberRole, removeMember } = useMemberMutations(teamId, 'TEAM')
-
   // 현재 사용자가 이 팀의 OWNER인지 확인
   const isOwner = members.some(
     (member) => member.userId === user.id && member.role === 'OWNER',
   )
 
-  // [변경] 현재 열려있는 메뉴의 ID를 저장 (예: 'role-1', 'board-2')
-  const [activeMenu, setActiveMenu] = useState(null)
-
-  // 로딩 상태 관리 (어떤 멤버의 보드를 로딩 중인지)
-  const [loadingMemberId, setLoadingMemberId] = useState(null)
-
-  // 외부 클릭 시 메뉴 닫기
-  useEffect(() => {
-    const closeMenu = () => setActiveMenu(null)
-    window.addEventListener('click', closeMenu)
-    return () => window.removeEventListener('click', closeMenu)
-  }, [])
-
-  // 메뉴 토글 함수 (역할/보드 공통 사용)
-  const toggleMenu = (e, type, id) => {
-    e.stopPropagation() // 클릭 이벤트 전파 방지
-    const menuId = `${type}-${id}`
-    // 이미 열려있으면 닫고(null), 아니면 엶
-    setActiveMenu((prev) => (prev === menuId ? null : menuId))
-  }
-
-  // 3. [핵심] 보드 보기 클릭 핸들러 (Lazy Loading)
-  const handleBoardClick = async (e, memberId) => {
-    // 일단 메뉴를 엽니다.
-    toggleMenu(e, 'board', memberId)
-
-    // 해당 멤버를 찾습니다.
-    const targetMember = members.find((m) => m.userId === memberId)
-
-    // 이미 보드 데이터가 배열로 존재하면 API 호출 스킵 (캐싱)
-    if (targetMember && Array.isArray(targetMember.boards)) {
-      return
-    }
-
-    // 데이터가 없으면 API 호출 시작
-    try {
-      setLoadingMemberId(memberId)
-
-      // [API 호출] 해당 멤버의 보드 목록 가져오기
-      // 경로는 백엔드 명세에 따라 수정 필요 (예: /teams/{teamId}/members/{memberId}/boards)
-      const res = await teamApi.getMemberParticipatedBoards(teamId, memberId)
-      const fetchedBoards = res.data.data || [] // 데이터가 없으면 빈 배열
-
-      // React Query 캐시 업데이트 - UI 즉시 반영
-      queryClient.setQueryData(['team', Number(teamId)], (oldData) => {
-        if (!oldData) return oldData
-        return {
-          ...oldData,
-          members: oldData.members.map((m) =>
-            m.userId === memberId ? { ...m, boards: fetchedBoards } : m,
-          ),
-        }
-      })
-    } catch (error) {
-      console.error('보드 목록 조회 실패', error)
-    } finally {
-      setLoadingMemberId(null)
-    }
-  }
-
-  // 4. 멤버 내보내기 핸들러
-  const handleRemoveMember = (memberId) => {
-    if (
-      window.confirm(
-        memberId === user.id
-          ? `정말 ${team.name} 팀에서 탈퇴하시겠습니까?`
-          : '정말 이 멤버를 팀에서 내보내시겠습니까?',
-      )
-    ) {
-      removeMember(memberId)
-    }
-  }
-
-  // 5. 멤버 역할 변경 핸들러
-  const handleRoleChange = async (memberId, newRole) => {
-    changeMemberRole({ userId: memberId, newRole })
-  }
-
-  if (isLoading) return <div>Loading...</div>
+  if (isLoading)
+    return <div className="p-8 text-center text-gray-500">Loading...</div>
 
   return (
     <main className="flex-1 overflow-y-auto bg-white p-8">
       <div className="mx-auto w-full max-w-5xl space-y-6">
-        <div className="mt-10 flex items-center justify-between px-2">
-          <h3 className="text-xl font-semibold text-gray-800">팀 멤버 목록</h3>
+        {/* 헤더 */}
+        <div className="mt-8 flex items-center justify-between px-2">
+          <div>
+            <h1 className="text-3xl font-bold text-gray-900">팀 멤버 목록</h1>
+            <p className="mt-2 text-sm text-gray-500">
+              팀원을 관리하고 역할을 지정할 수 있습니다.
+            </p>
+          </div>
 
           <button
-            className="rounded-lg bg-blue-600 px-4 py-2 text-sm font-medium text-white shadow hover:cursor-pointer hover:bg-blue-700"
             onClick={() => setIsInviteModalOpen(true)}
+            className="rounded-lg bg-blue-600 px-4 py-2 text-sm font-medium text-white shadow-sm transition-colors hover:cursor-pointer hover:bg-blue-700 hover:shadow-md"
           >
             멤버 초대
           </button>
         </div>
 
-        <div className="overflow-hidden rounded-xl border border-gray-300">
-          <div className="max-w-full overflow-x-auto">
-            {/* 테이블 */}
-            <table className="min-w-full">
-              <thead className="border-b border-gray-300 bg-gray-50">
-                <tr>
-                  <th className="px-5 py-3 text-start text-sm font-medium text-gray-500">
-                    멤버
-                  </th>
-                  <th className="px-5 py-3 text-start text-sm font-medium text-gray-500">
-                    팀 역할
-                  </th>
-                  <th className="px-5 py-3 text-start text-sm font-medium text-gray-500">
-                    직책
-                  </th>
-                  <th className="px-5 py-3 text-start text-sm font-medium text-gray-500">
-                    보드
-                  </th>
-                  <th className="px-5 py-3 text-start text-sm font-medium text-gray-500">
-                    이메일
-                  </th>
-                  <th className="px-5 py-3 text-start text-sm font-medium text-gray-500">
-                    관리
-                  </th>
-                </tr>
-              </thead>
-
-              <tbody className="divide-y divide-gray-300">
-                {members.map((member) => {
-                  // 현재 렌더링 중인 행의 메뉴 ID들
-                  const roleMenuId = `role-${member.userId}`
-                  const boardMenuId = `board-${member.userId}`
-                  const isMe = member.userId === user?.id
-
-                  return (
-                    <tr key={member.userId}>
-                      {/* 유저 정보 */}
-                      <td className="px-5 py-4 whitespace-nowrap">
-                        <div className="flex items-center gap-3">
-                          <div className="relative h-10 w-10">
-                            <img
-                              src={member.profileImg || defaultProfile}
-                              alt={member.nickname}
-                              className="h-full w-full rounded-full object-cover"
-                            />
-                            {isMe && (
-                              <span className="absolute -right-2 -bottom-2 flex h-5 w-5 items-center justify-center text-[15px] font-bold text-yellow-400">
-                                나
-                              </span>
-                            )}
-                          </div>
-                          <div>
-                            <span className="block font-medium text-gray-800">
-                              {member.nickname}
-                            </span>
-                          </div>
-                        </div>
-                      </td>
-
-                      {/* 팀 역할 */}
-                      <td className="relative px-4 py-3 text-sm text-gray-800">
-                        {/*  OWNER일 경우만 역할 선택 버튼 */}
-                        {isOwner ? (
-                          <>
-                            <button
-                              onClick={(e) =>
-                                toggleMenu(e, 'role', member.userId)
-                              }
-                              // 본인은 역할 변경 불가
-                              disabled={isMe}
-                              className={`rounded-lg border border-gray-300 px-3 py-1 ${
-                                isMe
-                                  ? 'cursor-default bg-gray-100 text-gray-500'
-                                  : 'hover:cursor-pointer hover:bg-gray-200'
-                              }`}
-                            >
-                              {member.role || 'Member'}
-                            </button>
-
-                            {/* 역할 선택 드롭다운 (activeMenu가 일치할 때만 렌더링) */}
-                            {!isMe && activeMenu === roleMenuId && (
-                              <div
-                                onClick={(e) => e.stopPropagation()}
-                                className="absolute top-1/2 left-[70%] z-20 w-36 -translate-y-1/2 rounded-lg border border-gray-300 bg-white shadow-md"
-                              >
-                                <div className="flex flex-col p-1 text-sm text-gray-800">
-                                  {['OWNER', 'MEMBER', 'VIEWER'].map((role) => (
-                                    <div
-                                      key={role}
-                                      className="cursor-pointer rounded-md px-3 py-2 hover:bg-gray-200"
-                                      onClick={() =>
-                                        handleRoleChange(member.userId, role)
-                                      }
-                                    >
-                                      {role}
-                                    </div>
-                                  ))}
-                                </div>
-                              </div>
-                            )}
-                          </>
-                        ) : (
-                          <span className="inline-block px-1 py-1 text-gray-600">
-                            {member.role || 'Member'}{' '}
-                          </span>
-                        )}
-                      </td>
-
-                      {/* 직책 (개인 직책) */}
-                      <td className="px-4 py-3 text-sm text-gray-800">
-                        {member.position || '-'}
-                      </td>
-
-                      {/* 보드 */}
-                      <td className="relative px-4 py-3 text-sm text-gray-800">
-                        <button
-                          // [변경] 클릭 시 handleBoardClick 호출 (API 호출 포함)
-                          onClick={(e) => handleBoardClick(e, member.userId)}
-                          className="rounded-lg border border-gray-300 px-3 py-1 text-sm hover:cursor-pointer hover:bg-gray-200"
-                        >
-                          보드 보기
-                        </button>
-
-                        {/* 보드 리스트 드롭다운 (activeMenu가 일치할 때만 렌더링) */}
-                        {activeMenu === boardMenuId && (
-                          <div
-                            onClick={(e) => e.stopPropagation()}
-                            className="absolute top-1/2 left-[80%] z-20 w-48 -translate-y-1/2 rounded-lg border border-gray-300 bg-white shadow-lg"
-                          >
-                            <div className="max-h-48 space-y-1 overflow-y-auto p-2">
-                              {/* 1. 로딩 중일 때 */}
-                              {loadingMemberId === member.userId && (
-                                <div className="px-2 py-1 text-center text-sm text-gray-500">
-                                  로딩 중...
-                                </div>
-                              )}
-
-                              {/* 2. 로딩 완료 + 데이터 없음 */}
-                              {loadingMemberId !== member.userId &&
-                                member.boards &&
-                                member.boards.length === 0 && (
-                                  <div className="px-2 py-1 text-center text-sm text-gray-500">
-                                    참여한 보드가 없습니다
-                                  </div>
-                                )}
-
-                              {/* 3. 데이터 있음 */}
-                              {member.boards?.map((board) => (
-                                <div
-                                  key={board.id}
-                                  className="flex cursor-pointer items-center gap-2 rounded-md px-2 py-1 hover:bg-gray-200"
-                                >
-                                  <div
-                                    className="h-3 w-3 rounded-full"
-                                    style={{
-                                      backgroundColor: board.color || '#3b82f6',
-                                    }}
-                                  />
-                                  <span className="truncate text-sm text-gray-800">
-                                    {board.name || board.title}
-                                  </span>
-                                </div>
-                              ))}
-                            </div>
-                          </div>
-                        )}
-                      </td>
-
-                      {/* 이메일 */}
-                      <td className="px-4 py-3 text-sm text-gray-600">
-                        {member.email}
-                      </td>
-
-                      {/* 관리 (내보내기/탈퇴)*/}
-                      <td className="px-4 py-3 text-sm">
-                        {isMe
-                          ? // 본인이면서 OWNER가 아닌 경우 '탈퇴' 버튼 표시
-                            member.role !== 'OWNER' && (
-                              <button
-                                onClick={() =>
-                                  handleRemoveMember(member.userId)
-                                }
-                                className="rounded-lg border border-red-200 px-3 py-1 text-sm text-red-600 hover:cursor-pointer hover:bg-red-200"
-                              >
-                                탈퇴
-                              </button>
-                            )
-                          : // 타인이고 내가 OWNER인 경우 '내보내기' 버튼 표시
-                            isOwner && (
-                              <button
-                                onClick={() =>
-                                  handleRemoveMember(member.userId)
-                                }
-                                className="rounded-lg border border-red-200 px-3 py-1 text-sm text-red-600 hover:cursor-pointer hover:bg-red-200"
-                              >
-                                내보내기
-                              </button>
-                            )}
-                      </td>
-                    </tr>
-                  )
-                })}
-              </tbody>
-            </table>
-          </div>
-        </div>
+        <MemberTable
+          members={members}
+          currentUser={user}
+          isOwner={isOwner}
+          teamId={teamId}
+          teamName={team?.name}
+        />
       </div>
+
       {/* 멤버 초대 모달 */}
       {isInviteModalOpen && (
         <InviteMemberModal

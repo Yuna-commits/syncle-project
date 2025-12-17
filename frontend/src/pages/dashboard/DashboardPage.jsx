@@ -1,5 +1,5 @@
 import BoardCard from '../../components/common/BoardCard'
-import TeamBoardSection from '../../components/dashboard/TeamBoardSection'
+import TeamBoardSection from '../../components/team/TeamBoardSection'
 // eslint-disable-next-line no-unused-vars
 import { AnimatePresence, motion } from 'framer-motion'
 import { useDashboardQuery } from '../../hooks/team/useTeamQuery'

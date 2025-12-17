@@ -117,35 +117,59 @@ public class BoardMemberServiceImpl implements BoardMemberService {
     }
 
     @Override
-    public void changeBoardRole(Long boardId, Long memberId, BoardRoleUpdateRequest req, Long userId) {
+    public void changeBoardRole(Long boardId, Long targetId, BoardRoleUpdateRequest req, Long ownerId) {
         // 1. OWNER 권한 확인
-        memberVal.validateBoardManager(boardId, userId);
+        memberVal.validateBoardManager(boardId, ownerId);
 
         // 2. 멤버 존재 확인
-        if (!boardMemberMapper.existsByBoardIdAndUserId(boardId, memberId)) {
+        if (!boardMemberMapper.existsByBoardIdAndUserId(boardId, targetId)) {
             throw new BusinessException(ErrorCode.MEMBER_NOT_FOUND);
         }
 
+        Role newRole = req.getRole();
+
+        // 추가) OWNER 권한 위임 로직
+        if (newRole == Role.OWNER) {
+            // 1. 나(OWNER)를 MEMBER로 강등
+            BoardMemberVo me = BoardMemberVo.builder()
+                    .boardId(boardId)
+                    .userId(ownerId)
+                    .role(Role.MEMBER)
+                    .build();
+
+            boardMemberMapper.updateBoardRole(me);
+
+            // 2. 대상(targetId)를 OWNER로 승격
+            BoardMemberVo target = BoardMemberVo.builder()
+                    .boardId(boardId)
+                    .userId(targetId)
+                    .role(Role.OWNER)
+                    .build();
+
+            boardMemberMapper.updateBoardRole(target);
+        } else {
+            // 일반적인 권한 변경 (MEMBER <-> VIEWER)
+            if (ownerId.equals(targetId)) {
+                throw new BusinessException(ErrorCode.OWNER_CANNOT_DOWNGRADE_SELF);
+            }
+
+            BoardMemberVo vo = req.toVo(boardId, targetId);
+            boardMemberMapper.updateBoardRole(vo);
+        }
+
         // 로그 기록을 위해 보드 정보 조회하여 teamId 획득
-        BoardVo board = boardMapper.findBoardByBoardId(boardId);
-        Long teamId = (board != null) ? board.getTeamId() : null;
-
-        BoardMemberVo vo = req.toVo(boardId, memberId);
-        Role oldRole = vo.getRole();
-
-        boardMemberMapper.updateBoardRole(vo);
+//        BoardVo board = boardMapper.findBoardByBoardId(boardId);
+//        Long teamId = (board != null) ? board.getTeamId() : null;
 
         // 멤버 권한 변경 로그 저장
-        changeRoleLog(teamId, boardId, memberId, userId, oldRole, req.getRole());
+        // changeRoleLog(teamId, boardId, memberId, userId, oldRole, req.getRole());
 
         // 소켓 전송
-        socketSender.sendSocketMessage(boardId, "BOARD_MEMBER_UPDATED", userId, null);
+        socketSender.sendSocketMessage(boardId, "BOARD_MEMBER_UPDATED", ownerId, null);
     }
 
     @Override
     public void deleteBoardMember(Long boardId, Long memberId, Long userId) {
-        Long ownerId = null;
-
         BoardVo board = boardMapper.findBoardByBoardId(boardId);
         UserVo actor = userMapper.findById(userId)
                 .orElseThrow(() -> new BusinessException(ErrorCode.USER_NOT_FOUND));
@@ -159,33 +183,24 @@ public class BoardMemberServiceImpl implements BoardMemberService {
         if (!userId.equals(memberId)) {
             // 강퇴시키는 경우 -> OWNER 권한 확인
             memberVal.validateBoardManager(boardId, userId);
-            ownerId = userId;
-
             // [알림] 대상자에게 추방 알림 발송
             publishMemberEvent(actor, memberId, board, NotificationType.BOARD_MEMBER_KICKED);
-        } else { // 본인 탈퇴인 경우 -> 보드에 OWNER 최소 한 명 이상 존재해야 함
+        } else {
+            // 본인 탈퇴인 경우
             BoardMemberVo me = boardMemberMapper.findMember(boardId, userId);
-            // OWNER가 탈퇴하는 경우 마지막 관리자인지 확인
+            // 본인이 OWNER이면 탈퇴 불가
             if (me.getRole() == Role.OWNER) {
-                // 현재 보드의 OWNER 수 count
-                long ownerCount = boardMemberMapper.countBoardOwner();
-                if (ownerCount <= 1) {
-                    throw new BusinessException(ErrorCode.LAST_OWNER_CANNOT_LEAVE);
-                }
+                throw new BusinessException(ErrorCode.OWNER_MUST_TRANSFER_BEFORE_LEAVE);
             }
 
-            // 남아있는 관리자들에게 알림 전송
-            List<Long> ownerIds = findBoardOwnerIds(boardId);
-            for (Long remainingOwnerId : ownerIds) {
-                if (remainingOwnerId.equals(userId)) continue; // 본인 제외
-                publishMemberEvent(actor, remainingOwnerId, board, NotificationType.BOARD_MEMBER_LEFT);
-            }
+            Long ownerId = findBoardOwnerId(boardId);
+            publishMemberEvent(actor, ownerId, board, NotificationType.BOARD_MEMBER_LEFT);
         }
 
         boardMemberMapper.deleteBoardMember(boardId, memberId);
 
         // 탈퇴/강퇴 로그 저장
-        kickMemberLog(boardId, memberId, ownerId);
+        // kickMemberLog(boardId, memberId, ownerId);
 
         // 소켓 전송
         socketSender.sendSocketMessage(boardId, "BOARD_MEMBER_DELETED", userId, null);
@@ -250,11 +265,12 @@ public class BoardMemberServiceImpl implements BoardMemberService {
      */
 
     // 보드 OWNER id 목록 조회
-    private List<Long> findBoardOwnerIds(Long boardId) {
+    private Long findBoardOwnerId(Long boardId) {
         return boardMemberMapper.findMembersByBoardId(boardId).stream()
                 .filter(m -> m.getRole() == Role.OWNER)
                 .map(BoardMemberResponse::getUserId)
-                .collect(Collectors.toList());
+                .findFirst()
+                .orElseThrow(() -> new BusinessException(ErrorCode.USER_NOT_FOUND));
     }
 
     // [이벤트] 초대 이벤트 발행

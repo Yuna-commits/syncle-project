@@ -58,7 +58,8 @@ public enum ErrorCode {
     MEMBER_INVITE_FORBIDDEN(HttpStatus.FORBIDDEN, "M004", "멤버 초대 권한이 없습니다."),
     MEMBER_UPDATE_FORBIDDEN(HttpStatus.FORBIDDEN, "M005", "멤버 정보 수정 권한이 없습니다."),
     MEMBER_DELETE_FORBIDDEN(HttpStatus.FORBIDDEN, "M006", "멤버 추방/탈퇴 권한이 없습니다."),
-    LAST_OWNER_CANNOT_LEAVE(HttpStatus.FORBIDDEN, "M007", "마지막 관리자는 탈퇴할 수 없습니다."),
+    OWNER_CANNOT_DOWNGRADE_SELF(HttpStatus.FORBIDDEN, "M007", "관리자는 스스로를 강등할 수 없습니다."),
+    OWNER_MUST_TRANSFER_BEFORE_LEAVE(HttpStatus.FORBIDDEN, "M008", "관리자 권한을 위임한 후 탈퇴할 수 있습니다."),
 
     // 초대
     INVITATION_NOT_FOUND(HttpStatus.NOT_FOUND, "I001", "존재하지 않거나 만료된 초대장입니다."),

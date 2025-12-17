@@ -1,6 +1,6 @@
 import React, { useState } from 'react'
 import { Link, useLocation } from 'react-router-dom'
-import SidebarTeamItem from '../sidebar/SidebarTeamItem'
+import SidebarTeamItem from './SidebarTeamItem'
 import { useTeamQuery } from '../../hooks/team/useTeamQuery'
 
 function Sidebar() {
