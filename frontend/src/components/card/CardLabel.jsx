@@ -1,24 +1,11 @@
-import { Tag, Trash2 } from 'lucide-react'
-import { useEffect, useRef, useState } from 'react'
+import { Tag, Trash2, Check } from 'lucide-react'
+import { useEffect, useRef, useState, useMemo } from 'react'
 import { createPortal } from 'react-dom'
 import { useParams } from 'react-router-dom'
-import { LABEL_COLORS } from '../../constants/priority' // 상수 경로 주의 (없다면 파일 내 선언 또는 적절한 곳에서 import)
+import { LABEL_COLORS } from '../../constants/priority'
 import { useBoardQuery } from '../../hooks/board/useBoardQuery'
 import { useCardMutations } from '../../hooks/card/useCardMutations'
 import useBoardStore from '../../stores/useBoardStore'
-
-// 만약 LABEL_COLORS가 constants에 없다면 여기에 선언해서 사용하세요.
-const PRESET_COLORS = LABEL_COLORS || [
-  { name: 'Red', value: '#ef4444' },
-  { name: 'Orange', value: '#f97316' },
-  { name: 'Yellow', value: '#eab308' },
-  { name: 'Green', value: '#22c55e' },
-  { name: 'Blue', value: '#3b82f6' },
-  { name: 'Purple', value: '#a855f7' },
-  { name: 'Pink', value: '#ec4899' },
-  { name: 'Gray', value: '#6b7280' },
-  { name: 'Black', value: '#1f2937' },
-]
 
 export default function CardLabel() {
   const { boardId } = useParams()
@@ -28,22 +15,38 @@ export default function CardLabel() {
 
   const [isOpen, setIsOpen] = useState(false)
   const [labelName, setLabelName] = useState('')
-  const [selectedColor, setSelectedColor] = useState(PRESET_COLORS[0].value)
+  const [selectedColor, setSelectedColor] = useState(LABEL_COLORS[0].value)
 
   const buttonRef = useRef(null)
   const [popupPos, setPopupPos] = useState({ top: 0, left: 0 })
 
-  // 선택된 카드 정보 동기화
+  // 보드 내에서 사용 중인 색상별 라벨 이름을 한 번에 매핑
+  const usedLabelsMap = useMemo(() => {
+    const map = {}
+    if (!activeBoard?.columns) return map
+
+    Object.values(activeBoard.columns).forEach((col) => {
+      col.tasks?.forEach((task) => {
+        if (task.labelColor && task.label?.trim()) {
+          // 이미 찾은 색상이면 무시
+          if (!map[task.labelColor]) {
+            map[task.labelColor] = task.label
+          }
+        }
+      })
+    })
+    return map
+  }, [activeBoard])
+
   useEffect(() => {
     if (selectedCard) {
       setLabelName(selectedCard.label || '')
-      setSelectedColor(selectedCard.labelColor || PRESET_COLORS[0].value)
+      setSelectedColor(selectedCard.labelColor || LABEL_COLORS[0].value)
     }
   }, [selectedCard])
 
   if (!selectedCard) return null
 
-  // 메뉴 토글
   const toggleMenu = () => {
     if (!isOpen && buttonRef.current) {
       const rect = buttonRef.current.getBoundingClientRect()
@@ -52,31 +55,27 @@ export default function CardLabel() {
     setIsOpen(!isOpen)
   }
 
-  // 저장
+  const handleColorSelect = (colorValue) => {
+    setSelectedColor(colorValue)
+    // 매핑된 맵에서 즉시 이름을 찾아 설정 (반복문 제거로 성능 향상)
+    setLabelName(usedLabelsMap[colorValue] || '')
+  }
+
   const handleSave = () => {
     if (!labelName.trim()) return
-
     updateCard({
       cardId: selectedCard.id,
       listId: selectedCard.listId,
-      updates: {
-        label: labelName,
-        labelColor: selectedColor,
-      },
+      updates: { label: labelName, labelColor: selectedColor },
     })
     setIsOpen(false)
   }
 
-  // 삭제
   const handleDelete = () => {
     updateCard({
       cardId: selectedCard.id,
       listId: selectedCard.listId,
-      updates: {
-        label: null,
-        labelColor: null,
-        removeLabel: true,
-      },
+      updates: { label: null, labelColor: null, removeLabel: true },
     })
     setLabelName('')
     setIsOpen(false)
@@ -84,7 +83,6 @@ export default function CardLabel() {
 
   return (
     <>
-      {/* 사이드바 버튼 */}
       <button
         ref={buttonRef}
         onClick={toggleMenu}
@@ -93,12 +91,10 @@ export default function CardLabel() {
         }`}
       >
         <Tag size={16} className="text-gray-500" />
-        <span className="text-gray-500">라벨</span>
-
-        {/* 라벨이 설정되어 있으면 우측에 뱃지 표시 */}
+        <span className="font-medium text-gray-500">라벨</span>
         {selectedCard.label && (
           <span
-            className="ml-auto block max-w-[80px] truncate rounded px-2 py-0.5 text-xs font-bold text-white"
+            className="ml-auto block max-w-20 truncate rounded px-2 py-0.5 text-[10px] font-bold text-white shadow-sm"
             style={{ backgroundColor: selectedCard.labelColor || '#6b7280' }}
           >
             {selectedCard.label}
@@ -106,75 +102,108 @@ export default function CardLabel() {
         )}
       </button>
 
-      {/* 팝업 메뉴 (Portal 사용) */}
       {isOpen &&
         createPortal(
           <div
-            className="animate-in fade-in zoom-in-95 fixed z-50 w-64 rounded-lg border border-gray-200 bg-white p-3 shadow-xl duration-100"
+            className="animate-in fade-in zoom-in-95 fixed z-50 w-72 rounded-lg border border-gray-200 bg-white p-4 shadow-2xl duration-100"
             style={{ top: popupPos.top, left: popupPos.left }}
           >
-            {/* Backdrop */}
             <div
               className="fixed inset-0 -z-10"
               onClick={() => setIsOpen(false)}
             />
 
-            <h4 className="mb-2 text-xs font-semibold text-gray-500">
-              라벨 설정
-            </h4>
-
-            {/* 이름 입력 */}
-            <input
-              type="text"
-              placeholder="라벨 이름"
-              value={labelName}
-              onChange={(e) => setLabelName(e.target.value)}
-              className="mb-3 w-full rounded border border-gray-300 px-2 py-1.5 text-sm focus:border-blue-500 focus:outline-none"
-              autoFocus
-              onKeyDown={(e) => {
-                if (e.key === 'Enter') handleSave()
-              }}
-            />
-
-            {/* 색상 선택 */}
-            <div className="mb-4 grid grid-cols-5 gap-2">
-              {PRESET_COLORS.map((color) => (
-                <button
-                  key={color.value}
-                  onClick={() => setSelectedColor(color.value)}
-                  className={`h-6 w-6 rounded-full border transition-transform hover:scale-110 ${
-                    selectedColor === color.value
-                      ? 'scale-110 ring-2 ring-blue-500 ring-offset-1'
-                      : 'border-transparent'
-                  }`}
-                  style={{ backgroundColor: color.value }}
-                  title={color.name}
-                />
-              ))}
+            <div className="mb-3 flex items-center justify-between">
+              <h4 className="text-xs font-bold text-gray-700">라벨 설정</h4>
+              <button
+                onClick={() => setIsOpen(false)}
+                className="text-gray-400 hover:text-gray-600"
+              >
+                ×
+              </button>
             </div>
 
-            {/* 하단 버튼 */}
-            <div className="flex items-center justify-between gap-2">
-              {selectedCard.label && (
+            <input
+              type="text"
+              placeholder="라벨 이름 입력..."
+              value={labelName}
+              onChange={(e) => setLabelName(e.target.value)}
+              className="mb-4 w-full rounded-md border border-gray-300 px-3 py-2 text-sm transition-all focus:border-blue-500 focus:ring-2 focus:ring-blue-200 focus:outline-none"
+              autoFocus
+              onKeyDown={(e) => e.key === 'Enter' && handleSave()}
+            />
+
+            <p className="mb-2 text-[11px] font-semibold tracking-wider text-gray-400 uppercase">
+              색상 및 기존 라벨
+            </p>
+
+            {/* [개선] 색상 선택 리스트 스타일링 */}
+            <div className="mb-5 flex max-h-48 flex-col gap-1.5 overflow-y-auto pr-1">
+              {LABEL_COLORS.map((color) => {
+                const isSelected = selectedColor === color.value
+                const existingName = usedLabelsMap[color.value]
+
+                return (
+                  <button
+                    key={color.value}
+                    onClick={() => handleColorSelect(color.value)}
+                    className={`group relative flex items-center gap-3 rounded-md px-2 py-1.5 transition-all ${
+                      isSelected
+                        ? 'bg-gray-100 ring-1 ring-gray-200 ring-inset'
+                        : 'hover:bg-gray-50'
+                    }`}
+                  >
+                    {/* 색상 아이콘 */}
+                    <div
+                      className="flex h-5 w-5 shrink-0 items-center justify-center rounded shadow-inner"
+                      style={{ backgroundColor: color.value }}
+                    >
+                      {isSelected && <Check size={12} className="text-white" />}
+                    </div>
+
+                    {/* 라벨 이름 표시 */}
+                    <span
+                      className={`truncate text-xs ${existingName ? 'font-medium text-gray-700' : 'text-gray-400 italic'}`}
+                    >
+                      {existingName || '이름 없음'}
+                    </span>
+
+                    {/* 현재 선택 상태 표시 */}
+                    {isSelected && (
+                      <span className="ml-auto text-[10px] font-bold text-blue-600">
+                        선택됨
+                      </span>
+                    )}
+                  </button>
+                )
+              })}
+            </div>
+
+            {/* Footer - 버튼 영역을 확실히 분리 */}
+            <div className="flex items-center justify-between rounded-b-xl border-t border-gray-100 bg-gray-50/50 px-4 py-3">
+              {selectedCard.label ? (
                 <button
                   onClick={handleDelete}
-                  className="rounded bg-red-50 p-1.5 text-red-600 hover:bg-red-100"
-                  title="라벨 삭제"
+                  className="flex items-center gap-1.5 rounded-md px-2 py-1.5 text-xs font-bold text-red-500 transition-colors hover:bg-red-50"
                 >
-                  <Trash2 size={16} />
+                  <Trash2 size={14} />
+                  삭제
                 </button>
+              ) : (
+                <div />
               )}
-              <div className="flex flex-1 justify-end gap-2">
+
+              <div className="flex gap-2">
                 <button
                   onClick={() => setIsOpen(false)}
-                  className="rounded px-3 py-1.5 text-xs font-medium text-gray-500 hover:bg-gray-100"
+                  className="rounded-md px-3 py-1.5 text-xs font-bold text-gray-500 transition-colors hover:bg-gray-200"
                 >
                   취소
                 </button>
                 <button
                   onClick={handleSave}
                   disabled={!labelName.trim()}
-                  className="rounded bg-blue-600 px-3 py-1.5 text-xs font-medium text-white hover:bg-blue-700 disabled:bg-blue-300"
+                  className="rounded-md bg-blue-600 px-4 py-1.5 text-xs font-bold text-white shadow-lg shadow-blue-500/20 transition-all hover:bg-blue-700 disabled:bg-blue-200 disabled:shadow-none"
                 >
                   저장
                 </button>

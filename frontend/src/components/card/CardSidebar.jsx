@@ -18,6 +18,8 @@ import MemberPickerMenu from '../modals/MemberPickerMenu'
 import CardPriority from './CardPriority'
 import CardLabel from './CardLabel'
 import { useFileMutations } from '../../hooks/file/useFileMutations'
+import { getDateStatusStyle } from '../../utils/dateUtils'
+import { MAX_SIZE, ALLOWED_EXTENSIONS } from '../../constants/fileConstants'
 
 function CardSidebar({
   onAddChecklist,
@@ -58,31 +60,8 @@ function CardSidebar({
   // -- 파일 인풋 Ref --
   const fileInputRef = useRef(null)
 
-  // 업로드 가능한 확장자
-  const allowedExtensions = [
-    // 이미지
-    'image/jpeg',
-    'image/png',
-    'image/gif',
-    'image/webp',
-    'image/svg+xml',
-
-    // 문서
-    'application/pdf',
-    'text/plain', // .txt
-    'text/markdown', // .md
-    'text/csv',
-    'application/msword',
-    'application/msword', // .doc
-    'application/vnd.openxmlformats-officedocument.wordprocessingml.document', // .docx
-    'application/vnd.ms-excel', // .xls
-    'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet', // .xlsx
-    'application/vnd.ms-powerpoint', // .ppt
-    'application/vnd.openxmlformats-officedocument.presentationml.presentation', // .pptx
-
-    // 압축
-    'application/zip',
-  ]
+  // 날짜 스타일 및 라벨 계산
+  const dateStatus = getDateStatusStyle(selectedCard?.dueDate)
 
   // 카드가 선택될 때마다 기존 설정된 날짜로 초기화
   useEffect(() => {
@@ -156,14 +135,13 @@ function CardSidebar({
     if (!file) return
 
     // 용량 체크
-    const MAX_SIZE = 5 * 1024 * 1024
     if (file.size > MAX_SIZE) {
       alert('파일 크기는 5MB를 넘을 수 없습니다.')
       return
     }
 
     // 확장자 체크
-    if (!allowedExtensions.includes(file.type)) {
+    if (!ALLOWED_EXTENSIONS.includes(file.type)) {
       alert('지원하지 않은 파일 확장자입니다..')
       return
     }
@@ -324,6 +302,15 @@ function CardSidebar({
           >
             <Clock size={16} className="text-gray-500" />
             <span className="text-gray-500">마감일</span>
+
+            {/* 3. 마감일이 설정되어 있다면 우측에 날짜 표시 */}
+            {selectedCard?.dueDate && (
+              <span
+                className={`ml-auto rounded px-1.5 py-0.5 text-xs font-semibold ${dateStatus.bg} ${dateStatus.text}`}
+              >
+                {dateStatus.dateLabel}
+              </span>
+            )}
           </button>
 
           {/* 달력 메뉴 */}
