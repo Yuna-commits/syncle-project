@@ -1,13 +1,18 @@
 import {
+  AlertTriangle,
   ArrowRight,
   AtSign,
   Bell,
+  Briefcase,
   CheckSquare,
   Clock,
+  FileText,
   KanbanSquare,
   ListChecks,
   LogOut,
   MessageSquareCode,
+  MessageSquareText,
+  ShieldAlert,
   User,
   UserCheck,
   UserMinus,
@@ -71,78 +76,73 @@ export default function NotificationItem({
   // 알림 타입에 따른 아이콘/스타일
   const getTypeConfig = () => {
     switch (notification.type) {
-      case 'COMMENT': // 댓글
-      case 'COMMENT_REPLY': // 답글
+      // 1. [위험/긴급] 삭제, 강퇴, 마감 임박
+      case 'BOARD_DELETED':
+      case 'TEAM_DELETED':
+      case 'BOARD_MEMBER_KICKED':
+      case 'TEAM_MEMBER_KICKED':
+      case 'DEADLINE_NEAR':
         return {
-          icon: <MessageSquareCode size={14} />,
-          color: 'text-blue-600 bg-blue-50',
+          icon: <AlertTriangle size={15} />,
+          color: 'text-red-600 bg-red-50 border-red-100',
         }
-      case 'MENTION': // 멘션
+
+      // 2. [보안/권한] 권한 변경
+      case 'PERMISSION_CHANGED':
         return {
-          icon: <AtSign size={14} />,
-          color: 'text-cyan-600 bg-cyan-50',
+          icon: <ShieldAlert size={15} />,
+          color: 'text-purple-600 bg-purple-50 border-purple-100',
         }
-      case 'CARD_ASSIGNED': // 담당자 지정
+
+      // 3. [파일/자료] 파일 첨부
+      case 'FILE_UPLOAD':
         return {
-          icon: <User size={14} />,
-          color: 'text-green-600 bg-green-50',
+          icon: <FileText size={15} />,
+          color: 'text-blue-600 bg-blue-50 border-blue-100',
         }
-      case 'CARD_MOVED': // 카드 이동
+
+      // 4. [소통] 댓글, 답글, 멘션
+      case 'COMMENT':
+      case 'COMMENT_REPLY':
+      case 'MENTION':
         return {
-          icon: <ArrowRight size={14} />,
-          color: 'text-purple-600 bg-purple-50',
+          icon: <MessageSquareText size={15} />,
+          color: 'text-cyan-600 bg-cyan-50 border-cyan-100',
         }
-      case 'CARD_UPDATED': // 카드 수정
-        return {
-          icon: <CheckSquare size={14} />,
-          color: 'text-orange-600 bg-orange-50',
-        }
+
+      // 5. [업무] 카드 이동/수정, 할당, 완료
+      case 'CARD_ASSIGNED':
+      case 'CARD_MOVED':
+      case 'CARD_UPDATED':
       case 'CHECKLIST_COMPLETED':
         return {
-          icon: <ListChecks size={14} />,
-          color: 'text-emerald-600 bg-emerald-50',
+          icon: <Briefcase size={15} />,
+          color: 'text-emerald-600 bg-emerald-50 border-emerald-100',
         }
-      case 'DEADLINE_NEAR': // 마감 임박
-        return {
-          icon: <Clock size={14} />,
-          color: 'text-red-600 bg-red-50',
-        }
-      case 'TEAM_INVITE': // 팀 초대
-        return {
-          icon: <UserPlus size={14} />,
-          color: 'text-indigo-600 bg-indigo-50',
-        }
-      case 'BOARD_INVITE': // 보드 초대
-        return {
-          icon: <KanbanSquare size={14} />,
-          color: 'text-pink-600 bg-pink-50',
-        }
+
+      // 6. [멤버/초대] 초대 관련
+      case 'TEAM_INVITE':
+      case 'BOARD_INVITE':
       case 'INVITE_ACCEPTED':
         return {
-          icon: <UserCheck size={14} />,
-          color: 'text-green-600 bg-green-50',
+          icon: <UserPlus size={15} />,
+          color: 'text-indigo-600 bg-indigo-50 border-indigo-100',
         }
+
+      // 7. [기타/중립] 거절, 탈퇴
       case 'INVITE_REJECTED':
-        return {
-          icon: <UserX size={14} />,
-          color: 'text-gray-600 bg-gray-100',
-        }
-      case 'TEAM_MEMBER_KICKED':
-      case 'BOARD_MEMBER_KICKED':
-        return {
-          icon: <UserMinus size={14} />,
-          color: 'text-red-600 bg-red-50', // 경고의 의미로 빨간색
-        }
       case 'TEAM_MEMBER_LEFT':
       case 'BOARD_MEMBER_LEFT':
         return {
-          icon: <LogOut size={14} />,
-          color: 'text-gray-600 bg-gray-100', // 중립적인 색상
+          icon: <LogOut size={15} />,
+          color: 'text-gray-500 bg-gray-100 border-gray-200',
         }
+
+      // 기본값
       default:
         return {
-          icon: <Bell size={14} />,
-          color: 'text-gray-600 bg-gray-50',
+          icon: <Bell size={15} />,
+          color: 'text-gray-600 bg-gray-50 border-gray-100',
         }
     }
   }

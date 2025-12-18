@@ -13,6 +13,7 @@ import com.nullpointer.domain.member.service.BoardMemberService;
 import com.nullpointer.domain.member.vo.BoardMemberVo;
 import com.nullpointer.domain.member.vo.enums.Role;
 import com.nullpointer.domain.notification.event.InvitationEvent;
+import com.nullpointer.domain.notification.event.MemberEvent;
 import com.nullpointer.domain.notification.vo.enums.NotificationType;
 import com.nullpointer.domain.user.mapper.UserMapper;
 import com.nullpointer.domain.user.vo.UserVo;
@@ -107,7 +108,7 @@ public class BoardMemberServiceImpl implements BoardMemberService {
         // 알림 발송
         for (Long receiverId : finalTargetIds) {
             // [알림] 보드 멤버 초대 이벤트 발행
-            publishInviteEvent(inviter, receiverId, board.getId(), board.getTitle());
+            publishBoardEvent(inviter, receiverId, board, NotificationType.BOARD_INVITE);
             // 로그 저장
             // inviteMemberLog(receiverId, userId, boardId, teamId);
         }
@@ -126,6 +127,12 @@ public class BoardMemberServiceImpl implements BoardMemberService {
     public void changeBoardRole(Long boardId, Long targetId, BoardRoleUpdateRequest req, Long ownerId) {
         // 1. OWNER 권한 확인
         memberVal.validateBoardManager(boardId, ownerId);
+
+        // 알림용 조회
+        BoardVo board = boardMapper.findBoardByBoardId(boardId)
+                .orElseThrow(() -> new BusinessException(ErrorCode.BOARD_NOT_FOUND));
+        UserVo owner = userMapper.findById(ownerId)
+                .orElseThrow(() -> new BusinessException(ErrorCode.USER_NOT_FOUND));
 
         // 2. 멤버 존재 확인
         if (!boardMemberMapper.existsByBoardIdAndUserId(boardId, targetId)) {
@@ -169,6 +176,9 @@ public class BoardMemberServiceImpl implements BoardMemberService {
 
         // 멤버 권한 변경 로그 저장
         // changeRoleLog(teamId, boardId, memberId, userId, oldRole, req.getRole());
+
+        // [알림] 권한 변경 알림 발송
+        publishRolChangeEvent(owner, targetId, board, req.getRole());
 
         // 소켓 전송
         socketSender.sendSocketMessage(boardId, "BOARD_MEMBER_UPDATED", ownerId, null);
@@ -215,7 +225,7 @@ public class BoardMemberServiceImpl implements BoardMemberService {
         // kickMemberLog(boardId, memberId, ownerId);
 
         // [알림] 관리자/추방 대상에게 알림 발송
-        publishMemberEvent(actor, receiverId, board, notificationType);
+        publishBoardEvent(actor, receiverId, board, notificationType);
 
         // 소켓 전송
         socketSender.sendSocketMessage(boardId, "BOARD_MEMBER_DELETED", userId, null);
@@ -288,23 +298,8 @@ public class BoardMemberServiceImpl implements BoardMemberService {
                 .orElseThrow(() -> new BusinessException(ErrorCode.USER_NOT_FOUND));
     }
 
-    // [이벤트] 초대 이벤트 발행
-    private void publishInviteEvent(UserVo sender, Long receiverId, Long targetId, String targetName) {
-        InvitationEvent event = InvitationEvent.builder()
-                .senderId(sender.getId())
-                .senderNickname(sender.getNickname())
-                .senderProfileImg(sender.getProfileImg())
-                .receiverId(receiverId)
-                .targetId(targetId)
-                .targetName(targetName)
-                .type(NotificationType.BOARD_INVITE)
-                .build();
-
-        publisher.publishEvent(event);
-    }
-
-    // [이벤트] 멤버 추방/탈퇴 이벤트 발행
-    private void publishMemberEvent(UserVo sender, Long receiverId, BoardVo board, NotificationType type) {
+    // [이벤트] 멤버 초대/추방/탈퇴 이벤트 발행
+    private void publishBoardEvent(UserVo sender, Long receiverId, BoardVo board, NotificationType type) {
         InvitationEvent event = InvitationEvent.builder()
                 .senderId(sender.getId())
                 .senderNickname(sender.getNickname())
@@ -313,6 +308,23 @@ public class BoardMemberServiceImpl implements BoardMemberService {
                 .targetId(board.getId())
                 .targetName(board.getTitle())
                 .type(type)
+                .build();
+
+        publisher.publishEvent(event);
+    }
+
+    // [이벤트] 권한 변경 이벤트 발행
+    private void publishRolChangeEvent(UserVo sender, Long receiverId, BoardVo board, Role newRole) {
+        MemberEvent event = MemberEvent.builder()
+                .targetUserId(receiverId)
+                .targetId(board.getId())
+                .targetName(board.getTitle())
+                .targetType(MemberEvent.TargetType.BOARD)
+                .senderId(sender.getId())
+                .senderNickname(sender.getNickname())
+                .senderProfileImg(sender.getProfileImg())
+                .newRole(newRole)
+                .type(NotificationType.PERMISSION_CHANGED)
                 .build();
 
         publisher.publishEvent(event);
