@@ -25,7 +25,7 @@ import java.util.Set;
 public class NotificationEventListener {
 
     private final RedisUtil redisUtil;
-    private UserMapper userMapper;
+    private final UserMapper userMapper;
     private final SimpMessagingTemplate messagingTemplate;
 
     /**
