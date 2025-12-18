@@ -4,24 +4,44 @@ import FormInput from '../../components/common/FormInput'
 import FormButton from '../../components/common/FormButton'
 import { GoogleLogin } from '@react-oauth/google'
 import { useAuthMutations } from '../../hooks/auth/useAuthMutations'
+import { useForm } from 'react-hook-form'
 
 export default function SignIn() {
-  const { login, googleLogin, isLoginPending } = useAuthMutations()
   const location = useLocation() // 위치 훅
-
-  const [formData, setFormData] = useState({ email: '', password: '' })
-  const [isKeepLogin, setIsKeepLogin] = useState(false)
-
   const from = location.state?.from || '/'
 
-  const handleChange = (e) => {
-    const { name, value } = e.target
-    setFormData((prev) => ({ ...prev, [name]: value }))
-  }
+  const {
+    register,
+    handleSubmit,
+    setError,
+    formState: { errors },
+  } = useForm({
+    mode: 'onChange',
+    defaultValues: {
+      email: '',
+      password: '',
+    },
+  })
 
-  const handleSubmit = (e) => {
-    e.preventDefault()
-    login({ ...formData, isKeepLogin, redirectTo: from })
+  const [isKeepLogin, setIsKeepLogin] = useState(false)
+  const { login, googleLogin, isLoginPending } = useAuthMutations()
+
+  const onSubmit = (data) => {
+    // data: {email, password}
+    login(
+      { ...data, isKeepLogin, redirectTo: from },
+      {
+        onError: (error) => {
+          // 비밀번호 필드 아래에 에러 메시지 표시
+          setError('password', {
+            type: 'manual',
+            message: '이메일 또는 비밀번호가 일치하지 않습니다.',
+          })
+          // 이메일 필드는 빨간불
+          setError('email', { type: 'manual', message: '' })
+        },
+      },
+    )
   }
 
   return (
@@ -62,24 +82,32 @@ export default function SignIn() {
       </div>
 
       {/* 로그인 폼 */}
-      <form onSubmit={handleSubmit} className="space-y-6">
+      <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
         {/* 이메일 */}
         <FormInput
           name="email"
           type="email"
-          value={formData.email}
-          onChange={handleChange}
           label="이메일"
           placeholder="이메일을 입력해 주세요."
+          {...register('email', {
+            required: '이메일을 입력해주세요.',
+            pattern: {
+              value: /^[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,}$/i,
+              message: '올바른 이메일 형식이 아닙니다.',
+            },
+          })}
+          error={errors.email?.message}
         />
         {/* 비밀번호 */}
         <FormInput
           name="password"
           type="password"
-          value={formData.password}
-          onChange={handleChange}
           label="비밀번호"
           placeholder="비밀번호를 입력해 주세요."
+          {...register('password', {
+            required: '비밀번호를 입력해주세요.',
+          })}
+          error={errors.password?.message}
         />
 
         {/* 로그인 상태 유지 / 비밀번호 찾기 */}
@@ -108,7 +136,10 @@ export default function SignIn() {
       {/* 회원가입 링크 */}
       <p className="mt-5 text-left text-sm text-gray-700">
         아직 계정이 없으신가요?{' '}
-        <Link to="/auth/signup" className="text-blue-500 hover:text-blue-600">
+        <Link
+          to="/auth/signup"
+          className="font-semibold text-blue-500 hover:text-blue-600"
+        >
           회원가입하러 가기
         </Link>
       </p>

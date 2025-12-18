@@ -79,8 +79,6 @@ export const useAuthMutations = () => {
         if (window.confirm('비활성화된 계정입니다. 복구하시겠습니까?')) {
           reactivateMutation.mutate(variables)
         }
-      } else {
-        alert(res?.message || '이메일 또는 비밀번호를 확인해주세요.')
       }
     },
   })
