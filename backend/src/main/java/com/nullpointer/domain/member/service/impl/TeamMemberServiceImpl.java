@@ -10,6 +10,7 @@ import com.nullpointer.domain.member.service.TeamMemberService;
 import com.nullpointer.domain.member.vo.TeamMemberVo;
 import com.nullpointer.domain.member.vo.enums.Role;
 import com.nullpointer.domain.notification.event.InvitationEvent;
+import com.nullpointer.domain.notification.event.MemberEvent;
 import com.nullpointer.domain.notification.vo.enums.NotificationType;
 import com.nullpointer.domain.team.mapper.TeamMapper;
 import com.nullpointer.domain.team.vo.TeamVo;
@@ -75,6 +76,12 @@ public class TeamMemberServiceImpl implements TeamMemberService {
         // 1. 요청자가 OWNER인지 확인
         memberVal.validateTeamOwner(teamId, ownerId, ErrorCode.MEMBER_UPDATE_FORBIDDEN);
 
+        // 알림용 조회
+        TeamVo team = teamMapper.findTeamByTeamId(teamId)
+                .orElseThrow(() -> new BusinessException(ErrorCode.TEAM_NOT_FOUND));
+        UserVo owner = userMapper.findById(ownerId)
+                .orElseThrow(() -> new BusinessException(ErrorCode.USER_NOT_FOUND));
+
         // 2. 대상 멤버 존재 확인
         if (!teamMemberMapper.existsByTeamIdAndUserId(teamId, targetId)) {
             throw new BusinessException(ErrorCode.MEMBER_NOT_FOUND);
@@ -112,6 +119,7 @@ public class TeamMemberServiceImpl implements TeamMemberService {
             teamMemberMapper.updateTeamRole(vo);
         }
 
+        publishRolChangeEvent(owner, targetId, team, req.getRole());
         // 멤버 권한 변경 로그 저장
         // changeRoleLog(teamId, memberId, userId, oldRole, req.getRole());
     }
@@ -222,6 +230,23 @@ public class TeamMemberServiceImpl implements TeamMemberService {
                 .targetId(team.getId())
                 .targetName(team.getName())
                 .type(type)
+                .build();
+
+        publisher.publishEvent(event);
+    }
+
+    // [이벤트] 권한 변경 이벤트 발행
+    private void publishRolChangeEvent(UserVo sender, Long receiverId, TeamVo team, Role newRole) {
+        MemberEvent event = MemberEvent.builder()
+                .targetUserId(receiverId)
+                .targetId(team.getId())
+                .targetName(team.getName())
+                .targetType(MemberEvent.TargetType.TEAM)
+                .senderId(sender.getId())
+                .senderNickname(sender.getNickname())
+                .senderProfileImg(sender.getProfileImg())
+                .newRole(newRole)
+                .type(NotificationType.PERMISSION_CHANGED)
                 .build();
 
         publisher.publishEvent(event);

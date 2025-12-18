@@ -25,7 +25,9 @@ public enum NotificationType {
 
     BOARD_INVITE("보드 초대"),
     BOARD_MEMBER_KICKED("보드 멤버 추방"),
-    BOARD_MEMBER_LEFT("보드 멤버 탈퇴");
+    BOARD_MEMBER_LEFT("보드 멤버 탈퇴"),
+
+    PERMISSION_CHANGED("권한 변경");
 
     private final String label;
 

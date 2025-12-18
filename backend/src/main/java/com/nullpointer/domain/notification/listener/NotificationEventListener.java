@@ -2,6 +2,7 @@ package com.nullpointer.domain.notification.listener;
 
 import com.nullpointer.domain.notification.event.CardEvent;
 import com.nullpointer.domain.notification.event.InvitationEvent;
+import com.nullpointer.domain.notification.event.MemberEvent;
 import com.nullpointer.domain.notification.vo.NotificationDto;
 import com.nullpointer.domain.notification.vo.enums.NotificationType;
 import com.nullpointer.domain.user.mapper.UserMapper;
@@ -193,6 +194,42 @@ public class NotificationEventListener {
                 .isRead(false)
                 .createdAt(LocalDateTime.now())
                 .token(event.getToken())
+                .build();
+
+        // redis 저장, 소켓 전송
+        saveAndSendNotification(noti);
+    }
+
+    @Async
+    @EventListener
+    public void handleMemberEvent(MemberEvent event) {
+        log.info("권한 변경 이벤트 수신: type={}, targetId={}", event.getType(), event.getTargetId());
+
+        MemberEvent.TargetType targetType = event.getTargetType();
+
+        String message = String.format("'%s' %s에서의 권한이 '%s'(으)로 변경되었습니다.",
+                event.getTargetName(),
+                targetType.getLabel(),
+                event.getNewRole().getLabel());
+
+        String targetUrl = "/teams/" + event.getTargetId() + "/members"; // 팀 멤버 목록 페이지로 이동
+
+        if (targetType == MemberEvent.TargetType.BOARD) {
+            targetUrl = "/board/" + event.getTargetId(); // 해당 보드 페이지로 이동
+        }
+
+        // 알림 객체 생성
+        NotificationDto noti = NotificationDto.builder()
+                .id(System.currentTimeMillis())
+                .receiverId(event.getTargetUserId())
+                .senderId(event.getSenderId())
+                .senderNickname(event.getSenderNickname())
+                .senderProfileImg(event.getSenderProfileImg())
+                .type(event.getType())
+                .message(message)
+                .targetUrl(targetUrl)
+                .isRead(false)
+                .createdAt(LocalDateTime.now())
                 .build();
 
         // redis 저장, 소켓 전송

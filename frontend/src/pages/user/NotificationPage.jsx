@@ -28,7 +28,12 @@ function NotificationPage() {
   const getFilterTypes = (tabId) => {
     switch (tabId) {
       case 'ME':
-        return ['MENTION', 'CARD_ASSIGNED', 'COMMENT_REPLY']
+        return [
+          'MENTION',
+          'CARD_ASSIGNED',
+          'COMMENT_REPLY',
+          'PERMISSION_CHANGED',
+        ]
       case 'COMMENT':
         return ['COMMENT', 'COMMENT_REPLY', 'MENTION']
       case 'WORK':
@@ -37,6 +42,7 @@ function NotificationPage() {
           'CARD_UPDATED',
           'CHECKLIST_COMPLETED',
           'DEADLINE_NEAR',
+          'FILE_UPLOAD',
         ]
       case 'NOTICE':
         return [
@@ -49,6 +55,9 @@ function NotificationPage() {
           'TEAM_MEMBER_LEFT',
           'BOARD_MEMBER_KICKED',
           'BOARD_MEMBER_LEFT',
+
+          'TEAM_DELETED',
+          'BOARD_DELETED',
         ]
       default:
         return [] // ALL인 경우
