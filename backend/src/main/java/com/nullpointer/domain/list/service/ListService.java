@@ -26,4 +26,7 @@ public interface ListService {
 
     // 리스트 삭제 (soft delete)
     void deleteList(Long listId, Long userId);
+
+    // 리스트 아카이브 상태 변경
+    void updateArchiveStatus(Long listId, boolean isArchived, Long userId);
 }

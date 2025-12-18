@@ -17,6 +17,7 @@ public class ListVo {
     private String title;
     // 정렬용 컬럼 (DB: order_index)
     private Integer orderIndex;
+    private Boolean isArchived;
 
     private LocalDateTime createdAt;
     private LocalDateTime updatedAt;

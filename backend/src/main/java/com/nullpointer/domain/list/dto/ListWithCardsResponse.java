@@ -17,6 +17,7 @@ public class ListWithCardsResponse {
     private Long id;
     private String title;
     private Integer orderIndex;
+    private Boolean isArchived;
 
     // 해당 리스트에 속한 카드 목록
     private List<CardResponse> cards;
@@ -26,6 +27,7 @@ public class ListWithCardsResponse {
                 .id(list.getId())
                 .title(list.getTitle())
                 .orderIndex(list.getOrderIndex())
+                .isArchived(list.getIsArchived())
                 .cards(cards)
                 .build();
     }

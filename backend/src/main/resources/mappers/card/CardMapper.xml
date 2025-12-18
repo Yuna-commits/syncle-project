@@ -185,6 +185,15 @@
         WHERE id = #{id}
     </update>
 
+    <!-- 카드 아카이브 토글 -->
+    <update id="updateCardArchiveStatus">
+        UPDATE card
+        SET is_archived = #{isArchived},
+            updated_at = NOW()
+        WHERE id = #{cardId}
+          AND deleted_at IS NULL
+    </update>
+
     <!-- 카드 삭제 -->
     <update id="deleteCard">
         UPDATE card

@@ -35,6 +35,11 @@ export const boardApi = {
     api.put(`/lists/${listId}`, {
       title: newTitle,
     }),
+  // 리스트 아카이브 변경
+  updateListArchiveStatus: (listId, isArchived) =>
+    api.patch(`/lists/${listId}/archive`, null, {
+      params: { isArchived },
+    }),
   // 리스트 삭제
   deleteList: (listId) => api.delete(`/lists/${listId}`),
   // 리스트 이동
@@ -49,6 +54,11 @@ export const boardApi = {
     }),
   // 카드 수정
   updateCard: (cardId, updates) => api.patch(`/cards/${cardId}`, updates),
+  // 카드 아카이브 변경
+  updateCardArchiveStatus: (cardId, isArchived) =>
+    api.patch(`/cards/${cardId}/archive`, null, {
+      params: { isArchived },
+    }),
   // 카드 삭제
   deleteCard: (cardId) => api.delete(`/cards/${cardId}`),
   // 카드 이동

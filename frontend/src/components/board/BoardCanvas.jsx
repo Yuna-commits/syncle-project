@@ -13,15 +13,17 @@ function BoardCanvas({ board, columnRefs, listContainerRef }) {
     <div className="h-full w-full overflow-x-auto overflow-y-hidden bg-gray-100/50 p-6">
       <div className="flex h-full items-start gap-6">
         <div ref={listContainerRef} className="flex h-full items-start gap-6">
-          {orderedColumns.map((column) => (
-            <BoardList
-              key={column.id}
-              column={column}
-              innerRef={(el) => (columnRefs.current[column.id] = el)}
-              canEdit={canEdit} // 리스트 작업 권한
-              boardId={board.id}
-            />
-          ))}
+          {orderedColumns
+            ?.filter((column) => !column.isArchived)
+            .map((column) => (
+              <BoardList
+                key={column.id}
+                column={column}
+                innerRef={(el) => (columnRefs.current[column.id] = el)}
+                canEdit={canEdit} // 리스트 작업 권한
+                boardId={board.id}
+              />
+            ))}
           {canEdit && <AddListButton boardId={board.id} />}
         </div>
       </div>

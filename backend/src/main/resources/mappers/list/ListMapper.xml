@@ -36,7 +36,8 @@
         SELECT id,
                board_id,
                title,
-               order_index AS orderIndex
+               order_index AS orderIndex,
+               is_archived AS isArchived
         FROM list
         WHERE board_id = #{boardId}
           AND deleted_at IS NULL
@@ -65,6 +66,15 @@
         SET title      = #{title},
             updated_at = NOW()
         WHERE id = #{id}
+          AND deleted_at IS NULL
+    </update>
+
+    <!-- 리스트 아카이브 토글 -->
+    <update id="updateListArchiveStatus">
+        UPDATE list
+        SET is_archived = #{isArchived},
+            updated_at  = NOW()
+        WHERE id = #{listId}
           AND deleted_at IS NULL
     </update>
 

@@ -37,6 +37,17 @@ public class ListManageController {
         return ApiResponse.success("리스트 수정 성공");
     }
 
+    // 리스트 아카이브 변경
+    @Operation(summary = "리스트 아카이브 상태 변경", description = "리스트 아카이브 상태를 변경합니다.")
+    @PatchMapping("/{listId}/archive")
+    public ApiResponse<String> updateListArchiveStatus(
+            @PathVariable Long listId,
+            @RequestParam boolean isArchived,
+            @LoginUser Long userId) {
+        listService.updateArchiveStatus(listId, isArchived, userId);
+        return ApiResponse.success("리스트 아카이브 상태 변경");
+    }
+
     // 리스트 삭제 (soft delete)
     @Operation(summary = "리스트 삭제", description = "리스트를 삭제합니다.")
     @DeleteMapping("/{listId}")

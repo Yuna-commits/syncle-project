@@ -1,6 +1,6 @@
 import React, { useState, useRef, useEffect, useMemo } from 'react'
 import TaskCard from '../card/TaskCard'
-import { MoreHorizontal, Plus, X } from 'lucide-react'
+import { Archive, MoreHorizontal, Plus, X } from 'lucide-react'
 import { useCardMutations } from '../../hooks/card/useCardMutations'
 import { useListMutations } from '../../hooks/useListMutations'
 import useBoardStore from '../../stores/useBoardStore'
@@ -11,7 +11,8 @@ import { filterAndSortTasks } from '../../utils/boardFilterUtils'
  */
 function BoardList({ column, innerRef, boardId }) {
   const { addCard } = useCardMutations(boardId)
-  const { deleteList, updateList } = useListMutations(boardId)
+  const { deleteList, updateList, updateListArchiveStatus } =
+    useListMutations(boardId)
   const { filter } = useBoardStore()
 
   const [isAdding, setIsAdding] = useState(false)
@@ -58,6 +59,15 @@ function BoardList({ column, innerRef, boardId }) {
       updateList({ listId: column.id, title: listTitle })
     }
     setIsEditing(false)
+  }
+
+  const handleArchiveList = () => {
+    if (window.confirm(`'${column.title}' 리스트를 아카이브하시겠습니까?`)) {
+      updateListArchiveStatus({
+        listId: column.id,
+        isArchived: true,
+      })
+    }
   }
 
   // 완료 리스트 여부
@@ -133,7 +143,14 @@ function BoardList({ column, innerRef, boardId }) {
               >
                 ✏️ 리스트 이름 수정
               </button>
+              <button
+                onClick={handleArchiveList}
+                className="flex w-full items-center px-4 py-2 text-sm text-orange-600 hover:bg-orange-50"
+              >
+                <Archive size={14} className="mr-2" /> 아카이브로 이동
+              </button>
 
+              <div className="my-1 border-t border-gray-100"></div>
               <button
                 onClick={handleDeleteList}
                 className="flex w-full items-center px-4 py-2 text-sm text-red-600 hover:cursor-pointer hover:bg-red-50"
@@ -151,9 +168,11 @@ function BoardList({ column, innerRef, boardId }) {
         data-column-id={column.id}
         className="custom-scrollbar min-h-[50px] flex-1 overflow-y-auto px-1 py-0.5"
       >
-        {filteredAndSortedTasks.map((task) => (
-          <TaskCard key={task.id} task={task} />
-        ))}
+        {filteredAndSortedTasks
+          ?.filter((card) => !card.isArchived)
+          .map((task) => (
+            <TaskCard key={task.id} task={task} />
+          ))}
         {filteredAndSortedTasks.length === 0 && column.tasks.length > 0 && (
           <div className="py-4 text-center text-xs text-gray-400">
             조건에 맞는 카드가 없습니다.

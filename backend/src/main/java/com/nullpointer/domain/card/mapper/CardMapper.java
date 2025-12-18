@@ -38,6 +38,9 @@ public interface CardMapper {
     // 카드 수정
     void updateCard(CardVo cardVo);
 
+    // 카드 아카이브 토글
+    void updateCardArchiveStatus(@Param("cardId") Long cardId, @Param("isArchived") boolean isArchived);
+
     // 카드 삭제
     void deleteCard(Long cardId);
 

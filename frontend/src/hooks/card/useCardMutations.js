@@ -282,6 +282,19 @@ export const useCardMutations = (boardId) => {
     onSettled: () => queryClient.invalidateQueries({ queryKey }),
   })
 
+  //카드 아카이브 상태 변경
+  const updateCardArchiveStatusMutation = useMutation({
+    mutationFn: ({ cardId, isArchived }) =>
+      boardApi.updateCardArchiveStatus(cardId, isArchived),
+    onSuccess: () => {
+      // 보드 데이터를 무효화하여 아카이브된 카드가 즉시 숨겨지게 합니다.
+      queryClient.invalidateQueries({ queryKey: ['board', boardId] })
+    },
+    onError: (error) => {
+      console.error('카드 아카이브 상태 변경 실패:', error)
+    },
+  })
+
   // 카드 삭제
   const deleteCardMutation = useMutation({
     mutationFn: ({ cardId }) => boardApi.deleteCard(cardId),
@@ -293,6 +306,7 @@ export const useCardMutations = (boardId) => {
     moveCard: moveCardMutation.mutate,
     addCard: addCardMutation.mutate,
     updateCard: updateCardMutation.mutate,
+    updateCardArchiveStatus: updateCardArchiveStatusMutation.mutate,
     deleteCard: deleteCardMutation.mutate,
   }
 }
