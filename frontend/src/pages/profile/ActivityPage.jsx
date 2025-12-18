@@ -104,7 +104,7 @@ export default function ActivityPage() {
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-3xl font-bold text-gray-900">활동 내역</h1>
-          <p className="mt-1 text-gray-500">
+          <p className="mt-2 text-gray-500">
             최근 활동과 통계를 한눈에 확인하세요.
           </p>
         </div>

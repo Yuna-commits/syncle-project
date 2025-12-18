@@ -5,13 +5,8 @@ import { Outlet } from 'react-router-dom'
 import TeamCreateModal from '../components/modals/team/TeamCreateModal'
 import useUiStore from '../stores/useUiStore'
 import { useAuthQuery } from '../hooks/auth/useAuthQuery'
-import { useGlobalSocket } from '../hooks/useGlobalSocket'
 
 function MainLayout() {
-  // 전역 소켓 연결 & 알림 구독 시작
-  // 로그인 상태이면 소켓을 연결하고 '/user/queue/notifications' 구독
-  useGlobalSocket()
-
   const [openTeamModal, setOpenTeamModal] = useState(false)
 
   // 메뉴 정보 가져오기

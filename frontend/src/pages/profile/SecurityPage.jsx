@@ -82,16 +82,11 @@ export default function SecurityPage() {
   return (
     <div className="animate-fade-in mx-auto w-full max-w-4xl space-y-8 p-8 pb-20">
       {/* 헤더 */}
-      <div className="flex items-center gap-4">
-        <div className="flex h-16 w-16 items-center justify-center rounded-2xl bg-white text-blue-600 shadow-sm">
-          <ShieldCheck size={32} />
-        </div>
-        <div>
-          <h2 className="text-3xl font-bold text-gray-900">보안 설정</h2>
-          <p className="mt-1 text-gray-500">
-            계정 보안 및 로그인 활동을 관리합니다.
-          </p>
-        </div>
+      <div>
+        <h1 className="text-3xl font-bold text-gray-900">보안 설정</h1>
+        <p className="mt-2 text-gray-500">
+          계정 보안 및 로그인 활동을 관리하세요.
+        </p>
       </div>
 
       <div className="flex flex-col gap-5">
