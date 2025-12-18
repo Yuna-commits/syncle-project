@@ -18,13 +18,17 @@ export const useGlobalSocket = () => {
 
     // 소켓 연결 시도
     socketClient.connect({
+      headers: {
+        Authorization: `Bearer ${localStorage.getItem('accessToken') || sessionStorage.getItem('accessToken')}`,
+      },
       onConnect: () => {
         console.log(`전역 범위 웹 소켓 연결됨`)
+        console.log(`[${user.email}] 소켓 연결 성공`)
 
         // [전역 기능] 개인 알림 구독
-        socketClient.subscribe('/user/queue/notifications', () => {
+        socketClient.subscribe('/user/queue/notifications', (message) => {
           try {
-            console.log('실시간 알림 도착')
+            console.log('⚡ 내 알림 도착:', JSON.parse(message.body))
             // 알림 목록 쿼리 갱신
             queryClient.invalidateQueries({ queryKey: ['notifications'] })
           } catch (e) {

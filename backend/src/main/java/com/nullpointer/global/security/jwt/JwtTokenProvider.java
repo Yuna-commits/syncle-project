@@ -6,6 +6,9 @@ import io.jsonwebtoken.security.Keys;
 import jakarta.annotation.PostConstruct;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.stereotype.Component;
 
 import java.nio.charset.StandardCharsets;
@@ -93,6 +96,19 @@ public class JwtTokenProvider {
             // 만료된 토큰이어도 정보가 필요할 때 사용 가능
             return e.getClaims();
         }
+    }
+
+    // 토큰을 복호화하여 Authentication 객체 생성
+    public Authentication getAuthentication(String token) {
+        // claims 추출
+        Long userId = getUserId(token);
+        String email = getEmail(token);
+
+        // UserDetails 객체 생성
+        UserDetails userDetails = new CustomUserDetails(userId, email);
+
+        return new UsernamePasswordAuthenticationToken(
+                userDetails, null, userDetails.getAuthorities());
     }
 
     // JWT에서 userId 추출

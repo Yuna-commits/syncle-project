@@ -4,6 +4,8 @@ import com.nullpointer.domain.notification.event.CardEvent;
 import com.nullpointer.domain.notification.event.InvitationEvent;
 import com.nullpointer.domain.notification.vo.NotificationDto;
 import com.nullpointer.domain.notification.vo.enums.NotificationType;
+import com.nullpointer.domain.user.mapper.UserMapper;
+import com.nullpointer.domain.user.vo.UserVo;
 import com.nullpointer.global.common.enums.RedisKeyType;
 import com.nullpointer.global.util.RedisUtil;
 import lombok.RequiredArgsConstructor;
@@ -23,6 +25,7 @@ import java.util.Set;
 public class NotificationEventListener {
 
     private final RedisUtil redisUtil;
+    private UserMapper userMapper;
     private final SimpMessagingTemplate messagingTemplate;
 
     /**
@@ -249,15 +252,22 @@ public class NotificationEventListener {
         // 용량 관리 (최근 50개만 유지)
         redisUtil.trimList(key, 50);
 
-        // WebSocket 실시간 전송
-        // 구독 경로: /queue/notifications/{userId}
-        // 프론트엔드가 이 경로를 구독해야 함
-        messagingTemplate.convertAndSendToUser(
-                String.valueOf(noti.getReceiverId()),
-                "/queue/notifications",
-                noti);
+        UserVo receiver = userMapper.findById(noti.getReceiverId()).orElse(null);
 
-        log.info("알림 발송 완료: receiverId={}", noti.getReceiverId());
+        if (receiver != null) {
+            String email = receiver.getEmail(); // 소켓 principal
+
+            // 이메일로 소켓 메시지 전송
+            // WebSocket 실시간 전송
+            // 구독 경로: /queue/notifications/{email} <- Spring Security의 username이 이메일이기 때문
+            // 프론트엔드가 이 경로를 구독해야 함
+            messagingTemplate.convertAndSendToUser(
+                    email, "/queue/notifications", noti);
+
+            log.info("알림 발송 완료: receiverId={}", noti.getReceiverId());
+        } else {
+            log.warn("알림 수신자를 찾을 수 없음: id={}", noti.getReceiverId());
+        }
     }
 
 }
