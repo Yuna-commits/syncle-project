@@ -67,7 +67,7 @@ export default function ProfilePage() {
       // 파일 업로드
       const uploadResponse = await uploadImage({
         file: compressedFile,
-        fileType: 'profiles',
+        fileType: 'PROFILE',
       })
       const newProfileImgUrl = uploadResponse.data.data.url
 

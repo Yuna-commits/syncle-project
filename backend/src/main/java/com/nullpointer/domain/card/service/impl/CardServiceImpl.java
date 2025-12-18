@@ -20,9 +20,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.util.HashSet;
-import java.util.List;
-import java.util.Set;
+import java.util.*;
 
 @Service
 @RequiredArgsConstructor
@@ -53,11 +51,14 @@ public class CardServiceImpl implements CardService {
         // DB 저장
         cardMapper.insertCard(cardVo);
 
+        // 생성된 카드 상세 정보 조회
+        CardResponse response = cardMapper.findCardDetailById(cardVo.getId());
+
         // 소켓 전송
-        socketSender.sendSocketMessage(boardId, "CARD_CREATE", userId, null);
+        socketSender.sendSocketMessage(boardId, "CARD_CREATE", userId, response);
 
         // 담당자 정보 포함 응답 반환
-        return cardMapper.findCardDetailById(cardVo.getId());
+        return response;
     }
 
     @Override
@@ -86,8 +87,14 @@ public class CardServiceImpl implements CardService {
         // 순서 및 리스트 변경
         cardOrderManager.moveCardOrder(card, req.getListId(), req.getOrderIndex());
 
+        // 이동 정보 저장
+        Map<String, Object> data = new HashMap<>();
+        data.put("cardId", card.getId());
+        data.put("ListId", card.getListId());
+        data.put("newIndex", req.getOrderIndex());
+
         // 소켓 전송
-        socketSender.sendSocketMessage(boardId, "CARD_MOVE", userId, null);
+        socketSender.sendSocketMessage(boardId, "CARD_MOVE", userId, data);
 
         // [이벤트] 카드 이동 알림 발행 (담당자가 있고, 본인이 담당자가 아닐 때)
         if (card.getAssigneeId() != null) {
@@ -136,8 +143,11 @@ public class CardServiceImpl implements CardService {
         // 초기화 요청 처리 (날짜, 라벨, 우선순위 제거)
         handleRemoveRequests(cardId, req);
 
+        // 업데이트 된 카드 정보 조회
+        CardResponse response = cardMapper.findCardDetailById(card.getId());
+
         // 소켓 전송
-        socketSender.sendSocketMessage(boardId, "CARD_UPDATE", userId, null);
+        socketSender.sendSocketMessage(boardId, "CARD_UPDATE", userId, response);
 
         // [이벤트] 카드 변경 알림 발행
         if (!changedFields.isEmpty()) {
@@ -146,7 +156,7 @@ public class CardServiceImpl implements CardService {
                     changedFields, null);
         }
 
-        return cardMapper.findCardDetailById(cardId);
+        return response;
     }
 
     // 카드 삭제
@@ -162,8 +172,13 @@ public class CardServiceImpl implements CardService {
         // 카드 삭제
         cardMapper.deleteCard(cardId);
 
+        // 삭제된 카드 정보 저장
+        Map<String, Object> data = new HashMap<>();
+        data.put("cardId", cardId);
+        data.put("listId", card.getListId());
+
         // 소켓 전송
-        socketSender.sendSocketMessage(boardId, "CARD_DELETE", userId, null);
+        socketSender.sendSocketMessage(boardId, "CARD_DELETE", userId, data);
     }
 
     /**

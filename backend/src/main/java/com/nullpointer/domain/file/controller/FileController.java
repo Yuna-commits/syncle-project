@@ -3,6 +3,7 @@ package com.nullpointer.domain.file.controller;
 import com.nullpointer.domain.file.dto.FileResponse;
 import com.nullpointer.domain.file.service.FileService;
 import com.nullpointer.domain.file.service.S3FileStorageService;
+import com.nullpointer.domain.file.vo.enums.FileType;
 import com.nullpointer.global.common.ApiResponse;
 import com.nullpointer.global.common.annotation.LoginUser;
 import io.swagger.v3.oas.annotations.Operation;
@@ -25,7 +26,7 @@ public class FileController {
 
     @Operation(summary = "프로필 이미지 업로드", description = "이미지를 업로드하고 URL을 반환받습니다.")
     @PostMapping(value = "/upload", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
-    public ApiResponse<Map<String, String>> uploadImage(@RequestParam("file") MultipartFile file, @LoginUser Long userId, @RequestParam("fileType") String fileType) {
+    public ApiResponse<Map<String, String>> uploadImage(@RequestParam("file") MultipartFile file, @LoginUser Long userId, @RequestParam("fileType") FileType fileType) {
         String key = fileStorageService.storeFile(file, userId, fileType);
         String fileUrl = fileStorageService.getFileUrl(key);
         return ApiResponse.success(Map.of("url", fileUrl));

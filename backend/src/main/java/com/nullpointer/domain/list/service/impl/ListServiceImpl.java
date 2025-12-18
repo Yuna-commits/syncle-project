@@ -22,7 +22,9 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 /**
  * 리스트 생성/조회/수정/삭제 로직 구현체
@@ -60,10 +62,17 @@ public class ListServiceImpl implements ListService {
         // 로그 저장
         saveActivityLog(userId, boardId, ActivityType.CREATE_LIST, listVo.getId(), listVo.getTitle(), "리스트를 생성했습니다.");
 
-        // 소켓 전송
-        socketSender.sendSocketMessage(boardId, "LIST_CREATE", userId, null);
+        ListResponse response = ListResponse.builder()
+                .id(listVo.getId())
+                .boardId(listVo.getBoardId())
+                .title(listVo.getTitle())
+                .orderIndex(listVo.getOrderIndex())
+                .build();
 
-        return ListResponse.builder().id(listVo.getId()).boardId(listVo.getBoardId()).title(listVo.getTitle()).orderIndex(listVo.getOrderIndex()).build();
+        // 소켓 전송
+        socketSender.sendSocketMessage(boardId, "LIST_CREATE", userId, response);
+
+        return response;
     }
 
 
@@ -78,9 +87,8 @@ public class ListServiceImpl implements ListService {
 
         List<ListResponse> responseList = new ArrayList<>();
         for (ListVo vo : voList) {
-            ListResponse res = ListResponse.builder().id(vo.getId()).boardId(vo.getBoardId()).title(vo.getTitle()).orderIndex(vo.getOrderIndex()).build();
+            responseList.add(ListResponse.builder().id(vo.getId()).boardId(vo.getBoardId()).title(vo.getTitle()).orderIndex(vo.getOrderIndex()).build());
 
-            responseList.add(res);
         }
 
         return responseList;
@@ -101,7 +109,7 @@ public class ListServiceImpl implements ListService {
         }
 
         // 소켓 전송
-        socketSender.sendSocketMessage(boardId, "LIST_MOVE", userId, null);
+        socketSender.sendSocketMessage(boardId, "LIST_MOVE", userId, request);
     }
 
     @Override
@@ -116,8 +124,13 @@ public class ListServiceImpl implements ListService {
         // 업데이트
         listMapper.updateListInfo(ListVo.builder().id(listId).title(request.getTitle()).build());
 
+        // 변경된 리스트 정보 저장
+        Map<String, Object> data = new HashMap<>();
+        data.put("id", listId);
+        data.put("title", request.getTitle());
+
         // 소켓 전송
-        socketSender.sendSocketMessage(list.getBoardId(), "LIST_UPDATE", userId, null);
+        socketSender.sendSocketMessage(list.getBoardId(), "LIST_UPDATE", userId, data);
     }
 
     @Override
@@ -135,8 +148,12 @@ public class ListServiceImpl implements ListService {
         // 로그 저장
         saveActivityLog(userId, list.getBoardId(), ActivityType.DELETE_LIST, listId, list.getTitle(), "리스트를 삭제했습니다.");
 
+        // 삭제된 리스트 정보 저장
+        Map<String, Object> data = new HashMap<>();
+        data.put("listId", listId);
+
         // 소켓 전송
-        socketSender.sendSocketMessage(list.getBoardId(), "LIST_DELETE", userId, null);
+        socketSender.sendSocketMessage(list.getBoardId(), "LIST_DELETE", userId, data);
     }
 
     // 리스트 활동 로그 저장
