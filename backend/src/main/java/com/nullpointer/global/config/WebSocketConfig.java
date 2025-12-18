@@ -1,13 +1,24 @@
 package com.nullpointer.global.config;
 
+import com.nullpointer.global.security.jwt.JwtTokenProvider;
+import lombok.RequiredArgsConstructor;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.messaging.Message;
+import org.springframework.messaging.MessageChannel;
+import org.springframework.messaging.simp.config.ChannelRegistration;
 import org.springframework.messaging.simp.config.MessageBrokerRegistry;
+import org.springframework.messaging.simp.stomp.StompCommand;
+import org.springframework.messaging.simp.stomp.StompHeaderAccessor;
+import org.springframework.messaging.support.ChannelInterceptor;
+import org.springframework.messaging.support.MessageHeaderAccessor;
+import org.springframework.security.core.Authentication;
 import org.springframework.web.socket.config.annotation.EnableWebSocketMessageBroker;
 import org.springframework.web.socket.config.annotation.StompEndpointRegistry;
 import org.springframework.web.socket.config.annotation.WebSocketMessageBrokerConfigurer;
 
 @Configuration
 @EnableWebSocketMessageBroker
+@RequiredArgsConstructor
 public class WebSocketConfig implements WebSocketMessageBrokerConfigurer {
 
     /**
@@ -18,6 +29,36 @@ public class WebSocketConfig implements WebSocketMessageBrokerConfigurer {
      * 4. /topic/presence/{boardId} 접속 상태
      * ...
      */
+
+    private final JwtTokenProvider jwtTokenProvider;
+
+    @Override
+    public void configureClientInboundChannel(ChannelRegistration registration) {
+        registration.interceptors(new ChannelInterceptor() {
+            @Override
+            public Message<?> preSend(Message<?> message, MessageChannel channel) {
+                StompHeaderAccessor accessor = MessageHeaderAccessor.getAccessor(message, StompHeaderAccessor.class);
+
+                // CONNECT 명령어일 때 토큰 검사
+                if (StompCommand.CONNECT.equals(accessor.getCommand())) {
+                    // 헤더에서 토큰 추출
+                    String authHeader = accessor.getFirstNativeHeader("Authorization");
+
+                    if (authHeader != null && authHeader.startsWith("Bearer ")) {
+                        String token = authHeader.substring(7);
+
+                        // 토큰 검증, Authentication 객체 생성
+                        if (jwtTokenProvider.validateToken(token)) {
+                            Authentication auth = jwtTokenProvider.getAuthentication(token);
+                            // 소켓 세션에 principal 등록
+                            accessor.setUser(auth);
+                        }
+                    }
+                }
+                return message;
+            }
+        });
+    }
 
     @Override
     public void configureMessageBroker(MessageBrokerRegistry registry) {
