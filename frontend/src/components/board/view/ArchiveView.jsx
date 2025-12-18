@@ -2,6 +2,7 @@ import { useState } from 'react'
 import { Archive, RotateCcw, Trash2, Search } from 'lucide-react'
 import { useListMutations } from '../../../hooks/useListMutations'
 import { useCardMutations } from '../../../hooks/card/useCardMutations'
+import useBoardStore from '../../../stores/useBoardStore'
 
 export default function ArchiveView({ board }) {
   // 탭 상태: 'lists'가 기본값 (리스트 -> 카드 순)
@@ -10,6 +11,7 @@ export default function ArchiveView({ board }) {
 
   const { updateListArchiveStatus, deleteList } = useListMutations(board.id)
   const { updateCardArchiveStatus, deleteCard } = useCardMutations(board.id)
+  const { openCardModal } = useBoardStore()
 
   // 아카이브된 리스트 필터링
   const archivedLists = Object.values(board.columns || {}).filter(
@@ -136,49 +138,69 @@ export default function ArchiveView({ board }) {
             )}
           </div>
         ) : (
+          // 카드 탭 로직
           <div className="space-y-2">
             {archivedCards.length > 0 ? (
-              archivedCards.map((card) => (
-                <div
-                  key={card.id}
-                  className="group flex items-center justify-between rounded-lg border border-gray-100 bg-gray-50 p-3"
-                >
-                  <div className="flex flex-col">
-                    <div className="flex items-center gap-2">
-                      <span className="text-sm font-medium text-gray-700">
-                        {card.title}
-                      </span>
-                      {board.columns[card.listId]?.isArchived && (
-                        <span className="rounded bg-orange-100 px-1 text-[10px] text-orange-600">
-                          리스트 아카이브됨
+              archivedCards.map((card) => {
+                const isParentArchived = board.columns[card.listId]?.isArchived
+
+                return (
+                  <div
+                    key={card.id}
+                    // 클릭 시 카드 상세 모달 오픈
+                    onClick={() => openCardModal(card)}
+                    className={`group flex cursor-pointer items-center justify-between rounded-lg border p-3 transition-colors hover:border-blue-300 ${
+                      isParentArchived
+                        ? 'border-gray-200 bg-gray-100'
+                        : 'border-gray-100 bg-white shadow-sm hover:shadow'
+                    }`}
+                  >
+                    <div className="flex flex-1 flex-col pr-4">
+                      <div className="flex items-center gap-2">
+                        <span
+                          className={`text-sm font-medium ${isParentArchived ? 'text-gray-500' : 'text-gray-700'}`}
+                        >
+                          {card.title}
                         </span>
-                      )}
+                      </div>
+                      <div className="mt-0.5 flex items-center gap-1">
+                        <span className="text-[11px] text-gray-400">
+                          리스트: {board.columns[card.listId]?.title}
+                        </span>
+                        {isParentArchived && (
+                          <span className="text-[10px] font-medium text-orange-500">
+                            (리스트 비활성)
+                          </span>
+                        )}
+                      </div>
                     </div>
-                    <span className="text-xs text-gray-400">
-                      리스트: {board.columns[card.listId]?.title}
-                    </span>
-                  </div>
-                  <div className="flex gap-1">
-                    <button
-                      onClick={() => handleRestoreCard(card)}
-                      className="rounded p-1.5 text-gray-500 hover:bg-blue-50 hover:text-blue-600"
-                      title="보드로 복구"
+
+                    <div
+                      className="flex gap-1"
+                      onClick={(e) => e.stopPropagation()}
                     >
-                      <RotateCcw size={16} />
-                    </button>
-                    <button
-                      onClick={() => {
-                        if (confirm('영구 삭제하시겠습니까?'))
-                          deleteCard({ cardId: card.id, listId: card.listId })
-                      }}
-                      className="rounded p-1.5 text-gray-500 hover:bg-red-50 hover:text-red-600"
-                      title="영구 삭제"
-                    >
-                      <Trash2 size={16} />
-                    </button>
+                      {/* 버튼 영역은 클릭 시 모달이 열리지 않도록 stopPropagation 추가 */}
+                      <button
+                        onClick={() => handleRestoreCard(card)}
+                        className="rounded p-1.5 text-gray-500 hover:bg-blue-50 hover:text-blue-600"
+                        title="보드로 복구"
+                      >
+                        <RotateCcw size={16} />
+                      </button>
+                      <button
+                        onClick={() => {
+                          if (confirm('영구 삭제하시겠습니까?'))
+                            deleteCard({ cardId: card.id, listId: card.listId })
+                        }}
+                        className="rounded p-1.5 text-gray-500 hover:bg-red-50 hover:text-red-600"
+                        title="영구 삭제"
+                      >
+                        <Trash2 size={16} />
+                      </button>
+                    </div>
                   </div>
-                </div>
-              ))
+                )
+              })
             ) : (
               <p className="py-10 text-center text-sm text-gray-400">
                 아카이브된 카드가 없습니다.

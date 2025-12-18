@@ -98,7 +98,7 @@ function BoardList({ column, innerRef, boardId }) {
 
       {/* === 리스트 헤더 영역 (제목 + 메뉴) === */}
       <div className="relative mb-2 flex items-center justify-between px-2 pt-1">
-        {isEditing ? (
+        {isEditing && !isDoneList ? (
           <input
             autoFocus
             className="w-full rounded border border-blue-500 px-1 py-0.5 text-sm font-semibold text-gray-700 focus:outline-none"
@@ -114,7 +114,7 @@ function BoardList({ column, innerRef, boardId }) {
         ) : (
           <div
             className="flex w-full cursor-pointer items-center gap-2"
-            onClick={() => setIsEditing(true)}
+            onClick={() => !isDoneList && setIsEditing(true)}
           >
             <h3
               className={`truncate text-sm font-semibold ${isDoneList ? 'text-green-800' : 'text-gray-700'}`}
@@ -123,43 +123,44 @@ function BoardList({ column, innerRef, boardId }) {
             </h3>
           </div>
         )}
+        {!isDoneList && (
+          <div className="relative ml-2" ref={menuRef}>
+            <button
+              onClick={() => setIsMenuOpen(!isMenuOpen)}
+              className="rounded p-1 text-gray-500 transition-colors hover:bg-gray-200"
+            >
+              <MoreHorizontal size={20} />
+            </button>
 
-        <div className="relative ml-2" ref={menuRef}>
-          <button
-            onClick={() => setIsMenuOpen(!isMenuOpen)}
-            className="rounded p-1 text-gray-500 transition-colors hover:bg-gray-200"
-          >
-            <MoreHorizontal size={20} />
-          </button>
+            {isMenuOpen && (
+              <div className="ring-opacity-5 absolute top-8 right-0 z-20 w-40 rounded-md bg-white py-1 shadow-lg ring-1 ring-black/5">
+                <button
+                  onClick={() => {
+                    setIsEditing(true)
+                    setIsMenuOpen(false)
+                  }}
+                  className="flex w-full items-center px-4 py-2 text-sm text-gray-700 hover:cursor-pointer hover:bg-gray-100"
+                >
+                  ✏️ 리스트 이름 수정
+                </button>
+                <button
+                  onClick={handleArchiveList}
+                  className="flex w-full items-center px-4 py-2 text-sm text-orange-600 hover:bg-orange-50"
+                >
+                  <Archive size={14} className="mr-2" /> 아카이브로 이동
+                </button>
 
-          {isMenuOpen && (
-            <div className="ring-opacity-5 absolute top-8 right-0 z-20 w-40 rounded-md bg-white py-1 shadow-lg ring-1 ring-black/5">
-              <button
-                onClick={() => {
-                  setIsEditing(true)
-                  setIsMenuOpen(false)
-                }}
-                className="flex w-full items-center px-4 py-2 text-sm text-gray-700 hover:cursor-pointer hover:bg-gray-100"
-              >
-                ✏️ 리스트 이름 수정
-              </button>
-              <button
-                onClick={handleArchiveList}
-                className="flex w-full items-center px-4 py-2 text-sm text-orange-600 hover:bg-orange-50"
-              >
-                <Archive size={14} className="mr-2" /> 아카이브로 이동
-              </button>
-
-              <div className="my-1 border-t border-gray-100"></div>
-              <button
-                onClick={handleDeleteList}
-                className="flex w-full items-center px-4 py-2 text-sm text-red-600 hover:cursor-pointer hover:bg-red-50"
-              >
-                🗑️ 리스트 삭제
-              </button>
-            </div>
-          )}
-        </div>
+                <div className="my-1 border-t border-gray-100"></div>
+                <button
+                  onClick={handleDeleteList}
+                  className="flex w-full items-center px-4 py-2 text-sm text-red-600 hover:cursor-pointer hover:bg-red-50"
+                >
+                  🗑️ 리스트 삭제
+                </button>
+              </div>
+            )}
+          </div>
+        )}
       </div>
 
       {/* === 카드 리스트 영역 === */}

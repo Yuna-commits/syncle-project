@@ -14,7 +14,21 @@ function BoardCanvas({ board, columnRefs, listContainerRef }) {
       <div className="flex h-full items-start gap-6">
         <div ref={listContainerRef} className="flex h-full items-start gap-6">
           {orderedColumns
-            ?.filter((column) => !column.isArchived)
+            ?.filter((column) => {
+              // 기본적으로 아카이브된 리스트는 제외
+              if (column.isArchived) return false
+
+              // 완료 리스트(isVirtual)인 경우, 아카이브되지 않은 카드가 하나라도 있는지 확인
+              if (column.isVirtual) {
+                const hasVisibleCards = column.tasks?.some(
+                  (task) => !task.isArchived,
+                )
+                // 보여줄 카드가 없으면 리스트 자체를 렌더링하지 않음
+                if (!hasVisibleCards) return false
+              }
+
+              return true
+            })
             .map((column) => (
               <BoardList
                 key={column.id}
