@@ -26,6 +26,7 @@ public class CardVo {
     private Boolean isComplete;
     private String label;
     private String labelColor;
+    private Boolean isArchived;
     private LocalDateTime createdAt;
     private LocalDateTime updatedAt;
     private LocalDateTime deletedAt;

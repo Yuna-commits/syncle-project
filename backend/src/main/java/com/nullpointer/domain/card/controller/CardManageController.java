@@ -42,6 +42,17 @@ public class CardManageController {
         return ApiResponse.success("카드 이동 성공");
     }
 
+    // 아카이브 변경
+    @Operation(summary = "아카이브 변경", description = "카드 아카이브 상태를 변경합니다.")
+    @PatchMapping("/{cardId}/archive")
+    public ApiResponse<String> updateCardArchiveStatus(
+            @PathVariable Long cardId,
+            @RequestParam boolean isArchived,
+            @LoginUser Long userId) {
+        cardService.updateArchiveStatus(cardId, isArchived, userId);
+        return ApiResponse.success("카드 아카이브 변경");
+    }
+
     // 카드 수정
     @Operation(summary = "카드 수정", description = "카드 제목, 설명, 마감일 등 정보를 수정합니다.")
     @PatchMapping("/{cardId}")

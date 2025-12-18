@@ -28,6 +28,9 @@ public interface ListMapper {
     // 리스트 정보(title) 수정
     void updateListInfo(ListVo listVo);
 
+    // 리스트 아카이브 토글
+    void updateListArchiveStatus(@Param("listId") Long listId, @Param("isArchived") boolean isArchived);
+
     // 리스트 soft delete (deleted_at 업데이트)
     void softDeleteList(@Param("listId") Long listId);
 }

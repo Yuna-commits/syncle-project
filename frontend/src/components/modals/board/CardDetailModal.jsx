@@ -18,7 +18,9 @@ export default function CardDetailModal() {
   const { selectedCard, closeCardModal } = useBoardStore()
 
   const { data: activeBoard } = useBoardQuery(boardId)
-  const { updateCard } = useCardMutations(activeBoard?.id)
+  const { updateCard, updateCardArchiveStatus } = useCardMutations(
+    activeBoard?.id,
+  )
 
   // activeBoard가 갱신될 때 selectedCard 동기화
   useEffect(() => {
@@ -82,6 +84,20 @@ export default function CardDetailModal() {
         isComplete: nextState,
       },
     })
+  }
+
+  // 아카이브 토글 핸들러
+  const handleArchiveToggle = (newStatus) => {
+    const message = newStatus
+      ? '이 카드를 아카이브하시겠습니까?'
+      : '이 카드를 다시 보드로 복구하시겠습니까?'
+
+    if (window.confirm(message)) {
+      updateCardArchiveStatus({
+        cardId: selectedCard.id,
+        isArchived: newStatus,
+      })
+    }
   }
 
   // 날짜 스타일 계산
@@ -195,6 +211,7 @@ export default function CardDetailModal() {
 
             {/* [Right Column] Sidebar Actions */}
             <CardSidebar
+              onArchiveToggle={handleArchiveToggle}
               onAddChecklist={() => setShowChecklist((prev) => !prev)}
               showChecklist={showChecklist}
               onToggleComment={() => setShowComment((prev) => !prev)}

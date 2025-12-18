@@ -6,6 +6,8 @@ import {
   Trash2,
   User,
   Paperclip,
+  ArrowUpCircle,
+  Archive,
 } from 'lucide-react'
 import { useEffect, useRef, useState } from 'react'
 import { useParams } from 'react-router-dom'
@@ -26,6 +28,7 @@ function CardSidebar({
   showChecklist,
   onToggleComment,
   showComment,
+  onArchiveToggle,
 }) {
   const { boardId } = useParams()
   const { selectedCard, closeCardModal } = useBoardStore()
@@ -392,12 +395,30 @@ function CardSidebar({
             />
           </>
         )}
+
+        <button
+          onClick={() => onArchiveToggle(!selectedCard.isArchived)}
+          className="flex w-full items-center gap-2 rounded-md px-3 py-1.5 text-left text-sm font-medium text-gray-700 transition-colors hover:cursor-pointer hover:bg-gray-200"
+        >
+          {selectedCard.isArchived ? (
+            <>
+              <ArrowUpCircle size={16} className="text-blue-600" />
+              <span>보드로 이동</span>
+            </>
+          ) : (
+            <>
+              <Archive size={16} className="text-orange-600" />
+              <span>아카이브로 이동</span>
+            </>
+          )}
+        </button>
+
         <button
           onClick={handleDeleteCard}
           className="flex w-full items-center gap-2 rounded-md bg-gray-100 px-3 py-1.5 text-sm font-medium text-red-500 transition-colors hover:cursor-pointer hover:bg-red-100"
         >
           <Trash2 size={14} />
-          <span>휴지통</span>
+          <span>카드 삭제</span>
         </button>
       </div>
     </div>

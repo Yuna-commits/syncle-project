@@ -159,6 +159,27 @@ public class CardServiceImpl implements CardService {
         return response;
     }
 
+    // 카드 아카이브 변경
+    @Override
+    @Transactional
+    public void updateArchiveStatus(Long cardId, boolean isArchived, Long userId) {
+
+        // 카드 조회
+        CardVo card = findCardOrThrow(cardId);
+
+        // 권한 검증 & 보드 id 조회
+        Long boardId = validateListAndPermission(card.getListId(), userId, false);
+
+        // 업데이트 된 카드 정보 조회
+        CardResponse response = cardMapper.findCardDetailById(card.getId());
+
+        // 소켓 전송
+        socketSender.sendSocketMessage(boardId, "CARD_UPDATE", userId, response);
+
+        // 업데이트
+        cardMapper.updateCardArchiveStatus(cardId, isArchived);
+    }
+
     // 카드 삭제
     @Override
     @Transactional

@@ -87,6 +87,7 @@ const normalizeBoardData = (dto) => {
         isComplete: card.isComplete || false,
         label: card.label,
         labelColor: card.labelColor,
+        isArchived: card.isArchived,
 
         // 댓글 트리
         comments: treeComments,
@@ -139,6 +140,7 @@ const normalizeBoardData = (dto) => {
       id: list.id,
       title: list.title,
       order: list.orderIndex,
+      isArchived: list.isArchived,
       // 카드 매핑 (CardResponse -> UI Card Object)
       tasks: activeTasks,
     }

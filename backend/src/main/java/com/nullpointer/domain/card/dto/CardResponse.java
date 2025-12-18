@@ -35,6 +35,7 @@ public class CardResponse {
     private Boolean isComplete;
     private String label;
     private String labelColor;
+    private Boolean isArchived;
     // 담당자 정보
     private Long assigneeId;
     private String assigneeName;
@@ -67,6 +68,7 @@ public class CardResponse {
                 .dueDate(c.getDueDate())
                 .label(c.getLabel())
                 .labelColor(c.getLabelColor())
+                .isArchived(c.getIsArchived())
                 .assigneeId(c.getAssigneeId())
                 .assigneeName(assigneeName)
                 .assigneeProfileImg(assigneeProfileImg)

@@ -103,6 +103,7 @@
             <id property="id" column="list_id"/>
             <result property="title" column="list_title"/>
             <result property="orderIndex" column="list_order"/>
+            <result property="isArchived" column="list_is_archived"/>
 
             <collection property="cards" ofType="CardResponse">
                 <id property="id" column="card_id"/>
@@ -115,6 +116,7 @@
                 <result property="isComplete" column="card_is_complete"/>
                 <result property="label" column="card_label"/>
                 <result property="labelColor" column="card_label_color"/>
+                <result property="isArchived" column="card_is_archived"/>
                 <result property="commentCount" column="card_comment_count"/>
 
                 <result property="assigneeId" column="assignee_id"/>
@@ -162,6 +164,7 @@
                l.id           AS list_id,
                l.title        AS list_title,
                l.order_index  AS list_order,
+               l.is_archived  AS list_is_archived,
 
                c.id           AS card_id,
                c.title        AS card_title,
@@ -173,6 +176,7 @@
                c.is_complete  As card_is_complete,
                c.label        AS card_label,
                c.label_color  AS card_label_color,
+               c.is_archived  AS card_is_archived,
 
                -- 담당자 정보 (user 테이블 조인)
                u.id           AS assignee_id,

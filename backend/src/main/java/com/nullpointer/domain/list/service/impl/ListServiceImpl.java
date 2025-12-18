@@ -134,6 +134,27 @@ public class ListServiceImpl implements ListService {
 
     @Override
     @Transactional
+    public void updateArchiveStatus(Long listId, boolean isArchived, Long userId) {
+        // 리스트 존재 확인 & 보드 id 조회
+        ListVo list = listMapper.findById(listId).orElseThrow(() -> new BusinessException(ErrorCode.BOARD_NOT_FOUND));
+
+        // 작업 권한 확인 -> VIEWER 불가
+        memberVal.validateBoardEditor(list.getBoardId(), userId);
+
+        // 업데이트
+        listMapper.updateListArchiveStatus(listId, isArchived);
+
+        // 변경된 리스트 정보 저장
+        Map<String, Object> data = new HashMap<>();
+        data.put("id", listId);
+        data.put("isArchived", isArchived);
+
+        // 소켓 전송
+        socketSender.sendSocketMessage(list.getBoardId(), "LIST_UPDATE", userId, data);
+    }
+
+    @Override
+    @Transactional
     public void deleteList(Long listId, Long userId) {
         // 리스트 존재 확인 & 보드 id 조회
         ListVo list = listMapper.findById(listId).orElseThrow(() -> new BusinessException(ErrorCode.BOARD_NOT_FOUND));
@@ -149,7 +170,7 @@ public class ListServiceImpl implements ListService {
 
         // 삭제된 리스트 정보 저장
         Map<String, Object> data = new HashMap<>();
-        data.put("listId", listId);
+        data.put("id", listId);
 
         // 소켓 전송
         socketSender.sendSocketMessage(list.getBoardId(), "LIST_DELETE", userId, data);

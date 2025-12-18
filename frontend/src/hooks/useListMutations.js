@@ -112,6 +112,20 @@ export const useListMutations = (boardId) => {
     onSettled: () => queryClient.invalidateQueries({ queryKey }),
   })
 
+  // 리스트 아카이브 상태 변경
+  const updateListArchiveStatusMutation = useMutation({
+    mutationFn: ({ listId, isArchived }) =>
+      boardApi.updateListArchiveStatus(listId, isArchived),
+    onSuccess: () => {
+      // 보드 상세 데이터를 다시 불러와 화면을 갱신합니다.
+      queryClient.invalidateQueries({ queryKey: ['board', boardId] })
+    },
+    onError: (error) => {
+      console.error('리스트 아카이브 상태 변경 실패:', error)
+      alert('상태 변경에 실패했습니다.')
+    },
+  })
+
   // 리스트 삭제
   const deleteListMutation = useMutation({
     mutationFn: (listId) => boardApi.deleteList(listId),
@@ -137,6 +151,7 @@ export const useListMutations = (boardId) => {
     moveList: moveListMutation.mutate,
     addList: addListMutation.mutate,
     updateList: updateListMutation.mutate,
+    updateListArchiveStatus: updateListArchiveStatusMutation.mutate,
     deleteList: deleteListMutation.mutate,
   }
 }
