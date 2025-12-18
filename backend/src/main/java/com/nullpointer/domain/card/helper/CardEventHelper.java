@@ -88,6 +88,7 @@ public class CardEventHelper {
                 .cardId(card.getId())
                 .cardTitle(card.getTitle())
                 .boardId(boardId)
+                .listId(card.getListId())
                 .actorId(actor.getId())
                 .actorNickname(actor.getNickname()) // 알림 메시지용 이름
                 .actorProfileImg(actor.getProfileImg())
@@ -97,6 +98,24 @@ public class CardEventHelper {
                 .dueDate(card.getDueDate())
                 .eventType(type)
                 .changedFields(changedFields)
+                .build();
+
+        publisher.publishEvent(event);
+    }
+
+    // [이벤트] 파일 업로드 이벤트 발행
+    public void publishFileAttachment(UserVo actor, CardVo card, Long boardId, String fileName) {
+        CardEvent event = CardEvent.builder()
+                .cardId(card.getId())
+                .cardTitle(card.getTitle())
+                .boardId(boardId)
+                .listId(card.getListId())
+                .actorId(actor.getId())
+                .actorNickname(actor.getNickname()) // 알림 메시지용 이름
+                .actorProfileImg(actor.getProfileImg())
+                .assigneeId(card.getAssigneeId())
+                .eventType(CardEvent.EventType.ATTACHMENT)
+                .changedFields(Set.of(fileName)) // 파일명
                 .build();
 
         publisher.publishEvent(event);
