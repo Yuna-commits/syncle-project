@@ -1,5 +1,6 @@
 package com.nullpointer.domain.file.service.impl;
 
+import com.nullpointer.domain.card.helper.CardEventHelper;
 import com.nullpointer.domain.card.mapper.CardMapper;
 import com.nullpointer.domain.card.vo.CardVo;
 import com.nullpointer.domain.file.dto.FileResponse;
@@ -10,6 +11,8 @@ import com.nullpointer.domain.file.vo.FileVo;
 import com.nullpointer.domain.file.vo.enums.FileType;
 import com.nullpointer.domain.list.mapper.ListMapper;
 import com.nullpointer.domain.list.vo.ListVo;
+import com.nullpointer.domain.user.mapper.UserMapper;
+import com.nullpointer.domain.user.vo.UserVo;
 import com.nullpointer.global.common.SocketSender;
 import com.nullpointer.global.common.enums.ErrorCode;
 import com.nullpointer.global.exception.BusinessException;
@@ -28,9 +31,11 @@ public class FileServiceImpl implements FileService {
     private final FileMapper fileMapper;
     private final CardMapper cardMapper;
     private final ListMapper listMapper;
+    private final UserMapper userMapper;
     private final MemberValidator memberValidator;
     private final S3FileStorageService fileStorageService;
     private final SocketSender socketSender;
+    private final CardEventHelper cardEventHelper;
 
     @Override
     @Transactional
@@ -38,6 +43,8 @@ public class FileServiceImpl implements FileService {
         // 1. 카드 존재 여부 확인
         CardVo card = cardMapper.findById(cardId)
                 .orElseThrow(() -> new BusinessException(ErrorCode.CARD_NOT_FOUND));
+        UserVo actor = userMapper.findById(userId)
+                .orElseThrow(() -> new BusinessException(ErrorCode.USER_NOT_FOUND));
 
         // 2. 권한 검증
         Long boardId = validateCardAndPermission(cardId, userId);
@@ -57,6 +64,7 @@ public class FileServiceImpl implements FileService {
 
         fileMapper.insertFile(fileVo);
 
+        cardEventHelper.publishFileAttachment(actor, card, boardId, fileVo.getFileName());
 
         // 5. 응답 반환
         // 파일 다운로드 URL 생성

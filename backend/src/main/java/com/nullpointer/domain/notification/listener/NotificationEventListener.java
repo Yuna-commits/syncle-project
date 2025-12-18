@@ -79,8 +79,8 @@ public class NotificationEventListener {
             case MENTION:
                 receiverId = event.getTargetUserId(); // 멘션된 사람에게 알림
                 type = NotificationType.MENTION;
-                message = String.format("'%s'님이 회원님을 언급했습니다:%s",
-                        event.getActorNickname(), getSafeSubstring(event.getCommentContent(), 20));
+                message = String.format("회원님을 언급했습니다:%s",
+                        getSafeSubstring(event.getCommentContent(), 20));
                 break;
             case CHECKLIST:
                 // 완료일 때만 알림 발송
@@ -95,6 +95,13 @@ public class NotificationEventListener {
                 receiverId = event.getAssigneeId(); // 담당자에게 알림
                 type = NotificationType.DEADLINE_NEAR;
                 message = String.format("담당 카드 '%s'의 마감이 임박했습니다.", event.getCardTitle());
+                break;
+            case ATTACHMENT:
+                String fileName = event.getChangedFields().iterator().next();
+                receiverId = event.getAssigneeId();
+                type = NotificationType.FILE_UPLOAD;
+                message = String.format("담당 카드 '%s'에 파일을 첨부했습니다.: %s",
+                        event.getCardTitle(), fileName);
                 break;
             default:
                 return;
@@ -142,39 +149,33 @@ public class NotificationEventListener {
         // 메시지 및 링크 생성
         switch (event.getType()) {
             case TEAM_INVITE:
-                message = String.format("'%s'님이 회원님을 '%s' 팀에 초대했습니다.",
-                        event.getSenderNickname(), event.getTargetName());
+                message = String.format("회원님을 '%s' 팀에 초대했습니다.", event.getTargetName());
                 targetUrl = "/teams/" + event.getTargetId() + "/boards"; // 팀 페이지로 이동
                 break;
             case BOARD_INVITE:
-                message = String.format("'%s'님이 회원님을 '%s' 보드에 추가했습니다.",
-                        event.getSenderNickname(), event.getTargetName());
+                message = String.format("회원님을 '%s' 보드에 추가했습니다.", event.getTargetName());
                 targetUrl = "/board/" + event.getTargetId(); // 해당 보드로 이동
                 break;
             case INVITE_ACCEPTED:
-                message = String.format("'%s'님이 '%s' 팀 초대를 수락했습니다.",
-                        event.getSenderNickname(), event.getTargetName());
+                message = String.format("'%s' 팀 초대를 수락했습니다.", event.getTargetName());
                 targetUrl = "/teams/" + event.getTargetId() + "/members"; // 팀 멤버 목록 페이지로 이동
                 break;
             case INVITE_REJECTED:
-                message = String.format("'%s'님이 '%s' 팀 초대를 거절했습니다.",
-                        event.getSenderNickname(), event.getTargetName());
+                message = String.format("'%s' 팀 초대를 거절했습니다.", event.getTargetName());
                 targetUrl = "/teams/" + event.getTargetId() + "/members"; // 팀 멤버 목록 페이지로 이동
                 break;
             case TEAM_MEMBER_KICKED:
                 message = String.format("'%s' 팀에서 제외되었습니다.", event.getTargetName());
                 break;
             case TEAM_MEMBER_LEFT:
-                message = String.format("'%s'님이 '%s' 팀을 떠났습니다.",
-                        event.getSenderNickname(), event.getTargetName());
+                message = String.format("'%s' 팀을 떠났습니다.", event.getTargetName());
                 targetUrl = "/teams/" + event.getTargetId() + "/members"; // 팀 멤버 목록 페이지로 이동
                 break;
             case BOARD_MEMBER_KICKED:
                 message = String.format("'%s' 보드에서 제외되었습니다.", event.getTargetName());
                 break;
             case BOARD_MEMBER_LEFT:
-                message = String.format("'%s'님이 '%s' 보드를 떠났습니다.",
-                        event.getSenderNickname(), event.getTargetName());
+                message = String.format("'%s' 보드를 떠났습니다.", event.getTargetName());
                 targetUrl = "/board/" + event.getTargetId(); // 해당 보드로 이동
                 break;
             default:

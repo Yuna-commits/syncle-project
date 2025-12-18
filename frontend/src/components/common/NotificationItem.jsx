@@ -151,11 +151,12 @@ export default function NotificationItem({
 
   const renderMessageContent = () => {
     const { message, type } = notification
-    // 댓글/답글/멘션 타입인 경우 '알림 문구'와 '내용'을 분리
+    // 댓글/답글/멘션/파일첨부 타입인 경우 '알림 문구'와 '내용'을 분리
     if (
       type.includes('COMMENT') ||
       type === 'MENTION' ||
-      type === 'CHECKLIST_COMPLETED'
+      type === 'CHECKLIST_COMPLETED' ||
+      type === 'FILE_UPLOAD'
     ) {
       const separatorIndex = message.indexOf(':') // 첫 번째 ':' 위치 찾음
 
