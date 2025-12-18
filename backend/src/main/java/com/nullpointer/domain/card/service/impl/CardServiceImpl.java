@@ -11,7 +11,8 @@ import com.nullpointer.domain.card.service.CardService;
 import com.nullpointer.domain.card.vo.CardVo;
 import com.nullpointer.domain.list.mapper.ListMapper;
 import com.nullpointer.domain.list.vo.ListVo;
-import com.nullpointer.domain.notification.event.CardEvent;
+import com.nullpointer.domain.user.mapper.UserMapper;
+import com.nullpointer.domain.user.vo.UserVo;
 import com.nullpointer.global.common.SocketSender;
 import com.nullpointer.global.common.enums.ErrorCode;
 import com.nullpointer.global.exception.BusinessException;
@@ -28,6 +29,7 @@ public class CardServiceImpl implements CardService {
 
     private final CardMapper cardMapper;
     private final ListMapper listMapper;
+    private final UserMapper userMapper;
 
     private final MemberValidator memberVal;
     private final CardOrderManager cardOrderManager;
@@ -84,6 +86,9 @@ public class CardServiceImpl implements CardService {
         // 권한 검증 & 보드 id 조회
         Long boardId = validateListAndPermission(req.getListId(), userId, false);
 
+        UserVo actor = userMapper.findById(userId)
+                .orElseThrow(() -> new BusinessException(ErrorCode.USER_NOT_FOUND));
+
         // 순서 및 리스트 변경
         cardOrderManager.moveCardOrder(card, req.getListId(), req.getOrderIndex());
 
@@ -96,14 +101,8 @@ public class CardServiceImpl implements CardService {
         // 소켓 전송
         socketSender.sendSocketMessage(boardId, "CARD_MOVE", userId, data);
 
-        // [이벤트] 카드 이동 알림 발행 (담당자가 있고, 본인이 담당자가 아닐 때)
-        if (card.getAssigneeId() != null) {
-            // 이동한 '새로운 리스트'의 정보 조회
-            ListVo targetList = listMapper.findById(req.getListId())
-                    .orElseThrow(() -> new BusinessException(ErrorCode.BOARD_NOT_FOUND));
-
-            cardEventHelper.publishCardEvent(card, boardId, userId, CardEvent.EventType.MOVED, null, targetList.getId());
-        }
+        // [이벤트] 카드 이동 알림 발행 (담당자가 있고, 본인이 담당자가 아닐 때 <- 내부에서 검증)
+        cardEventHelper.publishCardMoveEvent(actor, card, boardId, req.getListId());
     }
 
     // 카드 수정
@@ -115,13 +114,16 @@ public class CardServiceImpl implements CardService {
         // 권한 검증 & 보드 id 조회
         Long boardId = validateListAndPermission(card.getListId(), userId, false);
 
+        UserVo actor = userMapper.findById(userId)
+                .orElseThrow(() -> new BusinessException(ErrorCode.USER_NOT_FOUND));
+
         Set<String> changedFields = new HashSet<>();
 
         // 주요 필드 변경 감지 & 카드 객체 업데이트
         boolean isAssigneeChanged = applyChanges(card, req, boardId, changedFields);
 
         // [이벤트] 카드 설명 변경 시 멘션 알림 발행
-        cardEventHelper.processDescriptionMentions(card, req.getDescription(), userId, boardId);
+        cardEventHelper.processDescriptionMentions(actor, card, boardId, req.getDescription());
 
         // 카드 정보 업데이트
         CardVo updateVo = CardVo.builder()
@@ -150,11 +152,7 @@ public class CardServiceImpl implements CardService {
         socketSender.sendSocketMessage(boardId, "CARD_UPDATE", userId, response);
 
         // [이벤트] 카드 변경 알림 발행
-        if (!changedFields.isEmpty()) {
-            cardEventHelper.publishCardEvent(card, boardId, userId,
-                    isAssigneeChanged ? CardEvent.EventType.ASSIGNED : CardEvent.EventType.UPDATED,
-                    changedFields, null);
-        }
+        cardEventHelper.publishCardUpdateEvent(actor, card, boardId, changedFields, isAssigneeChanged);
 
         return response;
     }
