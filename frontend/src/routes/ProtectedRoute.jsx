@@ -11,29 +11,41 @@ export default function ProtectedRoute() {
   const location = useLocation()
   let isAuthenticated = false
 
+  console.log('🛡️ [ProtectedRoute] 토큰 진입:', token)
+
   // 토큰이 존재할 때 검증 수행
   if (token) {
     try {
       // 토큰 디코딩
       const decoded = jwtDecode(token)
-
       // 현재 시간 구하기 (ms -> s 변환)
       const currentTime = Date.now() / 1000
 
+      console.log(`⏰ 만료시간: ${decoded.exp}, 현재: ${currentTime}`)
       // 만료 시간 비교 (exp > 현재 시간일 때 유효)
       if (decoded.exp > currentTime) {
         isAuthenticated = true
       } else {
+        console.warn('❌ [ProtectedRoute] 토큰 만료됨! 삭제 실행')
         // 만료된 경우 스토리지 비우기
         localStorage.removeItem('accessToken')
+        localStorage.removeItem('refreshToken')
         sessionStorage.removeItem('accessToken')
-        console.log('토큰이 만료되어 접근이 거부되었습니다.')
+        sessionStorage.removeItem('refreshToken')
       }
     } catch (error) {
+      console.error('❌ [ProtectedRoute] 토큰 해석 실패! 삭제 실행', error)
       // 토큰 형식이 올바르지 않은 경우
-      console.error('유효하지 않은 토큰입니다.', error)
       isAuthenticated = false
+
+      // 잘못된 토큰 삭제
+      localStorage.removeItem('accessToken')
+      localStorage.removeItem('refreshToken')
+      sessionStorage.removeItem('accessToken')
+      sessionStorage.removeItem('refreshToken')
     }
+  } else {
+    console.log('❌ [ProtectedRoute] 토큰 아예 없음')
   }
 
   // 로그인 상태면 자식 라우트 렌더링, 비로그인 상태면 로그인 페이지 리다이렉트

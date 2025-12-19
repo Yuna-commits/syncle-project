@@ -1,13 +1,8 @@
 import React from 'react'
 import AppRoutes from './routes/AppRoutes'
 import { ToastContainer } from 'react-toastify'
-import { useGlobalSocket } from './hooks/useGlobalSocket'
 
 export default function App() {
-  // 전역 소켓 연결 & 알림 구독 시작
-  // 로그인 상태이면 소켓을 연결하고 '/user/queue/notifications' 구독
-  useGlobalSocket()
-
   return (
     <>
       <AppRoutes />

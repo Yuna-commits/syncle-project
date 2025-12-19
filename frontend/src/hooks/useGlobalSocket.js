@@ -7,7 +7,7 @@ import { useNotificationSettings } from './notification/useNotificationSettings'
 
 export const useGlobalSocket = () => {
   const queryClient = useQueryClient()
-  const { data: user, isLoading, refetch } = useAuthQuery()
+  const { data: user, isLoading } = useAuthQuery()
 
   // 토스트 훅 가져오기
   const { showToast } = useToast()
@@ -26,13 +26,8 @@ export const useGlobalSocket = () => {
   const subscriptionRef = useRef(null)
 
   useEffect(() => {
-    if (!user) {
-      // 사용자 정보가 없으면 refetch 시도
-      if (!isLoading) {
-        refetch()
-      }
-      return
-    }
+    // user가 없으면 소켓 연결 x
+    if (!user) return
 
     // 메시지 처리 핸들러
     const handleMessage = (message) => {
@@ -129,5 +124,5 @@ export const useGlobalSocket = () => {
     }
 
     // 페이지 이동 시 연결 유지하기 위해 disconnect 생략
-  }, [user, isLoading, refetch, queryClient, showToast])
+  }, [user, isLoading, queryClient, showToast])
 }

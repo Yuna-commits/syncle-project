@@ -6,7 +6,7 @@ import { GoogleLogin } from '@react-oauth/google'
 import { useAuthMutations } from '../../hooks/auth/useAuthMutations'
 import { useForm } from 'react-hook-form'
 
-export default function SignIn() {
+export default function SignInPage() {
   const location = useLocation() // 위치 훅
   const from = location.state?.from || '/'
 

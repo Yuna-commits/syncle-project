@@ -4,8 +4,6 @@ import SignInPage from '../pages/auth/SignInPage'
 import SignUpPage from '../pages/auth/SignUpPage'
 import ResetPasswordPage from '../pages/auth/ResetPasswordPage'
 import AuthLayout from '../layouts/AuthLayout'
-import EmailVerificationPage from '../pages/auth/EmailVerificationPage'
-import InviteAcceptPage from '../pages/auth/InviteAcceptPage'
 
 export default function AuthRoutes() {
   return (

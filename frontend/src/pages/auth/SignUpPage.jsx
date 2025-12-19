@@ -4,7 +4,7 @@ import useSignUpStore from '../../stores/auth/useSignUpStore'
 import Step1Form from './signup/Step1Form'
 import Step2Form from './signup/Step2Form'
 
-export default function SignUp() {
+export default function SignUpPage() {
   // Zustand Store에서 상태와 액션 꺼내기
   const { step, reset } = useSignUpStore()
 
