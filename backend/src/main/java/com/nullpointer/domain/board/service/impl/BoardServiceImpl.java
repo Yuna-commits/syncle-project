@@ -29,6 +29,7 @@ import com.nullpointer.domain.user.vo.UserVo;
 import com.nullpointer.global.common.SocketSender;
 import com.nullpointer.global.common.enums.ErrorCode;
 import com.nullpointer.global.exception.BusinessException;
+import com.nullpointer.global.util.RedisUtil;
 import com.nullpointer.global.validator.BoardValidator;
 import com.nullpointer.global.validator.MemberValidator;
 import com.nullpointer.global.validator.TeamValidator;
@@ -38,6 +39,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
+import java.util.UUID;
 
 @Service
 @RequiredArgsConstructor
@@ -57,6 +59,7 @@ public class BoardServiceImpl implements BoardService {
     private final SocketSender socketSender;
     private final S3FileStorageService s3FileStorageService;
     private final UserMapper userMapper;
+    private final RedisUtil redisUtil;
 
     /**
      * 보드 권한
@@ -337,6 +340,24 @@ public class BoardServiceImpl implements BoardService {
                 .teamMembers(teamMembers)
                 .isFavorite(isFavorite)
                 .build();
+    }
+
+    @Override
+    public String createShareToken(Long boardId, Long userId) {
+        // 1. 권한 체크: 보드 관리자(OWNER) 혹은 멤버인지 확인
+        // 보드를 볼 수 있는 권한이 있는 사람만 공유 링크를 생성할 수 있도록 제한합니다.
+        memberVal.validateBoardViewer(boardId, userId);
+
+        // 2. 고유 토큰 생성
+        String token = UUID.randomUUID().toString();
+
+        // 3. Redis에 토큰 저장
+        // 키 형식: "board_invite:{token}"
+        // 값: boardId
+        String redisKey = "board_invite:" + token;
+        redisUtil.setDataExpire(redisKey, boardId.toString(), 86400L); // 86400초 = 24시간
+
+        return token;
     }
 
     /**

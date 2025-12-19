@@ -11,8 +11,10 @@ import com.nullpointer.domain.invitation.service.InvitationEmailService;
 import com.nullpointer.domain.invitation.service.InvitationService;
 import com.nullpointer.domain.invitation.vo.InvitationVo;
 import com.nullpointer.domain.invitation.vo.enums.Status;
+import com.nullpointer.domain.member.mapper.BoardMemberMapper;
 import com.nullpointer.domain.member.mapper.TeamMemberMapper;
 import com.nullpointer.domain.member.service.TeamMemberService;
+import com.nullpointer.domain.member.vo.BoardMemberVo;
 import com.nullpointer.domain.member.vo.enums.Role;
 import com.nullpointer.domain.notification.event.InvitationEvent;
 import com.nullpointer.domain.notification.vo.enums.NotificationType;
@@ -20,6 +22,7 @@ import com.nullpointer.domain.team.mapper.TeamMapper;
 import com.nullpointer.domain.team.vo.TeamVo;
 import com.nullpointer.domain.user.mapper.UserMapper;
 import com.nullpointer.domain.user.vo.UserVo;
+import com.nullpointer.global.common.SocketSender;
 import com.nullpointer.global.common.enums.ErrorCode;
 import com.nullpointer.global.common.enums.RedisKeyType;
 import com.nullpointer.global.exception.BusinessException;
@@ -48,7 +51,9 @@ public class InvitationServiceImpl implements InvitationService {
     private final MemberValidator memberValidator;
     private final ActivityService activityService;
     private final TeamMemberMapper teamMemberMapper;
+    private final BoardMemberMapper boardMemberMapper;
     private final ApplicationEventPublisher publisher;
+    private final SocketSender socketSender;
 
     @Value("${app.domain.frontend}")
     private String frontendUrl;
@@ -290,6 +295,37 @@ public class InvitationServiceImpl implements InvitationService {
         if (invitation.getToken() != null) {
             redisUtil.deleteData(RedisKeyType.INVITATION.getKey(invitation.getToken()));
         }
+    }
+
+    @Override
+    @Transactional
+    public Long joinBoardByToken(String token, Long userId) {
+
+        Object data = redisUtil.getData("board_invite:" + token);
+        if (data == null) {
+            throw new BusinessException(ErrorCode.INVITATION_NOT_FOUND);
+        }
+
+        Long boardId = Long.parseLong(data.toString());
+
+        // 이미 멤버인지 확인
+        if (boardMemberMapper.existsByBoardIdAndUserId(boardId, userId)) {
+            throw new BusinessException(ErrorCode.MEMBER_ALREADY_EXISTS);
+        }
+
+        // VIEWER 권한으로 보드 멤버 등록
+        BoardMemberVo member = BoardMemberVo.builder()
+                .boardId(boardId)
+                .userId(userId)
+                .role(Role.VIEWER)
+                .build();
+
+        boardMemberMapper.insertBoardMember(member);
+
+        // 소켓 전송
+        socketSender.sendSocketMessage(boardId, "MEMBER_JOIN", userId, member);
+
+        return boardId;
     }
 
     /**

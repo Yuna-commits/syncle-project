@@ -19,5 +19,4 @@ public interface BoardMemberService {
 
     // 보드 탈퇴
     void deleteBoardMember(Long boardId, Long memberId, Long userId);
-
 }

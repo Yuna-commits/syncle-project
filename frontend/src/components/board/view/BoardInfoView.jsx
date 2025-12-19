@@ -23,7 +23,7 @@ function BoardInfoView({ board, isOwner }) {
   }
 
   return (
-    <form onSubmit={handleSubmit} className="space-y-4 py-2">
+    <form onSubmit={handleSubmit} className="mx-1 space-y-4 py-2">
       {/* 보드 오너 정보 */}
       <div className="rounded-lg border border-gray-200 bg-gray-50 p-3">
         <label className="mb-2 block text-xs font-bold text-gray-500 uppercase">

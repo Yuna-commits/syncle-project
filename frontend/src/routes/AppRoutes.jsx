@@ -12,6 +12,7 @@ import DashboardPage from '../pages/dashboard/DashboardPage'
 import NotificationPage from '../pages/user/NotificationPage'
 import CalendarPage from '../pages/user/CalendarPage'
 import EmailVerificationPage from '../pages/auth/EmailVerificationPage'
+import BoardJoinPage from '../pages/auth/BoardJoinPage'
 
 export default function AppRoutes() {
   return (
@@ -50,6 +51,8 @@ export default function AppRoutes() {
         <Route path="/board/*" element={<BoardRoutes />} />
         {/* 팀 초대 */}
         <Route path="/invite/accept" element={<InviteAcceptPage />} />
+        {/* 보드 공유 URL 초대 */}
+        <Route path="board/join" element={<BoardJoinPage />} />
       </Route>
     </Routes>
   )

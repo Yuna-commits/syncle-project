@@ -75,4 +75,12 @@ public class InvitationController {
         invitationService.removeInvitation(invitationId, userId);
         return ApiResponse.success("팀 초대를 취소했습니다.");
     }
+
+    // 공유 링크 Viewer 초대
+    @Operation(summary = "공유 링크를 통한 보드 참여", description = "공유 토큰을 통해 회원이 VIEWER 권한으로 보드에 참여합니다.")
+    @PostMapping("/boards/join")
+    public ApiResponse<Long> joinBoardViaLink(@RequestParam("token") String token, @LoginUser Long userId) {
+        Long boardId = invitationService.joinBoardByToken(token, userId);
+        return ApiResponse.success(boardId);
+    }
 }

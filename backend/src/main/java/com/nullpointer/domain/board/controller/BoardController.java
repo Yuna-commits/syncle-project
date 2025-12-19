@@ -136,4 +136,12 @@ public class BoardController {
     public ApiResponse<BoardViewResponse> getBoardView(@PathVariable Long boardId, @LoginUser Long userId) {
         return ApiResponse.success(boardService.getBoardView(boardId, userId));
     }
+
+    // 공유 링크 생성
+    @Operation(summary = "보드 공유 링크 생성", description = "VIEWER 멤버 초대를 위한 공유 링크 생성")
+    @PostMapping("/boards/{boardId}/share-link")
+    public ApiResponse<String> generateShareLink(@PathVariable Long boardId, @LoginUser Long userId) {
+        String token = boardService.createShareToken(boardId, userId);
+        return ApiResponse.success(token);
+    }
 }

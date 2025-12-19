@@ -20,6 +20,7 @@ import com.nullpointer.domain.user.vo.UserVo;
 import com.nullpointer.global.common.SocketSender;
 import com.nullpointer.global.common.enums.ErrorCode;
 import com.nullpointer.global.exception.BusinessException;
+import com.nullpointer.global.util.RedisUtil;
 import com.nullpointer.global.validator.MemberValidator;
 import lombok.RequiredArgsConstructor;
 import org.springframework.context.ApplicationEventPublisher;
@@ -43,6 +44,7 @@ public class BoardMemberServiceImpl implements BoardMemberService {
     private final ActivityService activityService;
     private final SocketSender socketSender;
     private final ApplicationEventPublisher publisher;
+    private final RedisUtil redisUtil;
 
     /**
      * 보드 멤버 관리 권한

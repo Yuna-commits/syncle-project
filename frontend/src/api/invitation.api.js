@@ -19,4 +19,7 @@ export const invitationApi = {
   // 팀 멤버 초대 (이메일 발송)
   inviteToTeam: (teamId, data) =>
     api.post(`/invitations/teams/${teamId}`, data),
+  // 공유 링크로 보드 참여
+  acceptBoardInvitation: (token) =>
+    api.post('/invitations/boards/join', null, { params: { token } }),
 }

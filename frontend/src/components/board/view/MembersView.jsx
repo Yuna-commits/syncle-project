@@ -3,6 +3,7 @@ import { useMemberMutations } from '../../../hooks/useMemberMutations'
 import { useAuthQuery } from '../../../hooks/auth/useAuthQuery'
 import { useState } from 'react'
 import BoardRoleSelect from './BoardRoleSelect'
+import { useBoardDisplayMembers } from '../../../utils/useBoardDisplayMembers'
 
 function MembersView({ board, isOwner }) {
   const { changeMemberRole, removeMember } = useMemberMutations(board.id)
@@ -12,7 +13,7 @@ function MembersView({ board, isOwner }) {
   const isPrivate = board?.visibility === 'PRIVATE'
 
   // 공개 범위에 따라 멤버 목록 다름
-  const allMembers = isPrivate ? board.members || [] : board.teamMembers || []
+  const allMembers = useBoardDisplayMembers(board)
 
   // 검색 필터링
   const members = allMembers.filter(
@@ -48,7 +49,7 @@ function MembersView({ board, isOwner }) {
 
   return (
     <div className="space-y-4 py-2">
-      <div className="relative">
+      <div className="relative mx-1">
         <div className="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3">
           <Search size={14} className="text-gray-400" />
         </div>
@@ -57,7 +58,7 @@ function MembersView({ board, isOwner }) {
           value={keyword}
           onChange={(e) => setKeyword(e.target.value)}
           placeholder="멤버 검색..."
-          className="w-full rounded-md border border-gray-300 bg-gray-50 px-3 py-1.5 text-sm focus:bg-white focus:ring-1 focus:ring-blue-500 focus:outline-none"
+          className="w-full rounded-md border border-gray-300 bg-gray-50 px-1 py-1.5 pl-9 text-sm focus:bg-white focus:ring-1 focus:ring-blue-500 focus:outline-none"
         />
       </div>
 

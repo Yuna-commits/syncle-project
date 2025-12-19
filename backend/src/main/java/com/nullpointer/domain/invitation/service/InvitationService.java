@@ -18,4 +18,6 @@ public interface InvitationService {
     List<MyInvitationResponse> getMyInvitations(Long userId);
 
     void removeInvitation(Long invitationId, Long userId);
+
+    Long joinBoardByToken(String token, Long userId);
 }

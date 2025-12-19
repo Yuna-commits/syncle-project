@@ -19,7 +19,7 @@ function VisibilityView({ board, isOwner }) {
   }
 
   return (
-    <form onSubmit={handleSubmit} className="space-y-4 py-2">
+    <form onSubmit={handleSubmit} className="mx-1 space-y-4 py-2">
       <div className="space-y-3">
         <RadioOption
           value="PRIVATE"

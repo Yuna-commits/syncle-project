@@ -5,6 +5,7 @@ import InviteBoardMemeberModal from '../modals/board/InviteBoardMemeberModal'
 import { useBoardMutations } from '../../hooks/board/useBoardMutations'
 import { Lock, Globe, MoreHorizontal, Plus, Share2, Star } from 'lucide-react'
 import BoardFilter from '../sidebar/BoardFilter'
+import { useBoardDisplayMembers } from '../../utils/useBoardDisplayMembers'
 
 function BoardHeader({ board }) {
   // UI 상태 제어 함수 (Store)
@@ -15,7 +16,8 @@ function BoardHeader({ board }) {
   const [isFilterOpen, setIsFilterOpen] = useState(false)
 
   // 데이터 변형 훅 (React Query)
-  const { toggleFavorite } = useBoardMutations(board.id)
+  const { toggleFavorite, createShareToken, isCreatingToken } =
+    useBoardMutations(board.id)
 
   // 모달 상태 관리
   const [isInviteModalOpen, setIsInviteModalOpen] = useState(false)
@@ -24,10 +26,8 @@ function BoardHeader({ board }) {
   const teamInitial = teamName.substring(0, 1).toUpperCase()
   const isPrivate = board.visibility === 'PRIVATE'
 
-  // 표시할 멤버 목록 결정
-  const membersToDisplay = isPrivate
-    ? board.members || []
-    : board.teamMembers || []
+  // 멤버 리스트 계산 로직
+  const membersToDisplay = useBoardDisplayMembers(board)
 
   // 아바타 스택 (최대 3명 + 나머지)
   const MAX_DISPLAY = 3
@@ -166,9 +166,13 @@ function BoardHeader({ board }) {
           </button>
 
           {/* 공유 버튼 */}
-          <button className="flex items-center gap-1.5 rounded-md bg-blue-600 px-3 py-1.5 text-sm font-medium text-white shadow-sm transition-all hover:cursor-pointer hover:bg-blue-700 active:scale-95">
+          <button
+            onClick={() => createShareToken()}
+            disabled={isCreatingToken}
+            className="flex items-center gap-1.5 rounded-md bg-blue-600 px-3 py-1.5 text-sm font-medium text-white shadow-sm transition-all hover:cursor-pointer hover:bg-blue-700 active:scale-95"
+          >
             <Share2 size={16} />
-            <span>공유</span>
+            {isCreatingToken ? '생성 중...' : '공유'}
           </button>
 
           {/* 더보기 메뉴 */}

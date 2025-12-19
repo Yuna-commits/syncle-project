@@ -14,6 +14,8 @@ export const boardApi = {
   deleteBoard: (boardId) => api.delete(`/boards/${boardId}`),
   // 즐겨찾기 토글
   toggleFavorite: (boardId) => api.post(`/boards/${boardId}/favorite`),
+  // 공유 토큰 생성
+  createShareToken: (boardId) => api.post(`/boards/${boardId}/share-link`),
 
   // 보드 멤버 초대 (팀 멤버 -> 보드 멤버 추가)
   inviteMember: (boardId, userIds) =>

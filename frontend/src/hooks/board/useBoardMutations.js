@@ -99,10 +99,26 @@ export const useBoardMutations = (boardId) => {
     },
   })
 
+  // 공유 토큰 생성
+  const createShareTokenMutation = useMutation({
+    mutationFn: () => boardApi.createShareToken(boardId),
+    onSuccess: async (response) => {
+      const fullUrl = `${window.location.origin}/board/join?token=${response.data.data}`
+      await navigator.clipboard.writeText(fullUrl)
+      alert('회원 전용 초대 링크가 복사되었습니다.')
+    },
+    onError: (error) => {
+      console.error('토큰 생성 실패:', error)
+      alert('링크 생성 중 오류가 발생했습니다.')
+    },
+  })
+
   return {
     toggleFavorite: toggleFavoriteMutation.mutate,
     createBoard: createBoardMutation.mutate,
     updateBoard: updateBoardMutation.mutate,
     deleteBoard: deleteBoardMutation.mutate,
+    createShareToken: createShareTokenMutation.mutate,
+    isCreatingToken: createShareTokenMutation.isPending,
   }
 }

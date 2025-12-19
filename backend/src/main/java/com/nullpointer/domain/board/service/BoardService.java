@@ -40,4 +40,7 @@ public interface BoardService {
 
     // 보드(리스트 + 카드 + 멤버) 조회
     BoardViewResponse getBoardView(Long boardId, Long userId);
+
+    // 보드 공유 링크 생성
+    String createShareToken(Long boardId, Long userId);
 }

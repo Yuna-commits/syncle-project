@@ -12,6 +12,7 @@ import {
 import { useNavigate } from 'react-router-dom'
 import { useMemberMutations } from '../../../hooks/useMemberMutations'
 import { useAuthQuery } from '../../../hooks/auth/useAuthQuery'
+import { useBoardDisplayMembers } from '../../../utils/useBoardDisplayMembers'
 
 function MainMenuView({
   board,
@@ -26,7 +27,8 @@ function MainMenuView({
   // 멤버 추방/탈퇴
   const { removeMember } = useMemberMutations(board.id)
 
-  const isPrivate = board.visibility === 'PRIVATE'
+  // 멤버 리스트 계산 로직
+  const displayMembers = useBoardDisplayMembers(board)
 
   // 보드 탈퇴 핸들러 (본인이 Owner가 아닐 때 가능)
   const handleLeaveBoard = async () => {
@@ -79,7 +81,7 @@ function MainMenuView({
           <Users size={18} className="text-gray-500" />
           멤버 관리
           <span className="ml-auto text-xs text-gray-400">
-            {isPrivate ? board.members.length : board.teamMembers.length}명
+            {displayMembers.length}명
           </span>
         </button>
         <button
