@@ -1,6 +1,6 @@
 package com.nullpointer.domain.notification.controller;
 
-import com.nullpointer.domain.notification.vo.NotificationDto;
+import com.nullpointer.domain.notification.dto.NotificationDto;
 import com.nullpointer.global.common.ApiResponse;
 import com.nullpointer.global.common.annotation.LoginUser;
 import com.nullpointer.global.common.enums.RedisKeyType;

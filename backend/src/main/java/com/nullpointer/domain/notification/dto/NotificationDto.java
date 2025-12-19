@@ -1,4 +1,4 @@
-package com.nullpointer.domain.notification.vo;
+package com.nullpointer.domain.notification.dto;
 
 import com.nullpointer.domain.notification.vo.enums.NotificationType;
 import lombok.AllArgsConstructor;
