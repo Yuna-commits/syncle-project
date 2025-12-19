@@ -27,5 +27,7 @@ public class BoardVo {
 
     private Boolean isFavorite;
     private LocalDateTime favoritedAt;
+
+    private Boolean isGuest;
 }
 

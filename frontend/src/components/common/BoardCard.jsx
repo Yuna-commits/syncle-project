@@ -1,8 +1,15 @@
 import { useNavigate } from 'react-router-dom'
-import { Star } from 'lucide-react'
+import { Star, Share2 } from 'lucide-react'
 import { useBoardMutations } from '../../hooks/board/useBoardMutations'
 
-function BoardCard({ id, imageUrl, title, isFavorite, onToggleFavorite }) {
+function BoardCard({
+  id,
+  imageUrl,
+  title,
+  isFavorite,
+  isGuest,
+  onToggleFavorite,
+}) {
   const navigate = useNavigate()
   const { toggleFavorite } = useBoardMutations(id)
 
@@ -28,6 +35,13 @@ function BoardCard({ id, imageUrl, title, isFavorite, onToggleFavorite }) {
       {/* 이미지 */}
       <div className="relative h-32 w-full">
         <img src={imageUrl} alt={title} />
+        {/* Guest 뱃지 */}
+        {isGuest && (
+          <div className="absolute top-2 left-2 flex items-center gap-1 rounded-md bg-black/60 px-2 py-1 text-xs font-medium text-white backdrop-blur-sm">
+            <Share2 size={12} />
+            <span>Guest</span>
+          </div>
+        )}
         {/* 즐겨찾기 버튼 */}
         <button
           onClick={handleFavoriteClick}
@@ -45,7 +59,7 @@ function BoardCard({ id, imageUrl, title, isFavorite, onToggleFavorite }) {
           />
         </button>
       </div>
-      <p className="p-3 text-sm">{title}</p>
+      <p className="p-3 text-sm font-medium text-gray-800">{title}</p>
     </div>
   )
 }

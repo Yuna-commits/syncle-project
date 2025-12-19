@@ -3,6 +3,7 @@ import BoardCard from '../common/BoardCard'
 import CreateBoardButton from '../common/CreateBoardButton'
 
 function TeamBoardSection({ team, onBoardCreated }) {
+  const isGuestTeam = team.boards.length > 0 && team.boards[0].isGuest
   return (
     <div className="mb-10">
       {/* 팀 헤더 */}
@@ -27,15 +28,18 @@ function TeamBoardSection({ team, onBoardCreated }) {
             imageUrl="https://picsum.photos/400/200"
             title={board.title}
             isFavorite={board.isFavorite}
+            isGuest={board.isGuest}
             onToggleFavorite={onBoardCreated}
           />
         ))}
 
         {/* 보드 생성 버튼 (팀 ID 전달) */}
-        <CreateBoardButton
-          teamId={team.teamId}
-          onBoardCreated={onBoardCreated}
-        />
+        {!isGuestTeam && (
+          <CreateBoardButton
+            teamId={team.teamId}
+            onBoardCreated={onBoardCreated}
+          />
+        )}
       </div>
     </div>
   )

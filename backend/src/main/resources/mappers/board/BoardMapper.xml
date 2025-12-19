@@ -35,25 +35,46 @@
                b.description,
                b.visibility,
                (bf.board_id IS NOT NULL) AS isFavorite,
-               bf.favorited_at
-
+               bf.favorited_at,
+               FALSE                     AS isGuest
         FROM team t
-                 INNER JOIN team_member tm
-                            ON t.id = tm.team_id
-                 LEFT JOIN board b
-                           ON t.id = b.team_id
-                               AND b.deleted_at IS NULL
-                 LEFT JOIN board_member bm
-                           ON b.id = bm.board_id
-                               AND bm.user_id = #{id} -- 중복 보드 조회 방지를 위해 '내' 정보 표시 조건 추가
-                 LEFT JOIN board_favorite bf
-                           ON b.id = bf.board_id
-                               AND bf.user_id = #{id}
-        WHERE tm.user_id = #{id}
+                 INNER JOIN team_member tm ON t.id = tm.team_id AND tm.user_id = #{id}
+                 LEFT JOIN board b ON t.id = b.team_id
+            AND b.deleted_at IS NULL
+            AND (
+                                          b.visibility = 'TEAM'
+                                              OR (b.visibility = 'PRIVATE' AND EXISTS (
+                                              SELECT 1 FROM board_member bm WHERE bm.board_id = b.id AND bm.user_id = #{id}
+                                          ))
+                                          )
+                 LEFT JOIN board_favorite bf ON b.id = bf.board_id AND bf.user_id = #{id}
+        WHERE t.deleted_at IS NULL
+        <if test="keyword != null and keyword != ''">
+            AND b.title LIKE CONCAT('%', #{keyword}, '%')
+        </if>
+
+        UNION ALL
+
+        SELECT t.id                      AS teamId,
+               t.name                    AS teamName,
+               b.id,
+               b.title,
+               b.description,
+               b.visibility,
+               (bf.board_id IS NOT NULL) AS isFavorite,
+               bf.favorited_at,
+               TRUE                      AS isGuest
+        FROM board b
+                 INNER JOIN team t ON b.team_id = t.id
+                 INNER JOIN board_member bm ON b.id = bm.board_id AND bm.user_id = #{id}
+                 LEFT JOIN team_member tm ON t.id = tm.team_id AND tm.user_id = #{id}
+                 LEFT JOIN board_favorite bf ON b.id = bf.board_id AND bf.user_id = #{id}
+        WHERE b.deleted_at IS NULL
           AND t.deleted_at IS NULL
-          AND (b.visibility = 'TEAM'
-            OR b.visibility = 'PRIVATE'
-                   AND bm.user_id IS NOT NULL)
+          AND tm.user_id IS NULL -- 팀 멤버가 아닌 경우만 조회하여 중복 방지
+        <if test="keyword != null and keyword != ''">
+            AND b.title LIKE CONCAT('%', #{keyword}, '%')
+        </if>
     </select>
 
     <!-- 특정 팀 보드 목록 (+즐겨찾기) 조회 -->

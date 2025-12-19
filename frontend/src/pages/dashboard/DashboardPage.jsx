@@ -20,6 +20,7 @@ function DashboardPage() {
       title: board.title,
       imageUrl: board.imageUrl,
       isFavorite: board.isFavorite,
+      isGuest: board.isGuest,
     }))
 
   // 팀별 그룹화
@@ -41,6 +42,7 @@ function DashboardPage() {
         title: cur.title,
         imageUrl: cur.imageUrl,
         isFavorite: cur.isFavorite,
+        isGuest: cur.isGuest,
       })
     }
     return acc
