@@ -49,9 +49,6 @@
                                           )
                  LEFT JOIN board_favorite bf ON b.id = bf.board_id AND bf.user_id = #{id}
         WHERE t.deleted_at IS NULL
-        <if test="keyword != null and keyword != ''">
-            AND b.title LIKE CONCAT('%', #{keyword}, '%')
-        </if>
 
         UNION ALL
 
@@ -72,9 +69,6 @@
         WHERE b.deleted_at IS NULL
           AND t.deleted_at IS NULL
           AND tm.user_id IS NULL -- 팀 멤버가 아닌 경우만 조회하여 중복 방지
-        <if test="keyword != null and keyword != ''">
-            AND b.title LIKE CONCAT('%', #{keyword}, '%')
-        </if>
     </select>
 
     <!-- 특정 팀 보드 목록 (+즐겨찾기) 조회 -->
