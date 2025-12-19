@@ -1,8 +1,7 @@
-package com.nullpointer.domain.notification.service.impl;
+package com.nullpointer.domain.notification.service;
 
 import com.nullpointer.domain.notification.dto.NotificationSettingDto;
 import com.nullpointer.domain.notification.mapper.NotificationSettingMapper;
-import com.nullpointer.domain.notification.service.NotificationSettingService;
 import com.nullpointer.domain.notification.vo.NotificationSettingVo;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;

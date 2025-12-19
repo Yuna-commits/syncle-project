@@ -1,4 +1,4 @@
-package com.nullpointer.domain.list.service.impl;
+package com.nullpointer.domain.list.service;
 
 import com.nullpointer.domain.activity.dto.request.ActivitySaveRequest;
 import com.nullpointer.domain.activity.service.ActivityService;
@@ -10,7 +10,6 @@ import com.nullpointer.domain.list.dto.ListResponse;
 import com.nullpointer.domain.list.dto.UpdateListOrderRequest;
 import com.nullpointer.domain.list.dto.UpdateListRequest;
 import com.nullpointer.domain.list.mapper.ListMapper;
-import com.nullpointer.domain.list.service.ListService;
 import com.nullpointer.domain.list.vo.ListVo;
 import com.nullpointer.global.common.SocketSender;
 import com.nullpointer.global.common.constants.AppConstants;

@@ -1,10 +1,12 @@
-package com.nullpointer.domain.file.service;
+package com.nullpointer.domain.file.service.impl;
 
 import com.nullpointer.domain.card.helper.CardEventHelper;
 import com.nullpointer.domain.card.mapper.CardMapper;
 import com.nullpointer.domain.card.vo.CardVo;
 import com.nullpointer.domain.file.dto.FileResponse;
 import com.nullpointer.domain.file.mapper.FileMapper;
+import com.nullpointer.domain.file.service.FileService;
+import com.nullpointer.domain.file.service.S3FileStorageService;
 import com.nullpointer.domain.file.vo.FileVo;
 import com.nullpointer.domain.file.vo.enums.FileType;
 import com.nullpointer.domain.list.mapper.ListMapper;

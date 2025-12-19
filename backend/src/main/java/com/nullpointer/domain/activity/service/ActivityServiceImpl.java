@@ -1,4 +1,4 @@
-package com.nullpointer.domain.activity.service.impl;
+package com.nullpointer.domain.activity.service;
 
 import com.nullpointer.domain.activity.dto.request.ActivityConditionRequest;
 import com.nullpointer.domain.activity.dto.request.ActivitySaveRequest;
@@ -6,7 +6,6 @@ import com.nullpointer.domain.activity.dto.response.ActivityLogResponse;
 import com.nullpointer.domain.activity.dto.response.ActivityStatsResponse;
 import com.nullpointer.domain.activity.dto.response.TopBoardResponse;
 import com.nullpointer.domain.activity.mapper.ActivityMapper;
-import com.nullpointer.domain.activity.service.ActivityService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;

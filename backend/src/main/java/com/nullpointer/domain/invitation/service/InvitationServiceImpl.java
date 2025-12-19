@@ -1,4 +1,4 @@
-package com.nullpointer.domain.invitation.service.impl;
+package com.nullpointer.domain.invitation.service;
 
 import com.nullpointer.domain.activity.dto.request.ActivitySaveRequest;
 import com.nullpointer.domain.activity.service.ActivityService;
@@ -7,7 +7,6 @@ import com.nullpointer.domain.invitation.dto.MyInvitationResponse;
 import com.nullpointer.domain.invitation.dto.TeamInvitationResponse;
 import com.nullpointer.domain.invitation.dto.TeamInviteRequest;
 import com.nullpointer.domain.invitation.mapper.InvitationMapper;
-import com.nullpointer.domain.invitation.service.InvitationService;
 import com.nullpointer.domain.invitation.vo.InvitationVo;
 import com.nullpointer.domain.invitation.vo.enums.Status;
 import com.nullpointer.domain.member.mapper.BoardMemberMapper;

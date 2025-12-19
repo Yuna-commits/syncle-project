@@ -1,4 +1,4 @@
-package com.nullpointer.domain.member.service;
+package com.nullpointer.domain.member.service.impl;
 
 import com.nullpointer.domain.activity.dto.request.ActivitySaveRequest;
 import com.nullpointer.domain.activity.service.ActivityService;
@@ -6,6 +6,7 @@ import com.nullpointer.domain.activity.vo.enums.ActivityType;
 import com.nullpointer.domain.member.dto.team.TeamMemberResponse;
 import com.nullpointer.domain.member.dto.team.TeamRoleUpdateRequest;
 import com.nullpointer.domain.member.mapper.TeamMemberMapper;
+import com.nullpointer.domain.member.service.TeamMemberService;
 import com.nullpointer.domain.member.vo.TeamMemberVo;
 import com.nullpointer.domain.member.vo.enums.Role;
 import com.nullpointer.domain.notification.event.InvitationEvent;

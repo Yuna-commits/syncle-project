@@ -1,4 +1,4 @@
-package com.nullpointer.domain.member.service;
+package com.nullpointer.domain.member.service.impl;
 
 import com.nullpointer.domain.activity.dto.request.ActivitySaveRequest;
 import com.nullpointer.domain.activity.service.ActivityService;
@@ -9,6 +9,7 @@ import com.nullpointer.domain.member.dto.board.BoardInviteRequest;
 import com.nullpointer.domain.member.dto.board.BoardMemberResponse;
 import com.nullpointer.domain.member.dto.board.BoardRoleUpdateRequest;
 import com.nullpointer.domain.member.mapper.BoardMemberMapper;
+import com.nullpointer.domain.member.service.BoardMemberService;
 import com.nullpointer.domain.member.vo.BoardMemberVo;
 import com.nullpointer.domain.member.vo.enums.Role;
 import com.nullpointer.domain.notification.event.InvitationEvent;

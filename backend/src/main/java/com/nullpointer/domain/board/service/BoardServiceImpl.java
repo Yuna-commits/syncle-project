@@ -1,4 +1,4 @@
-package com.nullpointer.domain.board.service.impl;
+package com.nullpointer.domain.board.service;
 
 import com.nullpointer.domain.activity.dto.request.ActivitySaveRequest;
 import com.nullpointer.domain.activity.service.ActivityService;
@@ -10,7 +10,6 @@ import com.nullpointer.domain.board.dto.response.BoardResponse;
 import com.nullpointer.domain.board.dto.response.BoardViewResponse;
 import com.nullpointer.domain.board.dto.response.MemberBoardResponse;
 import com.nullpointer.domain.board.mapper.BoardMapper;
-import com.nullpointer.domain.board.service.BoardService;
 import com.nullpointer.domain.board.vo.BoardVo;
 import com.nullpointer.domain.board.vo.enums.Visibility;
 import com.nullpointer.domain.file.service.S3FileStorageService;

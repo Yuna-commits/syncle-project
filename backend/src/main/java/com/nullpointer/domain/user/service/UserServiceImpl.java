@@ -1,4 +1,4 @@
-package com.nullpointer.domain.user.service.impl;
+package com.nullpointer.domain.user.service;
 
 import com.nullpointer.domain.auth.dto.request.AuthRequest;
 import com.nullpointer.domain.auth.dto.request.PasswordRequest;
@@ -7,7 +7,6 @@ import com.nullpointer.domain.user.dto.request.UpdateProfileRequest;
 import com.nullpointer.domain.user.dto.response.UserProfileResponse;
 import com.nullpointer.domain.user.dto.response.UserSummaryResponse;
 import com.nullpointer.domain.user.mapper.UserMapper;
-import com.nullpointer.domain.user.service.UserService;
 import com.nullpointer.domain.user.vo.UserVo;
 import com.nullpointer.domain.user.vo.enums.UserStatus;
 import com.nullpointer.domain.user.vo.enums.VerifyStatus;
@@ -17,13 +16,12 @@ import com.nullpointer.global.exception.BusinessException;
 import com.nullpointer.global.security.jwt.JwtTokenProvider;
 import com.nullpointer.global.util.RedisUtil;
 import lombok.RequiredArgsConstructor;
-
-import java.util.List;
-
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.StringUtils;
+
+import java.util.List;
 
 @Service
 @RequiredArgsConstructor

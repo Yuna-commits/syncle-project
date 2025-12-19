@@ -1,11 +1,10 @@
-package com.nullpointer.domain.checklist.service.impl;
+package com.nullpointer.domain.checklist.service;
 
 import com.nullpointer.domain.card.mapper.CardMapper;
 import com.nullpointer.domain.card.vo.CardVo;
 import com.nullpointer.domain.checklist.dto.CreateChecklistRequest;
 import com.nullpointer.domain.checklist.dto.UpdateChecklistRequest;
 import com.nullpointer.domain.checklist.mapper.ChecklistMapper;
-import com.nullpointer.domain.checklist.service.ChecklistService;
 import com.nullpointer.domain.checklist.vo.ChecklistVo;
 import com.nullpointer.domain.notification.event.CardEvent;
 import com.nullpointer.domain.user.mapper.UserMapper;

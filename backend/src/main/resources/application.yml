@@ -50,10 +50,8 @@ app:
     access-expiration: 3600000
 
   domain:
-    frontend: http://localhost:5173
-
-  email:
-    verify-base-url: http://localhost:5173/auth/verify-email
+    frontend:
+      url: http://localhost:5173
 
   file:
     upload-dir: ./uploads

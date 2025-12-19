@@ -1,4 +1,4 @@
-package com.nullpointer.domain.team.service.impl;
+package com.nullpointer.domain.team.service;
 
 import com.nullpointer.domain.activity.dto.request.ActivitySaveRequest;
 import com.nullpointer.domain.activity.service.ActivityService;
@@ -17,7 +17,6 @@ import com.nullpointer.domain.team.dto.request.UpdateTeamRequest;
 import com.nullpointer.domain.team.dto.response.TeamDetailResponse;
 import com.nullpointer.domain.team.dto.response.TeamResponse;
 import com.nullpointer.domain.team.mapper.TeamMapper;
-import com.nullpointer.domain.team.service.TeamService;
 import com.nullpointer.domain.team.vo.TeamVo;
 import com.nullpointer.domain.user.mapper.UserMapper;
 import com.nullpointer.domain.user.vo.UserVo;

@@ -1,4 +1,4 @@
-package com.nullpointer.domain.card.service.impl;
+package com.nullpointer.domain.card.service;
 
 import com.nullpointer.domain.card.dto.CardResponse;
 import com.nullpointer.domain.card.dto.CreateCardRequest;
@@ -7,7 +7,6 @@ import com.nullpointer.domain.card.dto.UpdateCardRequest;
 import com.nullpointer.domain.card.helper.CardEventHelper;
 import com.nullpointer.domain.card.helper.CardOrderManager;
 import com.nullpointer.domain.card.mapper.CardMapper;
-import com.nullpointer.domain.card.service.CardService;
 import com.nullpointer.domain.card.vo.CardVo;
 import com.nullpointer.domain.list.mapper.ListMapper;
 import com.nullpointer.domain.list.vo.ListVo;

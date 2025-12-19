@@ -1,11 +1,10 @@
-package com.nullpointer.domain.comment.service.impl;
+package com.nullpointer.domain.comment.service;
 
 import com.nullpointer.domain.card.mapper.CardMapper;
 import com.nullpointer.domain.card.vo.CardVo;
 import com.nullpointer.domain.comment.dto.CommentRequest;
 import com.nullpointer.domain.comment.dto.CommentResponse;
 import com.nullpointer.domain.comment.mapper.CommentMapper;
-import com.nullpointer.domain.comment.service.CommentService;
 import com.nullpointer.domain.comment.vo.CommentVo;
 import com.nullpointer.domain.list.mapper.ListMapper;
 import com.nullpointer.domain.list.vo.ListVo;
