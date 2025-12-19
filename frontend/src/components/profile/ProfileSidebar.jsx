@@ -41,7 +41,7 @@ export default function ProfileSidebar() {
     },
     {
       label: '알림 설정',
-      path: '/profile/notifications',
+      path: '/profile/notification',
       icon: <Bell size={24} />,
     },
   ]

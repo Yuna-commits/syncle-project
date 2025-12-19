@@ -103,8 +103,12 @@ api.interceptors.response.use(
   // 에러 발생 시 처리
   async (error) => {
     const originalRequest = error.config
-
     const status = error.response?.status
+
+    // 이미 로그인 페이지에 있다면 에러 처리 중단 (새로고침 방지)
+    if (window.location.pathname.startsWith('/auth/')) {
+      return Promise.reject(error)
+    }
 
     // 401 또는 403 에러이고, 아직 재시도를 안 한 요청(_retry가 없음/false)인 경우
     if ((status === 401 || status === 403) && !originalRequest._retry) {

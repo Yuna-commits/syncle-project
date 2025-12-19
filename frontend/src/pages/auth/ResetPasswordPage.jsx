@@ -5,7 +5,7 @@ import Step1Email from './reset-password/Step1Email'
 import Step2Verify from './reset-password/Step2Verify'
 import Step3NewPassword from './reset-password/Step3NewPassword'
 
-export default function ResetPassword() {
+export default function ResetPasswordPage() {
   const { step, reset } = useResetPasswordStore()
 
   // 페이지에서 나가면 상태 초기화

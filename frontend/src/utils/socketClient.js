@@ -7,13 +7,21 @@ export const socketClient = {
   // 연결 함수
   // 백엔드 소켓 인터셉터가 동작하기 위해 HTTP 헤더에 토큰 담아서 전송
   connect: (config) => {
-    // 이미 연결되어 있으면 패스
-    if (client && client.active) return
+    // 이미 연결되어 있어도 토큰(헤더)이 바뀌었으면 재연결
+    const newAuth = config?.headers?.Authorization
+    const currentAuth = client?.connectHeaders?.Authorization
+
+    if (client && client.active) {
+      if (newAuth === currentAuth) return // 토큰이 같으면 유지
+      client.deactivate() // 다르면 재연결
+    }
 
     client = new Client({
       brokerURL: 'ws://localhost:8080/ws', // 백엔드 WebSocket 주소
       reconnectDelay: 5000, // 연결 끊기면 5초 뒤 재연결 시도
       connectHeaders: config?.headers || {},
+      onConnect: config.onConnect,
+      onStompError: config.onStompError,
       ...config, // 외부에서 콜백 주입
     })
 

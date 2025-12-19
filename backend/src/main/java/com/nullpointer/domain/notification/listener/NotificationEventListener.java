@@ -7,6 +7,7 @@ import com.nullpointer.domain.notification.vo.NotificationDto;
 import com.nullpointer.domain.notification.vo.enums.NotificationType;
 import com.nullpointer.domain.user.mapper.UserMapper;
 import com.nullpointer.domain.user.vo.UserVo;
+import com.nullpointer.global.common.SocketSender;
 import com.nullpointer.global.common.enums.RedisKeyType;
 import com.nullpointer.global.util.RedisUtil;
 import lombok.RequiredArgsConstructor;
@@ -28,6 +29,7 @@ public class NotificationEventListener {
     private final RedisUtil redisUtil;
     private final UserMapper userMapper;
     private final SimpMessagingTemplate messagingTemplate;
+    private final SocketSender socketSender;
 
     /**
      * 카드 이벤트 처리 리스너
@@ -79,7 +81,8 @@ public class NotificationEventListener {
             case MENTION:
                 receiverId = event.getTargetUserId(); // 멘션된 사람에게 알림
                 type = NotificationType.MENTION;
-                message = String.format("회원님을 언급했습니다:%s",
+                message = String.format("'%s'님이 회원님을 언급했습니다:%s",
+                        event.getActorNickname(),
                         getSafeSubstring(event.getCommentContent(), 20));
                 break;
             case CHECKLIST:
@@ -87,20 +90,23 @@ public class NotificationEventListener {
                 if (Boolean.TRUE.equals(event.getChecklistDone())) {
                     receiverId = event.getAssigneeId(); // 담당자에게 알림
                     type = NotificationType.CHECKLIST_COMPLETED;
-                    message = String.format("담당 카드 '%s'의 항목을 완료했습니다.:%s",
+                    message = String.format("'%s'님이 담당 카드 '%s'의 항목을 완료했습니다.:%s",
+                            event.getActorNickname(),
                             event.getCardTitle(), getSafeSubstring(event.getChecklistContent(), 20));
                 }
                 break;
             case DEADLINE_NEAR:
                 receiverId = event.getAssigneeId(); // 담당자에게 알림
                 type = NotificationType.DEADLINE_NEAR;
-                message = String.format("담당 카드 '%s'의 마감이 임박했습니다.", event.getCardTitle());
+                message = String.format("'%s'님이 담당 카드 '%s'의 마감이 임박했습니다.",
+                        event.getActorNickname(), event.getCardTitle());
                 break;
             case ATTACHMENT:
                 String fileName = event.getChangedFields().iterator().next();
                 receiverId = event.getAssigneeId();
                 type = NotificationType.FILE_UPLOAD;
-                message = String.format("담당 카드 '%s'에 파일을 첨부했습니다.: %s",
+                message = String.format("'%s'님이 담당 카드 '%s'에 파일을 첨부했습니다.: %s",
+                        event.getActorNickname(),
                         event.getCardTitle(), fileName);
                 break;
             default:
@@ -149,19 +155,19 @@ public class NotificationEventListener {
         // 메시지 및 링크 생성
         switch (event.getType()) {
             case TEAM_INVITE:
-                message = String.format("회원님을 '%s' 팀에 초대했습니다.", event.getTargetName());
+                message = String.format("'%s'님이 회원님을 '%s' 팀에 초대했습니다.", event.getSenderNickname(), event.getTargetName());
                 targetUrl = "/teams/" + event.getTargetId() + "/boards"; // 팀 페이지로 이동
                 break;
             case BOARD_INVITE:
-                message = String.format("회원님을 '%s' 보드에 추가했습니다.", event.getTargetName());
+                message = String.format("'%s'님이 회원님을 '%s' 보드에 추가했습니다.", event.getSenderNickname(), event.getTargetName());
                 targetUrl = "/board/" + event.getTargetId(); // 해당 보드로 이동
                 break;
             case INVITE_ACCEPTED:
-                message = String.format("'%s' 팀 초대를 수락했습니다.", event.getTargetName());
+                message = String.format("'%s'님이 '%s' 팀 초대를 수락했습니다.", event.getSenderNickname(), event.getTargetName());
                 targetUrl = "/teams/" + event.getTargetId() + "/members"; // 팀 멤버 목록 페이지로 이동
                 break;
             case INVITE_REJECTED:
-                message = String.format("'%s' 팀 초대를 거절했습니다.", event.getTargetName());
+                message = String.format("'%s'님이 '%s' 팀 초대를 거절했습니다.", event.getSenderNickname(), event.getTargetName());
                 targetUrl = "/teams/" + event.getTargetId() + "/members"; // 팀 멤버 목록 페이지로 이동
                 break;
             case TEAM_MEMBER_KICKED:
@@ -169,7 +175,7 @@ public class NotificationEventListener {
                 targetUrl = "/dashboard";
                 break;
             case TEAM_MEMBER_LEFT:
-                message = String.format("'%s' 팀을 떠났습니다.", event.getTargetName());
+                message = String.format("'%s'님이 '%s' 팀을 떠났습니다.", event.getSenderNickname(), event.getTargetName());
                 targetUrl = "/teams/" + event.getTargetId() + "/members"; // 팀 멤버 목록 페이지로 이동
                 break;
             case BOARD_MEMBER_KICKED:
@@ -177,7 +183,7 @@ public class NotificationEventListener {
                 targetUrl = "/dashboard";
                 break;
             case BOARD_MEMBER_LEFT:
-                message = String.format("'%s' 보드를 떠났습니다.", event.getTargetName());
+                message = String.format("'%s'님이 '%s' 보드를 떠났습니다.", event.getSenderNickname(), event.getTargetName());
                 targetUrl = "/board/" + event.getTargetId(); // 해당 보드로 이동
                 break;
             case TEAM_DELETED:
@@ -303,14 +309,16 @@ public class NotificationEventListener {
         UserVo receiver = userMapper.findById(noti.getReceiverId()).orElse(null);
 
         if (receiver != null) {
-            String email = receiver.getEmail(); // 소켓 principal
-
             // 이메일로 소켓 메시지 전송
             // WebSocket 실시간 전송
             // 구독 경로: /queue/notifications/{email} <- Spring Security의 username이 이메일이기 때문
             // 프론트엔드가 이 경로를 구독해야 함
-            messagingTemplate.convertAndSendToUser(
-                    email, "/queue/notifications", noti);
+            socketSender.sendGlobalSocketMessage(
+                    receiver.getEmail(),    // 수신자 이메일
+                    noti.getType().name(),  // 타입 (예: CARD_MOVE)
+                    noti.getSenderId(),     // 보낸 사람 ID
+                    noti.getMessage(),      // "홍길동님이 카드를 이동했습니다."
+                    noti);
 
             log.info("알림 발송 완료: receiverId={}", noti.getReceiverId());
         } else {
