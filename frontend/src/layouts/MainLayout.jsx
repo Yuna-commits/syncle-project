@@ -5,7 +5,6 @@ import { Outlet, useNavigate } from 'react-router-dom'
 import TeamCreateModal from '../components/modals/team/TeamCreateModal'
 import useUiStore from '../stores/useUiStore'
 import { useAuthQuery } from '../hooks/auth/useAuthQuery'
-import { useGlobalSocket } from '../hooks/useGlobalSocket'
 
 function MainLayout() {
   const navigate = useNavigate()
@@ -17,10 +16,6 @@ function MainLayout() {
   // 사용자 정보 가져오기
   // 컴포넌트 마운트 시 자동으로 'fetchMe' API 호출
   const { isError } = useAuthQuery()
-
-  // 전역 소켓 연결 & 알림 구독 시작
-  // 로그인 상태이면 소켓을 연결하고 '/user/queue/notifications' 구독
-  useGlobalSocket()
 
   useEffect(() => {
     if (isError) {

@@ -11,7 +11,7 @@ export default function ProtectedRoute() {
   const location = useLocation()
   let isAuthenticated = false
 
-  console.log('🛡️ [ProtectedRoute] 토큰 진입:', token)
+  console.log('🛡️ [ProtectedRoute] 토큰 진입')
 
   // 토큰이 존재할 때 검증 수행
   if (token) {
@@ -21,7 +21,6 @@ export default function ProtectedRoute() {
       // 현재 시간 구하기 (ms -> s 변환)
       const currentTime = Date.now() / 1000
 
-      console.log(`⏰ 만료시간: ${decoded.exp}, 현재: ${currentTime}`)
       // 만료 시간 비교 (exp > 현재 시간일 때 유효)
       if (decoded.exp > currentTime) {
         isAuthenticated = true
