@@ -1,9 +1,11 @@
 package com.nullpointer.domain.notification.listener;
 
+import com.nullpointer.domain.notification.dto.NotificationDto;
 import com.nullpointer.domain.notification.event.CardEvent;
 import com.nullpointer.domain.notification.event.InvitationEvent;
 import com.nullpointer.domain.notification.event.MemberEvent;
-import com.nullpointer.domain.notification.vo.NotificationDto;
+import com.nullpointer.domain.notification.mapper.NotificationSettingMapper;
+import com.nullpointer.domain.notification.vo.NotificationSettingVo;
 import com.nullpointer.domain.notification.vo.enums.NotificationType;
 import com.nullpointer.domain.user.mapper.UserMapper;
 import com.nullpointer.domain.user.vo.UserVo;
@@ -13,7 +15,6 @@ import com.nullpointer.global.util.RedisUtil;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.context.event.EventListener;
-import org.springframework.messaging.simp.SimpMessagingTemplate;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Component;
 
@@ -28,8 +29,8 @@ public class NotificationEventListener {
 
     private final RedisUtil redisUtil;
     private final UserMapper userMapper;
-    private final SimpMessagingTemplate messagingTemplate;
     private final SocketSender socketSender;
+    private final NotificationSettingMapper settingMapper;
 
     /**
      * 카드 이벤트 처리 리스너
@@ -298,6 +299,18 @@ public class NotificationEventListener {
 
     // Redis 저장, 소켓 전송
     private void saveAndSendNotification(NotificationDto noti) {
+        Long receiverId = noti.getReceiverId();
+
+        // 수신자의 알림 설정 조회 (없으면 기본값)
+        NotificationSettingVo settings = settingMapper.findByUserId(receiverId)
+                .orElse(NotificationSettingVo.createDefault(receiverId));
+
+        // 알림 발송 여부 체크
+        if (!shouldSendNotification(settings, noti.getType())) {
+            log.info("알림 설정에 의해 발송 차단됨: receiverId={}, type={}", receiverId, noti.getType());
+            return;
+        }
+
         // Redis 저장
         // key: "np:notification:{userId}"
         String key = RedisKeyType.NOTIFICATION.getKey(String.valueOf(noti.getReceiverId()));
@@ -324,6 +337,35 @@ public class NotificationEventListener {
         } else {
             log.warn("알림 수신자를 찾을 수 없음: id={}", noti.getReceiverId());
         }
+    }
+
+    // 알림 설정과 타입을 비교하여 발송 여부 결정
+    private boolean shouldSendNotification(NotificationSettingVo settings, NotificationType type) {
+        // 1. 방해 금지 모드이면 무조건 false
+        if (settings.isDnd()) {
+            return false;
+        }
+
+        // 2. 타입별 설정 확인
+        return switch (type) {
+            // 멘션
+            case MENTION -> settings.isPushMentions();
+            // 담당자 지정
+            case CARD_ASSIGNED -> settings.isPushAssignments();
+            // 카드 이동
+            case CARD_MOVED -> settings.isPushCardMoves();
+            // 댓글, 답글
+            case COMMENT, COMMENT_REPLY -> settings.isPushComments();
+            // 마감 임박
+            case DEADLINE_NEAR -> settings.isPushDueDates();
+            // 카드 수정, 체크리스트 상태 변경, 파일 첨부
+            case CARD_UPDATED, CHECKLIST_COMPLETED, FILE_UPLOAD -> settings.isPushCardUpdates();
+            // 팀/보드 설정은 기본적으로 전송
+            case TEAM_INVITE, INVITE_ACCEPTED, INVITE_REJECTED, TEAM_MEMBER_KICKED, TEAM_MEMBER_LEFT, TEAM_DELETED,
+                 BOARD_INVITE, BOARD_MEMBER_KICKED, BOARD_MEMBER_LEFT, BOARD_DELETED, PERMISSION_CHANGED -> true;
+
+            default -> true;
+        };
     }
 
 }

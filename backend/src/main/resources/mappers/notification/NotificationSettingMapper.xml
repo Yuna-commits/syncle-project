@@ -1,0 +1,43 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.nullpointer.domain.notification.mapper.NotificationSettingMapper">
+
+    <!-- 조회 -->
+    <select id="findByUserId" resultType="NotificationSettingVo">
+        SELECT *
+        FROM notification_setting
+        WHERE user_id = #{userId}
+    </select>
+
+    <!-- 최초 생성 -->
+    <insert id="insertSettings" parameterType="NotificationSettingVo">
+        INSERT
+        INTO notification_setting (user_id, dnd,
+                                   email_invites, email_mentions, email_assignments,
+                                   push_mentions, push_comments, push_assignments,
+                                   push_due_dates, push_card_updates, push_card_moves)
+        VALUES (#{userId}, #{dnd},
+                #{emailInvites}, #{emailMentions}, #{emailAssignments},
+                #{pushMentions}, #{pushComments}, #{pushAssignments},
+                #{pushDueDates}, #{pushCardUpdates}, #{pushCardMoves})
+    </insert>
+
+    <!-- 수정 -->
+    <update id="updateSettings" parameterType="NotificationSettingVo">
+        UPDATE notification_setting
+        SET dnd               = #{dnd},
+            email_invites     = #{emailInvites},
+            email_mentions    = #{emailMentions},
+            email_assignments = #{emailAssignments},
+            push_mentions     = #{pushMentions},
+            push_comments     = #{pushComments},
+            push_assignments  = #{pushAssignments},
+            push_due_dates    = #{pushDueDates},
+            push_card_updates = #{pushCardUpdates},
+            push_card_moves   = #{pushCardMoves}
+        WHERE user_id = #{userId}
+    </update>
+
+</mapper>
