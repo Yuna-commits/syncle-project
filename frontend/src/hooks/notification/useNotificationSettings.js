@@ -35,9 +35,7 @@ export const useNotificationSettings = () => {
 
   // 2. 설정 수정 (PUT /api/notifications/settings)
   const { mutate: updateSettings } = useMutation({
-    mutationFn: async (newSettings) => {
-      notificationApi.updateMySettings(newSettings)
-    },
+    mutationFn: (newSettings) => notificationApi.updateMySettings(newSettings),
 
     // 낙관적 업데이트: UI 먼저 변경
     onMutate: async (newSettings) => {

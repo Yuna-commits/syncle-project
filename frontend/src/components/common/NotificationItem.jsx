@@ -161,7 +161,6 @@ export default function NotificationItem({
       const separatorIndex = message.indexOf(':') // 첫 번째 ':' 위치 찾음
 
       if (separatorIndex > -1) {
-        console.log(message)
         const titlePart = message.slice(0, separatorIndex)
         const contentPart = message.slice(separatorIndex + 1).trim()
 

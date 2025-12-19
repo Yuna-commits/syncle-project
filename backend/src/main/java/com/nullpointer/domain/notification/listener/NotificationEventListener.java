@@ -317,7 +317,7 @@ public class NotificationEventListener {
         redisUtil.addList(key, noti, RedisKeyType.NOTIFICATION.getDefaultTtl());
 
         // 용량 관리 (최근 50개만 유지)
-        redisUtil.trimList(key, 50);
+        redisUtil.trimList(key, 110);
 
         UserVo receiver = userMapper.findById(noti.getReceiverId()).orElse(null);
 
