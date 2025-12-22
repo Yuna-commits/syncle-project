@@ -15,7 +15,7 @@ public interface BoardMapper {
     void insertBoard(BoardVo boardVo);
 
     // 내 보드 목록 조회
-    List<BoardVo> findBoardByUserId(Long userId);
+    List<BoardVo> findBoardByUserId(@Param("id") Long userId);
 
     // 특정 팀 보드 목록 조회
     List<BoardResponse> findBoardWithFavoriteStatus(@Param("teamId") Long teamId, @Param("userId") Long userId);

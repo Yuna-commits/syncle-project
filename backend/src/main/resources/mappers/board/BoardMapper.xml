@@ -29,54 +29,49 @@
     <!-- 내 보드 목록 조회-->
     <select id="findBoardByUserId" parameterType="Long" resultType="BoardVo">
         SELECT t.id                      AS teamId,
-        t.name                    AS teamName,
-        b.id,
-        b.title,
-        b.description,
-        b.visibility,
-        (bf.board_id IS NOT NULL) AS isFavorite,
-        bf.favorited_at,
-        FALSE                     AS isGuest
+               t.name                    AS teamName,
+               b.id,
+               b.title,
+               b.description,
+               b.visibility,
+               (bf.board_id IS NOT NULL) AS isFavorite,
+               bf.favorited_at,
+               FALSE                     AS isGuest
         FROM team t
-        INNER JOIN team_member tm ON t.id = tm.team_id AND tm.user_id = #{id}
-        /* 다시 LEFT JOIN으로 변경하여 보드 없는 팀도 조회되게 함 */
-        LEFT JOIN board b ON t.id = b.team_id
-        AND b.deleted_at IS NULL
-        AND (
-        b.visibility = 'PUBLIC'
-        OR (b.visibility = 'PRIVATE' AND EXISTS (
-        SELECT 1 FROM board_member bm WHERE bm.board_id = b.id AND bm.user_id = #{id}
-        ))
-        )
-        LEFT JOIN board_favorite bf ON b.id = bf.board_id AND bf.user_id = #{id}
+                 INNER JOIN team_member tm ON t.id = tm.team_id AND tm.user_id = #{id} AND tm.deleted_at IS NULL
+                 LEFT JOIN board b ON t.id = b.team_id
+            AND b.deleted_at IS NULL
+            AND (
+                                          b.visibility = 'PUBLIC'
+                                              OR (b.visibility = 'PRIVATE' AND EXISTS (
+                                              SELECT 1 FROM board_member bm
+                                              WHERE bm.board_id = b.id
+                                                AND bm.user_id = #{id}
+                                                AND bm.deleted_at IS NULL
+                                          ))
+                                          )
+                 LEFT JOIN board_favorite bf ON b.id = bf.board_id AND bf.user_id = #{id}
         WHERE t.deleted_at IS NULL
-        <if test="keyword != null and keyword != ''">
-            /* 검색어가 있을 때는 보드 제목이 일치하는 것만 필터링 */
-            AND b.title LIKE CONCAT('%', #{keyword}, '%')
-        </if>
 
         UNION ALL
 
         SELECT t.id                      AS teamId,
-        t.name                    AS teamName,
-        b.id,
-        b.title,
-        b.description,
-        b.visibility,
-        (bf.board_id IS NOT NULL) AS isFavorite,
-        bf.favorited_at,
-        TRUE                      AS isGuest
+               t.name                    AS teamName,
+               b.id,
+               b.title,
+               b.description,
+               b.visibility,
+               (bf.board_id IS NOT NULL) AS isFavorite,
+               bf.favorited_at,
+               TRUE                      AS isGuest
         FROM board b
-        INNER JOIN team t ON b.team_id = t.id
-        INNER JOIN board_member bm ON b.id = bm.board_id AND bm.user_id = #{id}
-        LEFT JOIN team_member tm ON t.id = tm.team_id AND tm.user_id = #{id}
-        LEFT JOIN board_favorite bf ON b.id = bf.board_id AND bf.user_id = #{id}
+                 INNER JOIN team t ON b.team_id = t.id
+                 INNER JOIN board_member bm ON b.id = bm.board_id AND bm.user_id = #{id} AND bm.deleted_at IS NULL
+                 LEFT JOIN team_member tm ON t.id = tm.team_id AND tm.user_id = #{id} AND tm.deleted_at IS NULL
+                 LEFT JOIN board_favorite bf ON b.id = bf.board_id AND bf.user_id = #{id}
         WHERE b.deleted_at IS NULL
-        AND t.deleted_at IS NULL
-        AND tm.user_id IS NULL
-        <if test="keyword != null and keyword != ''">
-            AND b.title LIKE CONCAT('%', #{keyword}, '%')
-        </if>
+          AND t.deleted_at IS NULL
+          AND tm.user_id IS NULL
     </select>
 
     <!-- 특정 팀 보드 목록 (+즐겨찾기) 조회 -->
