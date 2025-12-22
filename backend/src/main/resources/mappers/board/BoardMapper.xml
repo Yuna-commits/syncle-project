@@ -30,6 +30,8 @@
     <select id="findBoardByUserId" parameterType="Long" resultType="BoardVo">
         SELECT t.id                      AS teamId,
                t.name                    AS teamName,
+               t.board_create_role       AS boardCreateRole,
+               tm.role                   AS teamRole,
                b.id,
                b.title,
                b.description,
@@ -43,12 +45,11 @@
             AND b.deleted_at IS NULL
             AND (
                                           b.visibility = 'PUBLIC'
-                                              OR (b.visibility = 'PRIVATE' AND EXISTS (
-                                              SELECT 1 FROM board_member bm
-                                              WHERE bm.board_id = b.id
-                                                AND bm.user_id = #{id}
-                                                AND bm.deleted_at IS NULL
-                                          ))
+                                              OR (b.visibility = 'PRIVATE' AND EXISTS (SELECT 1
+                                                                                       FROM board_member bm
+                                                                                       WHERE bm.board_id = b.id
+                                                                                         AND bm.user_id = #{id}
+                                                                                         AND bm.deleted_at IS NULL))
                                           )
                  LEFT JOIN board_favorite bf ON b.id = bf.board_id AND bf.user_id = #{id}
         WHERE t.deleted_at IS NULL
@@ -57,6 +58,8 @@
 
         SELECT t.id                      AS teamId,
                t.name                    AS teamName,
+               t.board_create_role       AS boardCreateRole,
+               tm.role                   AS teamRole,
                b.id,
                b.title,
                b.description,

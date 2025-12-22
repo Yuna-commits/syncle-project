@@ -20,5 +20,8 @@ public class TeamVo {
     private LocalDateTime updatedAt;
     private LocalDateTime deletedAt;
 
+    @Builder.Default
+    private Role boardCreateRole = Role.OWNER;
+
     private Role role;
 }

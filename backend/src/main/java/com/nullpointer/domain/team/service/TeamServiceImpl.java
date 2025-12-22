@@ -141,6 +141,9 @@ public class TeamServiceImpl implements TeamService {
         if (req.getDescription() != null) {
             teamVo.setDescription(req.getDescription());
         }
+        if (req.getDescription() != null) {
+            teamVo.setBoardCreateRole(req.getBoardCreateRole());
+        }
 
         teamMapper.updateTeam(teamVo);
 

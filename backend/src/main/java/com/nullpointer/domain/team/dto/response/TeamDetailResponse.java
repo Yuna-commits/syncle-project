@@ -2,10 +2,12 @@ package com.nullpointer.domain.team.dto.response;
 
 import com.nullpointer.domain.board.dto.response.BoardResponse;
 import com.nullpointer.domain.member.dto.team.TeamMemberResponse;
+import com.nullpointer.domain.member.vo.enums.Role;
 import com.nullpointer.domain.team.vo.TeamVo;
 import lombok.Builder;
 import lombok.Getter;
 
+import java.time.LocalDateTime;
 import java.util.List;
 
 @Getter
@@ -15,6 +17,8 @@ public class TeamDetailResponse {
     private long  id;
     private String name;
     private String description;
+    private Role boardCreateRole;
+
 
     // 멤버 목록
     private List<TeamMemberResponse> members;
@@ -30,6 +34,7 @@ public class TeamDetailResponse {
                 .id(vo.getId())
                 .name(vo.getName())
                 .description(vo.getDescription())
+                .boardCreateRole(vo.getBoardCreateRole())
                 .members(members)
                 .memberCount(members.size())
                 .boards(boards)

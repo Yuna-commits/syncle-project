@@ -5,6 +5,7 @@ import CreateBoardButton from '../../components/common/CreateBoardButton'
 import InviteMemberModal from '../../components/modals/team/InviteMemberModal'
 import { useTeamDetailQuery } from '../../hooks/team/useTeamQuery'
 import { Plus } from 'lucide-react'
+import useTeamPermission from '../../hooks/team/useTeamPermission'
 
 function TeamBoardPage() {
   // URL에서 teamId 추출
@@ -13,7 +14,9 @@ function TeamBoardPage() {
 
   // 팀 정보 조회
   const { data: team, isLoading, refetch } = useTeamDetailQuery(teamId)
-
+  console.log('서버에서 받은 팀 데이터:', team)
+  // 보드 생성 권한 정보 조회
+  const { canCreateBoard } = useTeamPermission(team)
   if (isLoading) return <div>Loading...</div>
   if (!team) return <div>팀 정보를 불러올 수 없습니다.</div>
 
@@ -98,12 +101,13 @@ function TeamBoardPage() {
                   onToggleFavorite={handleBoardUpdate}
                 />
               ))}
-
-            <CreateBoardButton
-              teamId={team.id}
-              teamName={team.name}
-              onBoardCreated={handleBoardUpdate}
-            />
+            {canCreateBoard && (
+              <CreateBoardButton
+                teamId={team.id}
+                teamName={team.name}
+                onBoardCreated={handleBoardUpdate}
+              />
+            )}
           </div>
         </section>
       </div>

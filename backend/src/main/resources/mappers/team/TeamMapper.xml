@@ -7,9 +7,11 @@
     <!-- 팀 생성 -->
     <insert id="insertTeam" parameterType="TeamVo" useGeneratedKeys="true" keyProperty="id">
         INSERT INTO team (name,
-                          description)
+                          description,
+                          board_create_role)
         VALUES (#{name},
-                #{description})
+                #{description},
+                #{boardCreateRole})
     </insert>
 
     <!-- 본인 소속 팀 전체 조회 -->
@@ -29,7 +31,8 @@
     <select id="findTeamByTeamId" parameterType="Long" resultType="TeamVo">
         SELECT id,
                name,
-               description
+               description,
+               board_create_role
         FROM team
         WHERE id = #{id}
     </select>
@@ -38,7 +41,8 @@
     <update id="updateTeam" parameterType="TeamVo">
         UPDATE team
         SET name        = #{name},
-            description = #{description}
+            description = #{description},
+            board_create_role = #{boardCreateRole}
         WHERE id = #{id}
     </update>
 

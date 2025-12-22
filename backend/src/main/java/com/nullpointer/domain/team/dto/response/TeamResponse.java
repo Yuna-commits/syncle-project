@@ -11,7 +11,6 @@ public class TeamResponse {
     private long  id;
     private String name;
     private Role role;
-
     public static TeamResponse from(TeamVo vo) {
         return TeamResponse.builder()
                 .id(vo.getId())

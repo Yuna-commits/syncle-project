@@ -3,11 +3,12 @@ import TeamBoardSection from '../../components/team/TeamBoardSection'
 // eslint-disable-next-line no-unused-vars
 import { AnimatePresence, motion } from 'framer-motion'
 import { useDashboardQuery } from '../../hooks/team/useTeamQuery'
+import { useAuthQuery } from '../../hooks/auth/useAuthQuery'
 
 function DashboardPage() {
   // 데이터 조회
   const { data: rawData, isLoading, refetch } = useDashboardQuery()
-  console.log('서버에서 받은 보드 데이터:', rawData)
+  const { data: user } = useAuthQuery()
   // 데이터 가공
   const allBoards = rawData || []
 
@@ -31,6 +32,13 @@ function DashboardPage() {
       acc[tName] = {
         teamName: tName,
         teamId: cur.teamId,
+        boardCreateRole: cur.boardCreateRole,
+        members: [
+          {
+            userId: user?.id,
+            role: cur.teamRole,
+          },
+        ],
         boards: [],
       }
     }

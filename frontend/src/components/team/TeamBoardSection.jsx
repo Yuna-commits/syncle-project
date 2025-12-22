@@ -1,9 +1,12 @@
 import React from 'react'
 import BoardCard from '../common/BoardCard'
 import CreateBoardButton from '../common/CreateBoardButton'
+import useTeamPermission from '../../hooks/team/useTeamPermission'
 
 function TeamBoardSection({ team, onBoardCreated }) {
-  const isGuestTeam = team.boards.length > 0 && team.boards[0].isGuest
+  // 보드 생성 권한 정보 조회
+  const { canCreateBoard } = useTeamPermission(team)
+  console.log(team)
   return (
     <div className="mb-10">
       {/* 팀 헤더 */}
@@ -34,7 +37,7 @@ function TeamBoardSection({ team, onBoardCreated }) {
         ))}
 
         {/* 보드 생성 버튼 (팀 ID 전달) */}
-        {!isGuestTeam && (
+        {canCreateBoard && (
           <CreateBoardButton
             teamId={team.teamId}
             onBoardCreated={onBoardCreated}

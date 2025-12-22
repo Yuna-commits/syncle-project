@@ -46,10 +46,11 @@ public enum ErrorCode {
     BOARD_NOT_FOUND(HttpStatus.NOT_FOUND, "B001", "존재하지 않는 보드입니다."),
     BOARD_TEAM_MISMATCH(HttpStatus.BAD_REQUEST, "B002", "해당 팀에 속한 보드가 아닙니다."),
     BOARD_DELETED(HttpStatus.GONE, "B003", "삭제된 보드입니다."),
-    BOARD_UPDATE_FORBIDDEN(HttpStatus.FORBIDDEN, "B004", "보드 수정 권한이 없습니다."),
-    BOARD_DELETE_FORBIDDEN(HttpStatus.FORBIDDEN, "B005", "보드 삭제 권한이 없습니다."),
-    BOARD_ACCESS_DENIED(HttpStatus.FORBIDDEN, "B006", "보드 접근 권한이 없습니다."),
-    BOARD_LIMIT_EXCEEDED(HttpStatus.BAD_REQUEST, "B007", "팀 내 생성 가능한 보드 개수를 초과했습니다."),
+    BOARD_CREATE_FORBIDDEN(HttpStatus.FORBIDDEN, "B005", "보드 생성 권한이 없습니다."),
+    BOARD_UPDATE_FORBIDDEN(HttpStatus.FORBIDDEN, "B006", "보드 수정 권한이 없습니다."),
+    BOARD_DELETE_FORBIDDEN(HttpStatus.FORBIDDEN, "B007", "보드 삭제 권한이 없습니다."),
+    BOARD_ACCESS_DENIED(HttpStatus.FORBIDDEN, "B008", "보드 접근 권한이 없습니다."),
+    BOARD_LIMIT_EXCEEDED(HttpStatus.BAD_REQUEST, "B009", "팀 내 생성 가능한 보드 개수를 초과했습니다."),
 
     // 멤버 (Team/Board 공통 사용 가능)
     MEMBER_NOT_FOUND(HttpStatus.NOT_FOUND, "M001", "존재하지 않는 멤버입니다."),

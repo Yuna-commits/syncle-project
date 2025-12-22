@@ -20,9 +20,11 @@ import com.nullpointer.domain.member.dto.team.TeamMemberResponse;
 import com.nullpointer.domain.member.mapper.BoardMemberMapper;
 import com.nullpointer.domain.member.mapper.TeamMemberMapper;
 import com.nullpointer.domain.member.vo.BoardMemberVo;
+import com.nullpointer.domain.member.vo.TeamMemberVo;
 import com.nullpointer.domain.member.vo.enums.Role;
 import com.nullpointer.domain.notification.event.InvitationEvent;
 import com.nullpointer.domain.notification.vo.enums.NotificationType;
+import com.nullpointer.domain.team.vo.TeamVo;
 import com.nullpointer.domain.user.mapper.UserMapper;
 import com.nullpointer.domain.user.vo.UserVo;
 import com.nullpointer.global.common.SocketSender;
@@ -71,10 +73,18 @@ public class BoardServiceImpl implements BoardService {
     public void createBoard(Long teamId, CreateBoardRequest req, Long userId) {
 
         // 팀 유효성 확인
-        teamVal.getValidTeam(teamId);
+        TeamVo team = teamVal.getValidTeam(teamId);
 
         // 팀 소속 여부 확인
-        memberVal.validateTeamMember(teamId, userId);
+        TeamMemberVo member = teamMemberMapper.findMember(teamId, userId);
+
+        if (member == null) {
+            throw new BusinessException(ErrorCode.MEMBER_NOT_FOUND);
+        }
+
+        if (team.getBoardCreateRole() == Role.OWNER && member.getRole() != Role.OWNER) {
+            throw new BusinessException(ErrorCode.BOARD_CREATE_FORBIDDEN);
+        }
 
         // 보드 개수 제한 체크 (팀당 최대 10개)
         int currentBoardCount = boardMapper.countBoardByTeamId(teamId);

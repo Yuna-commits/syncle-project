@@ -1,6 +1,7 @@
 package com.nullpointer.domain.board.vo;
 
 import com.nullpointer.domain.board.vo.enums.Visibility;
+import com.nullpointer.domain.member.vo.enums.Role;
 import lombok.*;
 
 import java.time.LocalDateTime;
@@ -16,6 +17,8 @@ public class BoardVo {
     private Long teamId;
     private String title;
     private String teamName;
+    private String boardCreateRole;
+    private Role teamRole;
     private String description;
 
     @Builder.Default
