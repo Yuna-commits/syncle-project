@@ -106,7 +106,7 @@ function NotificationPage() {
         </div>
 
         {/* 탭 */}
-        <div className="mb-5 flex gap-2 border-b border-gray-300 pb-1">
+        <div className="mb-5 flex gap-2 border-b border-gray-300">
           {tabs.map((tab) => (
             <button
               key={tab.id}

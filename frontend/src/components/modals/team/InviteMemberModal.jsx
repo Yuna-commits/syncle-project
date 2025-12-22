@@ -27,13 +27,12 @@ function InviteMemberModal({ teamId, currentMembers = [], onClose }) {
   const { inviteToTeam } = useInvitationMutations()
 
   // 이미 초대장을 보낸 사람들 조회
-  const { data: invitations = [] } = useTeamInvitationsQuery()
-
+  const { data: invitations = [] } = useTeamInvitationsQuery(teamId)
   const pendingInvitees = useMemo(() => {
     return new Set(
       invitations
         .filter((invite) => invite.status === 'PENDING')
-        .map((invite) => invite.inviteeId), // inviteeId가 유저 ID인지 확인 필요
+        .map((invite) => invite.inviteeId),
     )
   }, [invitations])
 

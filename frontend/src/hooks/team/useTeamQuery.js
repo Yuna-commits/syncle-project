@@ -45,6 +45,7 @@ export const useTeamInvitationsQuery = (teamId) => {
     queryKey: ['invitations', 'team', Number(teamId)],
     queryFn: async () => {
       const res = await invitationApi.getTeamInvitations(teamId)
+
       return res.data.data
     },
     enabled: !!teamId,

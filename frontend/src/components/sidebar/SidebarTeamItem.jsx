@@ -18,7 +18,7 @@ function SidebarTeamItem({ team, isSelected, onToggle }) {
       : 'text-gray-500 hover:bg-gray-50 hover:text-gray-900'
 
   const isActive = (path) => {
-    return window.location.pathname.startsWith(path)
+    return location.pathname.startsWith(path)
       ? 'bg-blue-50 text-blue-700 font-semibold' // 활성화 스타일
       : 'text-gray-500 hover:bg-gray-50 hover:text-gray-900' // 비활성화 스타일
   }

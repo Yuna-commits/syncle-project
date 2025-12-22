@@ -1,4 +1,4 @@
-import React, { useState } from 'react'
+import React, { useEffect, useState } from 'react'
 import { Link, useLocation } from 'react-router-dom'
 import SidebarTeamItem from './SidebarTeamItem'
 import { useTeamQuery } from '../../hooks/team/useTeamQuery'
@@ -7,6 +7,18 @@ function Sidebar() {
   const location = useLocation()
   const { data: teams = [] } = useTeamQuery()
   const [selectedTeam, setSelectedTeam] = useState({})
+
+  // URL 경로가 변경될 때 해당 팀이 있다면 메뉴 펼치기
+  useEffect(() => {
+    const match = location.pathname.match(/^\/teams\/(\d+)/)
+    if (match) {
+      const teamId = Number(match[1]) // ID 타입에 맞춰 변환
+      setSelectedTeam((prev) => ({
+        ...prev,
+        [teamId]: true, // 해당 팀 펼침 상태로 설정
+      }))
+    }
+  }, [location.pathname])
 
   // 팀 메뉴 토글
   const toggleTeam = (teamId) => {

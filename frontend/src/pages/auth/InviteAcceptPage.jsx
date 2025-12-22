@@ -41,6 +41,7 @@ export default function InviteAcceptPage() {
     if (!processedRef.current) {
       processedRef.current = true
       acceptInvitation(token)
+      navigate('/dashboard', { replace: true })
     }
   }, [token, user, isAuthLoading, navigate, acceptInvitation])
 

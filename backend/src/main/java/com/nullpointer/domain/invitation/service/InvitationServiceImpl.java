@@ -147,7 +147,7 @@ public class InvitationServiceImpl implements InvitationService {
 
             // 이메일 전송
             String inviteUrl = UriComponentsBuilder.fromUriString(frontendUrl)
-                    .path("/auth/invite/accept")
+                    .path("/invite/accept")
                     .queryParam("token", invitation.getToken())
                     .build()
                     .toUriString();
