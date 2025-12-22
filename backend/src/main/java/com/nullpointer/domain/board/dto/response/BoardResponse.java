@@ -24,6 +24,11 @@ public class BoardResponse {
     private LocalDateTime favoritedAt;
     private Boolean isGuest;
 
+    // 소유자 정보 추가
+    private String ownerName;
+    private String ownerEmail;
+    private String ownerProfileImg;
+
     public static BoardResponse from(BoardVo vo) {
         return BoardResponse.builder()
                 .teamId(vo.getTeamId())

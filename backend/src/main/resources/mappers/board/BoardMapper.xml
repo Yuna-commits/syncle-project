@@ -345,9 +345,14 @@
         b.title,
         b.description,
         b.visibility,
-        -- 검색에서는 즐겨찾기 상태를 굳이 조인하지 않거나 false로 처리 (필요시 조인 추가)
-        FALSE AS isFavorite
+        FALSE AS isFavorite,
+        -- 소유자 정보 조회 추가
+        u.nickname AS ownerName,
+        u.email AS ownerEmail,
+        u.profile_img AS ownerProfileImg
         FROM board b
+                LEFT JOIN board_member bm ON b.id = bm.board_id AND bm.role = 'OWNER'
+                LEFT JOIN user u ON bm.user_id = u.id
         WHERE b.deleted_at IS NULL
         AND b.visibility = 'PUBLIC'
         <if test="keyword != null and keyword != ''">
