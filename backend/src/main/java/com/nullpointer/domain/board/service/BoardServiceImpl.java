@@ -227,6 +227,7 @@ public class BoardServiceImpl implements BoardService {
     // 멤버 보드 조회
     @Override
     public List<MemberBoardResponse> getMemberBoards(Long teamId, Long memberId, Long userId) {
+        // owner 만 볼수 있게
         List<BoardVo> boards = boardMapper.findMemberBoard(teamId, memberId);
         return boards.stream().map(MemberBoardResponse::from).toList();
     }

@@ -296,14 +296,16 @@
     <!-- 소속 멤버 보드 조회 -->
     <select id="findMemberBoard" resultType="BoardVo">
         SELECT b.id,
-               b.title
+               b.title,
+               b.visibility
         FROM board b
                  LEFT JOIN board_member bm
                            ON b.id = bm.board_id
                                AND bm.user_id = #{userId}
+                               AND bm.deleted_at IS NULL
         WHERE b.team_id = #{teamId}
           AND b.deleted_at IS NULL
-          AND b.visibility = 'PUBLIC'
+          AND (b.visibility = 'PUBLIC' OR (b.visibility = 'PRIVATE' AND bm.user_id IS NOT NULL))
     </select>
 
     <!-- 보드 즐겨찾기 갯수 확인 -->
