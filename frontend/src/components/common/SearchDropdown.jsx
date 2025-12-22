@@ -1,5 +1,5 @@
-// frontend/src/components/common/SearchDropdown.jsx
 import React from 'react'
+import defaultProfile from '../../assets/images/default.png'
 
 function SearchDropdown({ results, isSearching, onSelect }) {
   return (
@@ -25,6 +25,23 @@ function SearchDropdown({ results, isSearching, onSelect }) {
                   <div className="line-clamp-1 truncate text-xs text-gray-500">
                     {board.description || '설명 없음'}
                   </div>
+                </div>
+                {/* 소유자 프로필 정보 추가 */}
+                <div className="flex shrink-0 items-center gap-2 pl-3 text-right">
+                  <div className="hidden flex-col items-end sm:flex">
+                    <span className="text-xs font-medium text-gray-700">
+                      {board.ownerName}
+                    </span>
+                    <span className="text-[10px] text-gray-400">
+                      {board.ownerEmail}
+                    </span>
+                  </div>
+                  <img
+                    src={board.ownerProfileImg || defaultProfile}
+                    alt={board.ownerName}
+                    className="h-8 w-8 rounded-full border border-gray-100 object-cover"
+                    title={`${board.ownerName} (${board.ownerEmail})`}
+                  />
                 </div>
               </button>
             </li>
