@@ -1,4 +1,4 @@
-package com.nullpointer.domain.notification.event;
+package com.nullpointer.domain.card.event;
 
 import com.nullpointer.domain.card.vo.enums.Priority;
 import lombok.Builder;
@@ -13,9 +13,13 @@ public class CardEvent {
     private Long cardId;
     private String cardTitle;
     private Long boardId;
+    private Long teamId;
 
     private Long listId; // 카드가 속한/이동한 리스트 id
     private String listTitle;
+
+    private Long prevListId; // 이동 전 리스트 id
+    private String prevListTitle;
 
     private Long actorId; // 행동한 사람
     private String actorNickname; // 행동한 사람의 닉네임
@@ -34,6 +38,8 @@ public class CardEvent {
     private String checklistContent; // 체크리스트 내용
     private Boolean checklistDone; // 완료 여부
 
+    private Boolean isArchived;
+
     // 변경된 속성 목록
     private Set<String> changedFields;
 
@@ -42,7 +48,9 @@ public class CardEvent {
     public enum EventType {
         ASSIGNED,
         MOVED,
+        CREATED,
         UPDATED,
+        DELETED,
         COMMENT,
         REPLY,
         MENTION,

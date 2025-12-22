@@ -1,5 +1,7 @@
 package com.nullpointer.domain.file.service.impl;
 
+import com.nullpointer.domain.board.mapper.BoardMapper;
+import com.nullpointer.domain.board.vo.BoardVo;
 import com.nullpointer.domain.card.helper.CardEventHelper;
 import com.nullpointer.domain.card.mapper.CardMapper;
 import com.nullpointer.domain.card.vo.CardVo;
@@ -36,6 +38,7 @@ public class FileServiceImpl implements FileService {
     private final S3FileStorageService fileStorageService;
     private final SocketSender socketSender;
     private final CardEventHelper cardEventHelper;
+    private final BoardMapper boardMapper;
 
     @Override
     @Transactional
@@ -48,6 +51,10 @@ public class FileServiceImpl implements FileService {
 
         // 2. 권한 검증
         Long boardId = validateCardAndPermission(cardId, userId);
+
+        BoardVo board = boardMapper.findBoardByBoardId(boardId)
+                .orElseThrow(() -> new BusinessException(ErrorCode.BOARD_NOT_FOUND));
+        Long teamId = board.getTeamId();
 
         // 3. S3에 파일 저장
         String filePath = fileStorageService.storeFile(file, userId, FileType.ATTACHMENT);
@@ -64,7 +71,7 @@ public class FileServiceImpl implements FileService {
 
         fileMapper.insertFile(fileVo);
 
-        cardEventHelper.publishFileAttachment(actor, card, boardId, fileVo.getFileName());
+        cardEventHelper.publishFileAttachment(actor, card, boardId, teamId, fileVo.getFileName());
 
         // 5. 응답 반환
         // 파일 다운로드 URL 생성

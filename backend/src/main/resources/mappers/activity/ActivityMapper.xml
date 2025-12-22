@@ -23,20 +23,20 @@
     <!-- 통계 조회 -->
     <select id="getStats" resultType="ActivityStatsResponse">
         SELECT
-        (SELECT COUNT(*) FROM activity_log l
-        <include refid="searchCriteria"/>
-        AND type = 'CREATE_CARD' AND created_at >= DATE_SUB(NOW(), INTERVAL 7 DAY)) AS createdCards7,
+        COUNT(CASE WHEN type = 'CREATE_CARD' THEN 1 END) AS createdCards7,
+        COUNT(CASE WHEN type = 'COMPLETE_CARD' THEN 1 END) AS completedTasks7,
+        COUNT(CASE WHEN type = 'CREATE_COMMENT' THEN 1 END) AS comments7
+        FROM activity_log l
+        <where>
+            <if test="userId != null">AND l.user_id = #{userId}</if>
+            <if test="teamId != null">AND l.team_id = #{teamId}</if>
+            <if test="boardId != null">AND l.board_id = #{boardId}</if>
 
-        (SELECT COUNT(*) FROM activity_log l
-        <include refid="searchCriteria"/>
-        AND type = 'COMPLETE_CARD' AND created_at >= DATE_SUB(NOW(), INTERVAL 7 DAY)) AS completedTasks7,
-
-        (SELECT COUNT(*) FROM activity_log l
-        <include refid="searchCriteria"/>
-        AND type = 'CREATE_COMMENT' AND created_at >= DATE_SUB(NOW(), INTERVAL 7 DAY)) AS comments7
+            AND l.created_at >= DATE_SUB(NOW(), INTERVAL 7 DAY)
+        </where>
     </select>
 
-    <!-- 인기 보드 조회 -->
+    <!-- 인기 보드 조회 ('내'가 로그를 많이 남긴 보드) -->
     <select id="findTopActiveBoards" resultType="TopBoardResponse">
         SELECT b.id,
         b.title,
@@ -45,12 +45,12 @@
         COUNT(l.id) as activity_count
         FROM board b
         JOIN board_member bm ON b.id = bm.board_id
+        AND bm.user_id = #{userId}
         LEFT JOIN activity_log l ON b.id = l.board_id
+        AND l.user_id = #{userId}
         AND l.created_at >= DATE_SUB(NOW(), INTERVAL 30 DAY)
         <where>
             b.deleted_at IS NULL AND bm.deleted_at IS NULL
-            <!-- 유저 기준 인기보드 -->
-            <if test="userId != null">AND bm.user_id = #{userId}</if>
             <!-- 팀 기준 인기보드 -->
             <if test="teamId != null">AND b.team_id = #{teamId}</if>
         </where>
@@ -65,6 +65,7 @@
         l.type,
         l.target_name AS targetName,
         l.description,
+        l.detail,
         l.created_at AS createdAt,
         u.nickname AS actorName,
         b.title AS boardTitle
@@ -84,6 +85,7 @@
                                   target_id,
                                   target_name,
                                   description,
+                                  detail,
                                   created_at)
         VALUES (#{userId},
                 #{teamId},
@@ -92,6 +94,7 @@
                 #{targetId},
                 #{targetName},
                 #{description},
+                #{detail},
                 NOW())
     </insert>
 

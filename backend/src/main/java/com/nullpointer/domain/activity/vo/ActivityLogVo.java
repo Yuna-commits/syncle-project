@@ -17,8 +17,8 @@ public class ActivityLogVo {
     private Long userId;
     private Long teamId;
     private Long boardId;
-
     private ActivityType type;
+
     private Long targetId;
     private String targetName;
     private String description;
