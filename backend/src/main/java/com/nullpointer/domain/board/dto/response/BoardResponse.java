@@ -22,6 +22,7 @@ public class BoardResponse {
     private Visibility visibility;
     private Boolean isFavorite;
     private LocalDateTime favoritedAt;
+    private Boolean isGuest;
 
     public static BoardResponse from(BoardVo vo) {
         return BoardResponse.builder()
@@ -33,6 +34,7 @@ public class BoardResponse {
                 .visibility(vo.getVisibility())
                 .isFavorite(vo.getIsFavorite())
                 .favoritedAt(vo.getFavoritedAt())
+                .isGuest(vo.getIsGuest())
                 .build();
     }
 }

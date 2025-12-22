@@ -7,7 +7,7 @@ import { useDashboardQuery } from '../../hooks/team/useTeamQuery'
 function DashboardPage() {
   // 데이터 조회
   const { data: rawData, isLoading, refetch } = useDashboardQuery()
-
+  console.log('서버에서 받은 보드 데이터:', rawData)
   // 데이터 가공
   const allBoards = rawData || []
 
@@ -20,6 +20,7 @@ function DashboardPage() {
       title: board.title,
       imageUrl: board.imageUrl,
       isFavorite: board.isFavorite,
+      isGuest: board.isGuest,
     }))
 
   // 팀별 그룹화
@@ -41,6 +42,7 @@ function DashboardPage() {
         title: cur.title,
         imageUrl: cur.imageUrl,
         isFavorite: cur.isFavorite,
+        isGuest: cur.isGuest,
       })
     }
     return acc
@@ -91,6 +93,7 @@ function DashboardPage() {
                       imageUrl="https://picsum.photos/400/200"
                       title={board.title}
                       isFavorite={board.isFavorite}
+                      isGuest={board.isGuest}
                       onToggleFavorite={handleBoardUpdate}
                     />
                   </motion.div>
