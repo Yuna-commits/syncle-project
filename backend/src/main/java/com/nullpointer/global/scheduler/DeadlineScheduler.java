@@ -1,10 +1,10 @@
 package com.nullpointer.global.scheduler;
 
+import com.nullpointer.domain.card.event.CardEvent;
 import com.nullpointer.domain.card.mapper.CardMapper;
 import com.nullpointer.domain.card.vo.CardVo;
 import com.nullpointer.domain.list.mapper.ListMapper;
 import com.nullpointer.domain.list.vo.ListVo;
-import com.nullpointer.domain.notification.event.CardEvent;
 import com.nullpointer.global.common.enums.ErrorCode;
 import com.nullpointer.global.common.enums.RedisKeyType;
 import com.nullpointer.global.common.enums.SystemActor;

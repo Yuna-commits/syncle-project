@@ -1,5 +1,6 @@
 package com.nullpointer.domain.comment.service;
 
+import com.nullpointer.domain.card.event.CardEvent;
 import com.nullpointer.domain.card.mapper.CardMapper;
 import com.nullpointer.domain.card.vo.CardVo;
 import com.nullpointer.domain.comment.dto.CommentRequest;
@@ -8,7 +9,6 @@ import com.nullpointer.domain.comment.mapper.CommentMapper;
 import com.nullpointer.domain.comment.vo.CommentVo;
 import com.nullpointer.domain.list.mapper.ListMapper;
 import com.nullpointer.domain.list.vo.ListVo;
-import com.nullpointer.domain.notification.event.CardEvent;
 import com.nullpointer.domain.user.mapper.UserMapper;
 import com.nullpointer.domain.user.vo.UserVo;
 import com.nullpointer.global.common.SocketSender;

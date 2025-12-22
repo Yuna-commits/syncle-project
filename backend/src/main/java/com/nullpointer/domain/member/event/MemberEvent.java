@@ -1,4 +1,4 @@
-package com.nullpointer.domain.notification.event;
+package com.nullpointer.domain.member.event;
 
 import com.nullpointer.domain.member.vo.enums.Role;
 import com.nullpointer.domain.notification.vo.enums.NotificationType;

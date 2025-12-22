@@ -1,4 +1,4 @@
-package com.nullpointer.domain.notification.event;
+package com.nullpointer.domain.invitation.event;
 
 import com.nullpointer.domain.notification.vo.enums.NotificationType;
 import lombok.Builder;
