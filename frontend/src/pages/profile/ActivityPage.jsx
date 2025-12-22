@@ -5,19 +5,68 @@ import BoardCard from '../../components/activity_log/BoardCard'
 import DateRangePickerMenu from '../../components/modals/DateRangePickerMenu'
 import ActivityLogItem from '../../components/activity_log/ActivityLogItem'
 import useActivityFilterStore from '../../stores/useActivityFilterStore'
-import { useActivityQuery } from '../../hooks/useActivityQuery'
-import { CalendarIcon, Filter, Inbox, RefreshCcw, Search } from 'lucide-react'
+import {
+  useActivityStats,
+  useInfiniteActivityLogs,
+} from '../../hooks/useActivityQuery'
+import {
+  CalendarIcon,
+  ChevronDown,
+  Filter,
+  Inbox,
+  Loader2,
+  RefreshCcw,
+  Search,
+  X,
+} from 'lucide-react'
 
 export default function ActivityPage() {
   // 필터 상태 관리
   const { filter, setFilter, reset } = useActivityFilterStore()
 
-  // 데이터 조회
-  const { data, isLoading, error, refetch } = useActivityQuery()
-  const { stats, topBoards, logs } = data || {
-    stats: { createdCards7: 0, completedTasks7: 0, comments7: 0 },
-    topBoards: [],
-    logs: [],
+  const [localKeyword, setLocalKeyword] = useState(filter.keyword || '')
+
+  // 엔터 키 감지 핸들러
+  const handleKeyDown = (e) => {
+    if (e.key === 'Enter') {
+      setFilter({ keyword: localKeyword }) // 엔터 누르면 store 업데이트 -> API 호출
+    }
+  }
+
+  // 통계 데이터
+  const {
+    data: dashboardData,
+    isLoading: isStatsLoading,
+    refetch: refetchStats,
+  } = useActivityStats()
+
+  const stats = dashboardData?.stats || {
+    createdCards7: 0,
+    completedTasks7: 0,
+    comments7: 0,
+  }
+  const topBoards = dashboardData?.topBoards || []
+
+  // 로그 데이터
+  const {
+    data: groupedLogs, // select 옵션을 통해 이미 날짜별로 그룹화된 데이터가 들어옴
+    fetchNextPage, // 다음 페이지 불러오기 함수
+    hasNextPage, // 더 불러올 데이터가 있는지 여부
+    isFetchingNextPage, // 추가 데이터 로딩 중인지 여부
+    isLoading: isLogsLoading,
+    isError,
+    refetch: refetchLogs,
+  } = useInfiniteActivityLogs()
+
+  // 언마운트 시 필터 초기화
+  useEffect(() => {
+    return () => reset()
+  }, [reset])
+
+  // 새로고침
+  const handleRefresh = () => {
+    refetchStats()
+    refetchLogs()
   }
 
   // 날짜 범위 (전체 기간 → null)
@@ -28,11 +77,6 @@ export default function ActivityPage() {
   const calendarButtonRef = useRef(null)
   // 메뉴 위치 상태
   const [calendarPos, setCalendarPos] = useState({ top: 0, right: 0 })
-
-  // 언마운트 시 필터 초기화
-  useEffect(() => {
-    return () => reset()
-  }, [reset])
 
   // 달력 토글 핸들러
   const toggleCalendar = () => {
@@ -85,15 +129,14 @@ export default function ActivityPage() {
     setOpenCalendar(false)
   }
 
-  // 검색어 엔터 처리
-  const handleSearch = (e) => {
-    setFilter({ keyword: e.target.value })
-  }
+  // 초기 전체 로딩 (통계나 첫 로그가 로딩 중일 때)
+  const isPageLoading = isStatsLoading || (isLogsLoading && !groupedLogs)
 
-  if (isLoading && !logs.length && !topBoards.length) {
+  if (isPageLoading) {
     return (
-      <div className="p-20 text-center text-gray-500">
-        데이터를 불러오는 중...
+      <div className="flex h-screen items-center justify-center gap-2 text-gray-500">
+        <Loader2 className="animate-spin" size={24} />
+        <span>데이터를 불러오는 중...</span>
       </div>
     )
   }
@@ -109,7 +152,7 @@ export default function ActivityPage() {
           </p>
         </div>
         <button
-          onClick={() => refetch()}
+          onClick={() => handleRefresh}
           className="flex items-center gap-2 rounded-lg border-b border-gray-100 bg-white px-4 py-2 text-sm font-medium text-gray-600 shadow-sm transition-colors hover:cursor-pointer hover:bg-gray-200"
         >
           <RefreshCcw size={16} />
@@ -157,10 +200,22 @@ export default function ActivityPage() {
               <input
                 type="text"
                 placeholder="활동 검색..."
-                value={filter.keyword || ''}
-                onChange={handleSearch}
+                value={localKeyword}
+                onChange={(e) => setLocalKeyword(e.target.value)}
+                onKeyDown={handleKeyDown}
                 className="block w-full rounded-lg border border-gray-300 bg-gray-50 py-2 pr-3 pl-10 text-sm placeholder-gray-400 focus:border-blue-500 focus:bg-blue-50 focus:ring-1 focus:ring-blue-500 focus:outline-none"
               />
+              {localKeyword && (
+                <button
+                  onClick={() => {
+                    setLocalKeyword('') // 1. 입력창 비우기
+                    setFilter({ keyword: '' }) // 2. 즉시 필터 초기화 및 재조회 요청
+                  }}
+                  className="absolute inset-y-0 right-0 flex cursor-pointer items-center pr-3 text-gray-400 hover:text-gray-600"
+                >
+                  <X size={16} />
+                </button>
+              )}
             </div>
 
             <div className="flex items-center gap-2">
@@ -171,10 +226,11 @@ export default function ActivityPage() {
                   onChange={(e) => setFilter({ type: e.target.value })}
                   className="appearance-none rounded-lg border border-gray-300 bg-gray-50 py-2 pr-8 pl-3 text-sm font-medium text-gray-700 hover:cursor-pointer hover:bg-gray-200 focus:border-blue-500 focus:ring-1 focus:ring-blue-500 focus:outline-none"
                 >
-                  <option value="all">모든 활동</option>
-                  <option value="card_create">카드 생성</option>
-                  <option value="card_update">카드 수정</option>
-                  <option value="comment">댓글</option>
+                  <option value="ALL">모든 활동</option>
+                  <option value="CREATE_CARD">카드 생성</option>
+                  <option value="UPDATE_CARD">카드 수정</option>
+                  <option value="ADD_COMMENT">댓글</option>
+                  <option value="CHECKLIST_COMPLETED">체크리스트</option>
                 </select>
                 <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center px-2 text-gray-500">
                   <Filter size={14} />
@@ -212,21 +268,15 @@ export default function ActivityPage() {
             </div>
           </div>
 
-          {/* 로그 리스트 - 로그 저장 방식 수정 필요!!! */}
+          {/* 로그 리스트 */}
           <div
-            className={`rounded-2xl border border-gray-300 bg-white p-6 shadow-sm ${
-              isLoading || error || logs.length === 0 ? 'min-h-[400px]' : ''
-            }`}
+            className={`min-h-[400px] rounded-2xl border border-gray-300 bg-white p-6 shadow-sm`}
           >
-            {isLoading ? (
-              <div className="flex h-64 items-center justify-center">
-                <div className="h-8 w-8 animate-spin rounded-full border-4 border-blue-500 border-t-transparent"></div>
-              </div>
-            ) : error ? (
+            {isError ? (
               <div className="flex h-64 items-center justify-center text-red-500">
                 데이터를 불러오지 못했습니다.
               </div>
-            ) : logs.length === 0 ? (
+            ) : !groupedLogs || groupedLogs.length === 0 ? (
               <div className="flex h-64 flex-col items-center justify-center gap-2">
                 <div className="flex h-12 w-12 items-center justify-center rounded-full bg-gray-100 text-gray-400">
                   <Inbox size={24} />
@@ -234,25 +284,53 @@ export default function ActivityPage() {
                 <p className="text-gray-500">활동 내역이 없습니다.</p>
               </div>
             ) : (
-              logs.map((group) => (
-                <div
-                  key={group.date}
-                  className="relative mb-6 border-l-2 border-gray-300 pl-4.5 last:mb-0 hover:cursor-pointer"
-                >
-                  <div className="mb-4 flex items-center">
-                    <div className="mr-4 -ml-[25px] h-3 w-3 rounded-full border border-gray-100 bg-gray-300 ring-4 ring-white"></div>
-                    <h4 className="text-sm font-bold text-gray-500">
-                      {group.date}
-                    </h4>
+              <>
+                {/* 날짜별 그룹 렌더링 */}
+                {groupedLogs.map((group) => (
+                  <div
+                    key={group.date}
+                    className="relative mb-6 border-l-2 border-gray-300 pl-4.5 last:mb-0"
+                  >
+                    <div className="mb-4 flex items-center">
+                      <div className="mr-4 -ml-[25px] h-3 w-3 rounded-full border border-gray-100 bg-gray-300 ring-4 ring-white"></div>
+                      <h4 className="text-sm font-bold text-gray-500">
+                        {group.date}
+                      </h4>
+                    </div>
+                    <div className="space-y-3">
+                      {group.logs.map((item) => (
+                        <ActivityLogItem key={item.id} log={item} />
+                      ))}
+                    </div>
                   </div>
+                ))}
 
-                  <div className="space-y-3">
-                    {group.logs.map((item) => (
-                      <ActivityLogItem key={item.id} log={item} />
-                    ))}
+                {/* 더보기 버튼 (페이지네이션) */}
+                {hasNextPage && (
+                  <div className="mt-8 flex justify-center pb-4">
+                    <button
+                      onClick={() => fetchNextPage()}
+                      disabled={isFetchingNextPage}
+                      className="group flex w-full max-w-xs items-center justify-center gap-2 rounded-xl border border-gray-200 bg-white py-3 text-sm font-medium text-gray-600 shadow-sm transition-all hover:border-blue-300 hover:bg-blue-50 hover:text-blue-600 disabled:cursor-not-allowed disabled:opacity-70"
+                    >
+                      {isFetchingNextPage ? (
+                        <>
+                          <Loader2 className="animate-spin" size={16} />
+                          불러오는 중...
+                        </>
+                      ) : (
+                        <>
+                          <ChevronDown
+                            size={16}
+                            className="transition-transform group-hover:translate-y-0.5"
+                          />
+                          더 보기
+                        </>
+                      )}
+                    </button>
                   </div>
-                </div>
-              ))
+                )}
+              </>
             )}
           </div>
         </div>

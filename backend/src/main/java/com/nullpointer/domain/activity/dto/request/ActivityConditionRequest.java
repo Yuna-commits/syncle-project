@@ -5,6 +5,8 @@ import lombok.Builder;
 import lombok.Getter;
 import lombok.Setter;
 
+import java.time.LocalDateTime;
+
 @Getter
 @Setter
 @Builder
@@ -20,7 +22,7 @@ public class ActivityConditionRequest {
 
     private String keyword; // 검색어
     private ActivityType type; // 활동 유형
-    private String startDate; // 날짜 범위
-    private String endDate;
+    private LocalDateTime startDate; // 날짜 범위
+    private LocalDateTime endDate;
 
 }

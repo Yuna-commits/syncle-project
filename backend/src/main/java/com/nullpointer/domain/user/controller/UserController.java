@@ -5,6 +5,7 @@ import com.nullpointer.domain.activity.dto.response.ActivityLogResponse;
 import com.nullpointer.domain.activity.dto.response.ActivityStatsResponse;
 import com.nullpointer.domain.activity.dto.response.TopBoardResponse;
 import com.nullpointer.domain.activity.service.ActivityService;
+import com.nullpointer.domain.activity.vo.enums.ActivityType;
 import com.nullpointer.domain.auth.dto.request.AuthRequest;
 import com.nullpointer.domain.auth.dto.request.PasswordRequest;
 import com.nullpointer.domain.user.dto.request.UpdateProfileRequest;
@@ -12,15 +13,21 @@ import com.nullpointer.domain.user.dto.response.UserProfileResponse;
 import com.nullpointer.domain.user.dto.response.UserSummaryResponse;
 import com.nullpointer.domain.user.service.UserService;
 import com.nullpointer.global.common.ApiResponse;
+import com.nullpointer.global.common.annotation.LoginUser;
 import com.nullpointer.global.security.jwt.CustomUserDetails;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.web.PageableDefault;
+import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 
+import java.time.LocalDate;
 import java.util.List;
 
 @Tag(name = "User", description = "사용자 정보 및 프로필 관리 API")
@@ -146,14 +153,24 @@ public class UserController {
     // 사용자 활동 타임라인 조회 (검색 포함)
     @Operation(summary = "내 활동 타임라인 조회", description = "나의 전체 활동 로그를 조회합니다.")
     @GetMapping("/me/activities")
-    public ApiResponse<List<ActivityLogResponse>> getMyActivities(
-            @AuthenticationPrincipal CustomUserDetails userDetails, @ModelAttribute ActivityConditionRequest condition) {
-        condition.setUserId(userDetails.getUserId());
-        condition.setTeamId(null); // 다른 조건 초기화
-        condition.setBoardId(null);
+    public ApiResponse<Page<ActivityLogResponse>> getMyActivities(
+            @LoginUser Long userId,
+            @RequestParam(required = false) ActivityType type,
+            @RequestParam(required = false) String keyword,
+            @RequestParam(required = false) @DateTimeFormat(pattern = "yyyy-MM-dd") LocalDate startDate,
+            @RequestParam(required = false) @DateTimeFormat(pattern = "yyyy-MM-dd") LocalDate endDate,
+            @PageableDefault(size = 10) Pageable pageable
+    ) {
+        ActivityConditionRequest condition = ActivityConditionRequest.builder()
+                .userId(userId)
+                .type(type)
+                .keyword(keyword)
+                .startDate(startDate != null ? startDate.atStartOfDay() : null)
+                .endDate(endDate != null ? endDate.atTime(23, 59, 59) : null)
+                .build();
 
-        List<ActivityLogResponse> response
-                = activityService.getActivities(condition);
+        Page<ActivityLogResponse> response
+                = activityService.getActivities(condition, pageable);
 
         return ApiResponse.success(response);
     }

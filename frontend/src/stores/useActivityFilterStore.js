@@ -3,7 +3,7 @@ import { create } from 'zustand'
 const useActivityFilterStore = create((set) => ({
   // 필터 상태
   filter: {
-    type: 'all',
+    type: 'ALL',
     keyword: '',
     startDate: null,
     endDate: null,
@@ -16,7 +16,7 @@ const useActivityFilterStore = create((set) => ({
   // 초기화
   reset: () =>
     set({
-      filter: { type: 'all', keyword: '', startDate: null, endDate: null },
+      filter: { type: 'ALL', keyword: '', startDate: null, endDate: null },
     }),
 }))
 

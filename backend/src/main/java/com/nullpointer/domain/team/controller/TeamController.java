@@ -99,10 +99,10 @@ public class TeamController {
         condition.setUserId(null);
         condition.setBoardId(null);
 
-        List<ActivityLogResponse> response
-                = activityService.getActivities(condition);
+//        List<ActivityLogResponse> response
+//                = activityService.getActivities(condition);
 
-        return ApiResponse.success(response);
+        return ApiResponse.success(null);
     }
 
     // 조회 조건 설정

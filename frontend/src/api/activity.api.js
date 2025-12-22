@@ -5,6 +5,6 @@ export const activityApi = {
   getStats: () => api.get('/users/me/activities/stats'),
   // 인기 보드
   getTopBoards: () => api.get('/users/me/activities/top-boards'),
-  // 활동 로그(params: 필터)
+  // 활동 로그 (params: { page, size, type, keyword, startDate, endDate })
   getLogs: (params) => api.get('/users/me/activities', { params }),
 }
