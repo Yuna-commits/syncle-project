@@ -10,7 +10,7 @@ export default function ArchiveView({ board }) {
   const [searchTerm, setSearchTerm] = useState('')
 
   const { updateListArchiveStatus, deleteList } = useListMutations(board.id)
-  const { updateCardArchiveStatus, deleteCard } = useCardMutations(board.id)
+  const { updateCard, deleteCard } = useCardMutations(board.id)
   const { openCardModal } = useBoardStore()
 
   // 아카이브된 리스트 필터링
@@ -50,7 +50,13 @@ export default function ArchiveView({ board }) {
     }
 
     // 2. 카드 복구 실행
-    updateCardArchiveStatus({ cardId: card.id, isArchived: false })
+    updateCard({
+      cardId: card.id,
+      listId: card.listId,
+      updates: {
+        isArchived: false,
+      },
+    })
   }
 
   return (

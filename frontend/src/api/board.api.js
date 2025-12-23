@@ -58,11 +58,6 @@ export const boardApi = {
     }),
   // 카드 수정
   updateCard: (cardId, updates) => api.patch(`/cards/${cardId}`, updates),
-  // 카드 아카이브 변경
-  updateCardArchiveStatus: (cardId, isArchived) =>
-    api.patch(`/cards/${cardId}/archive`, null, {
-      params: { isArchived },
-    }),
   // 카드 삭제
   deleteCard: (cardId) => api.delete(`/cards/${cardId}`),
   // 카드 이동

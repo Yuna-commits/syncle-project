@@ -178,6 +178,7 @@
             <if test="priority != null">priority = #{priority},</if>
             <if test="startDate != null">start_date = #{startDate},</if>
             <if test="dueDate != null">due_date = #{dueDate},</if>
+            <if test="isArchived != null">is_archived = #{isArchived},</if>
             <if test="label != null">label = #{label},</if>
             <if test="labelColor != null">label_color = #{labelColor},</if>
             updated_at = NOW()
@@ -189,7 +190,7 @@
     <update id="updateCardArchiveStatus">
         UPDATE card
         SET is_archived = #{isArchived},
-            updated_at = NOW()
+            updated_at  = NOW()
         WHERE id = #{cardId}
           AND deleted_at IS NULL
     </update>

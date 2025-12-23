@@ -26,5 +26,4 @@ public interface CardService {
 
     List<CardResponse> getMyCards(Long userId, Long teamId, Long boardId);
 
-    void updateArchiveStatus(Long cardId, boolean isArchived, Long userId);
 }

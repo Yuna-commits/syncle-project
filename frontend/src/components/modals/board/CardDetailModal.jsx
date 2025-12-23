@@ -19,11 +19,8 @@ export default function CardDetailModal() {
   const { selectedCard, closeCardModal } = useBoardStore()
 
   const { data: activeBoard } = useBoardQuery(boardId)
-  // 권한 조회
   const { canEdit } = useBoardPermission(activeBoard)
-  const { updateCard, updateCardArchiveStatus } = useCardMutations(
-    activeBoard?.id,
-  )
+  const { updateCard } = useCardMutations(activeBoard?.id)
 
   // activeBoard가 갱신될 때 selectedCard 동기화
   useEffect(() => {
@@ -100,10 +97,18 @@ export default function CardDetailModal() {
       : '이 카드를 다시 보드로 복구하시겠습니까?'
 
     if (window.confirm(message)) {
-      updateCardArchiveStatus({
+      updateCard({
         cardId: selectedCard.id,
-        isArchived: newStatus,
+        listId: selectedCard.listId,
+        updates: {
+          isArchived: newStatus,
+        },
       })
+
+      // 아카이브(보관) 처리 시 모달 닫기
+      if (newStatus === true) {
+        closeCardModal()
+      }
     }
   }
 

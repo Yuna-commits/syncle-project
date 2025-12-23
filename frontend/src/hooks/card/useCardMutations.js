@@ -90,6 +90,8 @@ const updateCardOptimisticUpdate = (oldBoard, { cardId, listId, updates }) => {
 
   // 수정하려는 카드가 존재하는 리스트
   const sourceList = { ...newColumns[sourceListId] }
+  // 리스트가 없을 경우 방어
+  if (!sourceList.tasks) return oldBoard
   sourceList.tasks = [...sourceList.tasks]
 
   const cardIndex = sourceList.tasks.findIndex((t) => t.id === cardId)
@@ -97,6 +99,20 @@ const updateCardOptimisticUpdate = (oldBoard, { cardId, listId, updates }) => {
 
   const oldCard = sourceList.tasks[cardIndex]
   const newCard = { ...oldCard, ...updates }
+
+  // 아카이브 처리: isArchived가 true로 변경되면 리스트에서 제거
+  if (updates.isArchived === true) {
+    sourceList.tasks.splice(cardIndex, 1)
+    newColumns[sourceListId] = sourceList
+
+    // 가상 리스트(완료)가 비었으면 삭제
+    if (sourceListId === DONE_LIST_ID && sourceList.tasks.length === 0) {
+      delete newColumns[DONE_LIST_ID]
+      newColumnOrder = newColumnOrder.filter((id) => id !== DONE_LIST_ID)
+    }
+
+    return { ...oldBoard, columns: newColumns, columnOrder: newColumnOrder }
+  }
 
   // 2. 업데이트 Target List 결정
   let targetListId = sourceListId
@@ -273,26 +289,13 @@ export const useCardMutations = (boardId) => {
     onSettled: () => queryClient.invalidateQueries({ queryKey }),
   })
 
-  // 카드 수정
+  // 카드 수정 (아카이브 포함)
   const updateCardMutation = useMutation({
     mutationFn: ({ cardId, updates }) => boardApi.updateCard(cardId, updates),
     onMutate: (vars) =>
       handleOptimisticUpdate(updateCardOptimisticUpdate, vars),
     onError: (err, vars, ctx) => handleError(ctx, '카드 수정 실패'),
     onSettled: () => queryClient.invalidateQueries({ queryKey }),
-  })
-
-  //카드 아카이브 상태 변경
-  const updateCardArchiveStatusMutation = useMutation({
-    mutationFn: ({ cardId, isArchived }) =>
-      boardApi.updateCardArchiveStatus(cardId, isArchived),
-    onSuccess: () => {
-      // 보드 데이터를 무효화하여 아카이브된 카드가 즉시 숨겨지게 합니다.
-      queryClient.invalidateQueries({ queryKey: ['board', boardId] })
-    },
-    onError: (error) => {
-      console.error('카드 아카이브 상태 변경 실패:', error)
-    },
   })
 
   // 카드 삭제
@@ -306,7 +309,6 @@ export const useCardMutations = (boardId) => {
     moveCard: moveCardMutation.mutate,
     addCard: addCardMutation.mutate,
     updateCard: updateCardMutation.mutate,
-    updateCardArchiveStatus: updateCardArchiveStatusMutation.mutate,
     deleteCard: deleteCardMutation.mutate,
   }
 }

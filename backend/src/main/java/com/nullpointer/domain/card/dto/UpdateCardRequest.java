@@ -1,26 +1,34 @@
 package com.nullpointer.domain.card.dto;
 
-import com.nullpointer.domain.card.vo.CardVo;
 import com.nullpointer.domain.card.vo.enums.Priority;
-import lombok.*;
+import lombok.Builder;
+import lombok.Getter;
 
 import java.time.LocalDateTime;
-import java.util.Optional;
 
 @Getter
 @Builder
 public class UpdateCardRequest {
+
     private String title;
     private String description;
+
     private Long assigneeId;
+
     private Priority priority;
-    private Boolean removePriority;
+
     private Boolean isComplete;
+    private Boolean isArchived;
+
     private String label;
     private String labelColor;
-    private Boolean removeLabel;
+
     private LocalDateTime startDate;
     private LocalDateTime dueDate;
+
+    // 삭제 플래그
+    private Boolean removePriority;
     private Boolean removeDate;
+    private Boolean removeLabel;
 
 }

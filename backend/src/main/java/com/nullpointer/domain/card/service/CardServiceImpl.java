@@ -3,7 +3,10 @@ package com.nullpointer.domain.card.service;
 import com.nullpointer.domain.board.mapper.BoardMapper;
 import com.nullpointer.domain.board.vo.BoardSettingVo;
 import com.nullpointer.domain.board.vo.BoardVo;
-import com.nullpointer.domain.card.dto.*;
+import com.nullpointer.domain.card.dto.CardResponse;
+import com.nullpointer.domain.card.dto.CreateCardRequest;
+import com.nullpointer.domain.card.dto.MoveCardRequest;
+import com.nullpointer.domain.card.dto.UpdateCardRequest;
 import com.nullpointer.domain.card.helper.CardEventHelper;
 import com.nullpointer.domain.card.helper.CardOrderManager;
 import com.nullpointer.domain.card.mapper.CardMapper;
@@ -22,7 +25,12 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
-import java.util.*;
+import java.time.format.DateTimeFormatter;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.function.Consumer;
+import java.util.function.Function;
 
 @Service
 @RequiredArgsConstructor
@@ -66,7 +74,7 @@ public class CardServiceImpl implements CardService {
         socketSender.sendSocketMessage(boardId, "CARD_CREATE", userId, response);
 
         // [이벤트] 카드 생성 이벤트 발행
-        cardEventHelper.publishCardCreateEvent(actor, cardVo, boardId, board.getTeamId());
+        cardEventHelper.publishCardCreateEvent(actor, cardVo, boardId, board.getTeamId(), actor.getNickname());
 
         // 담당자 정보 포함 응답 반환
         return response;
@@ -140,95 +148,62 @@ public class CardServiceImpl implements CardService {
                 .orElseThrow(() -> new BusinessException(ErrorCode.BOARD_NOT_FOUND));
         UserVo actor = userMapper.findById(userId)
                 .orElseThrow(() -> new BusinessException(ErrorCode.USER_NOT_FOUND));
+        Long teamId = board.getTeamId();
 
-        // 1. [캡처] 변경 전 데이터 저장 (로그 상세 메시지용)
-        String prevTitle = card.getTitle();
-        String prevLabel = card.getLabel();
-        Priority prevPriority = card.getPriority();
-        LocalDateTime prevDueDate = card.getDueDate();
-        LocalDateTime prevStartDate = card.getStartDate();
+        // 1. 담당자 변경
+        handleAssigneeChange(card, req.getAssigneeId(), boardId, teamId, actor);
 
-        Set<String> changedFields = new HashSet<>();
-        // 2. 주요 필드 변경 감지 & 카드 객체 업데이트
-        boolean isAssigneeChanged = applyChanges(card, req, boardId, changedFields);
+        // 2. 주요 필드 변경
+        checkAndUpdate(actor, card, boardId, teamId,
+                req.getPriority(), card.getPriority(), "중요도",
+                this::convertPriority, card::setPriority);
 
-        // 3. 담당자 이름 조회 (변경된 경우에만)
-        String assigneeNickname = null;
-        if (isAssigneeChanged && req.getAssigneeId() != null) {
-            assigneeNickname = userMapper.findById(req.getAssigneeId())
-                    .map(UserVo::getNickname)
-                    .orElse(null);
+        checkAndUpdate(actor, card, boardId, teamId,
+                req.getIsComplete(), card.getIsComplete(), "진행 상태",
+                this::convertComplete, card::setIsComplete);
+
+        checkAndUpdate(actor, card, boardId, teamId,
+                req.getDueDate(), card.getDueDate(), "마감일",
+                this::formatDate, card::setDueDate);
+
+        checkAndUpdate(actor, card, boardId, teamId,
+                req.getIsArchived(), card.getIsArchived(), "카드 상태",
+                this::convertArchive, card::setIsArchived);
+
+        if (req.getLabel() != null && !req.getLabel().equals(card.getLabel())) {
+            checkAndUpdate(actor, card, boardId, teamId,
+                    req.getLabel(), card.getLabel(), "라벨",
+                    val -> val == null ? "없음" : val, card::setLabel);
+        }
+        
+        // 라벨 색상 (로그 없음)
+        if (req.getLabelColor() != null) {
+            card.setLabelColor(req.getLabelColor());
         }
 
-        // [이벤트] 카드 설명 변경 시 멘션 알림 발행
-        cardEventHelper.processDescriptionMentions(actor, card, boardId, board.getTeamId(), req.getDescription());
+        // 시작일 (로그 없이 값만 업데이트)
+        if (req.getStartDate() != null && !req.getStartDate().equals(card.getStartDate())) {
+            card.setStartDate(req.getStartDate());
+        }
 
-        // 카드 정보 업데이트
-        CardVo updateVo = CardVo.builder()
-                .id(cardId)
-                .title(req.getTitle() != null ? req.getTitle() : card.getTitle()) // null이면 기존 값 유지
-                .description(req.getDescription() != null ? req.getDescription() : card.getDescription())
-                .startDate(req.getStartDate() != null ? req.getStartDate() : card.getStartDate())
-                .label(req.getLabel() != null ? req.getLabel() : card.getLabel())
-                .labelColor(req.getLabelColor() != null ? req.getLabelColor() : card.getLabelColor())
-                // applyChanges에서 이미 최신화된 필드는 card 객체에서 가져옴
-                .priority(card.getPriority())
-                .isComplete(card.getIsComplete())
-                .dueDate(card.getDueDate())
-                .build();
+        // 3. 삭제 플래그 처리 (초기화)
+        handleRemovals(req, card, actor, boardId, teamId);
 
-        // 업데이트 진행
-        cardMapper.updateCard(updateVo);
-        // 초기화 요청 처리 (날짜, 라벨, 우선순위 제거)
-        handleRemoveRequests(cardId, req);
+        // 4. 일반 필드(제목/설명/라벨) 업데이트 및 멘션 처리
+        boolean isGeneralUpdated = updateContentFields(card, req, actor, boardId, teamId);
 
-        // 업데이트 된 카드 정보 조회
-        CardResponse response = cardMapper.findCardDetailById(card.getId());
-        // 소켓 전송
+        // 5. DB 반영 및 소켓 전송
+        cardMapper.updateCard(card);
+        CardResponse response = cardMapper.findCardDetailById(cardId);
         socketSender.sendSocketMessage(boardId, "CARD_UPDATE", userId, response);
 
-        // 4. [이벤트] DTO 생성
-        CardUpdateInfo updateInfo = CardUpdateInfo.builder()
-                .changedFields(changedFields)
-                .isAssigneeChanged(isAssigneeChanged)
-                .prevTitle(prevTitle)
-                .prevLabel(prevLabel)
-                .prevPriority(prevPriority)
-                .prevDueDate(prevDueDate)
-                .prevStartDate(prevStartDate)
-                .assigneeNickname(assigneeNickname)
-                .build();
-
-        // [이벤트] 카드 변경 알림 발행
-        cardEventHelper.publishCardUpdateEvent(actor, card, boardId, board.getTeamId(), updateInfo);
+        // 6. 일반 수정 이벤트 (상세 내용이 없는 경우)
+        if (isGeneralUpdated) {
+            cardEventHelper.publishCardUpdateEvent(
+                    actor, card, boardId, teamId, null, null, null, null);
+        }
 
         return response;
-    }
-
-    // 카드 아카이브 변경
-    @Override
-    @Transactional
-    public void updateArchiveStatus(Long cardId, boolean isArchived, Long userId) {
-        // 데이터 조회
-        CardVo card = cardMapper.findById(cardId)
-                .orElseThrow(() -> new BusinessException(ErrorCode.CARD_NOT_FOUND));
-        // 권한 검증 & 보드 id 조회
-        Long boardId = validateListAndPermission(card.getListId(), userId, false);
-        BoardVo board = boardMapper.findBoardByBoardId(boardId)
-                .orElseThrow(() -> new BusinessException(ErrorCode.BOARD_NOT_FOUND));
-        UserVo actor = userMapper.findById(userId)
-                .orElseThrow(() -> new BusinessException(ErrorCode.USER_NOT_FOUND));
-
-        // 업데이트
-        cardMapper.updateCardArchiveStatus(cardId, isArchived);
-
-        // 업데이트 된 카드 정보 조회
-        CardResponse response = cardMapper.findCardDetailById(card.getId());
-        // 소켓 전송
-        socketSender.sendSocketMessage(boardId, "CARD_UPDATE", userId, response);
-
-        // [이벤트] 아카이브 이벤트 발행
-        cardEventHelper.publishCardArchiveEvent(actor, card, boardId, board.getTeamId(), isArchived);
     }
 
     // 카드 삭제
@@ -267,66 +242,6 @@ public class CardServiceImpl implements CardService {
      * Helper Methods
      */
 
-    // 변경 사항 적용 & 변경된 필드 수집
-    private boolean applyChanges(CardVo card, UpdateCardRequest req, Long boardId, Set<String> changedFields) {
-        // 담당자 변경 확인
-        boolean isAssigneeChanged = false;
-
-        if (checkChange(req.getAssigneeId(), card.getAssigneeId())) {
-            // 본인이 담당자가 아니고 담당자로 지정된 사람이 보드에 접근 가능한지 확인 (VIEWER 이상)
-            memberVal.validateBoardViewer(boardId, req.getAssigneeId());
-            cardMapper.updateCardAssignee(card.getId(), req.getAssigneeId());
-            card.setAssigneeId(req.getAssigneeId());
-
-            isAssigneeChanged = true;
-            changedFields.add("ASSIGNEE");
-        }
-
-        // 제목 변경
-        if (checkChange(req.getTitle(), card.getTitle())) {
-            changedFields.add("TITLE");
-        }
-        // 설명 변경
-        if (checkChange(req.getDescription(), card.getDescription())) {
-            changedFields.add("DESCRIPTION");
-        }
-        // 주요 필드 변경 확인 (완료 여부, 우선순위, 마감일, 라벨)
-        if (checkChange(req.getIsComplete(), card.getIsComplete())) {
-            card.setIsComplete(req.getIsComplete());
-            changedFields.add("COMPLETE");
-        }
-        if (checkChange(req.getPriority(), card.getPriority())) {
-            card.setPriority(req.getPriority());
-            changedFields.add("PRIORITY");
-        }
-        if (checkChange(req.getDueDate(), card.getDueDate())) {
-            card.setDueDate(req.getDueDate());
-            changedFields.add("DUE_DATE");
-        }
-        if (checkChange(req.getStartDate(), card.getStartDate())) {
-            card.setStartDate(req.getStartDate());
-            changedFields.add("START_DATE");
-        }
-        if (checkChange(req.getLabel(), card.getLabel())) {
-            card.setLabel(req.getLabel());
-            changedFields.add("LABEL");
-        }
-
-        // 값이 삭제된 경우 감지 (값이 없어서 applyChanges가 감지 못함)
-        // -> 삭제 플래그가 true이고 기존에 값이 있었다면 변경된 것으로 간주
-        if (Boolean.TRUE.equals(req.getRemovePriority()) && card.getPriority() != null) {
-            changedFields.add("PRIORITY");
-        }
-        if (Boolean.TRUE.equals(req.getRemoveDate()) && card.getDueDate() != null) {
-            changedFields.add("DUE_DATE");
-        }
-        if (Boolean.TRUE.equals(req.getRemoveLabel()) && card.getLabel() != null) {
-            changedFields.add("LABEL");
-        }
-
-        return isAssigneeChanged;
-    }
-
     // 리스트 id로 소속된 보드를 찾고, 사용자의 편집 권한(MEMBER 이상) 검증
     private Long validateListAndPermission(Long listId, Long userId, boolean readOnly) {
         // 리스트가 속한 보드 id 찾기
@@ -344,25 +259,89 @@ public class CardServiceImpl implements CardService {
         return list.getBoardId();
     }
 
-    // 변경 사항 감지
-    private <T> boolean checkChange(T newValue, T oldValue) {
-        return newValue != null && !newValue.equals(oldValue);
-    }
+    // 변경 사항 감지 -> 로그 문자열 변환 -> 이벤트 발행 -> 값 설정
+    private <T> void checkAndUpdate(UserVo actor, CardVo card, Long boardId, Long teamId,
+                                    T newValue, T oldValue, String fieldName,
+                                    Function<T, String> converter, Consumer<T> setter) {
+        if (newValue != null && !newValue.equals(oldValue)) {
+            String oldStr = converter.apply(oldValue);
+            String newStr = converter.apply(newValue);
 
-    // 업데이트 시 특정 필드 초기화
-    private void handleRemoveRequests(Long cardId, UpdateCardRequest req) {
-        // 우선순위 초기화 요청 처리
-        if (Boolean.TRUE.equals(req.getRemovePriority())) {
-            cardMapper.deleteCardPriority(cardId);
-        }
-        // 마감일 초기화 요청 처리
-        if (Boolean.TRUE.equals(req.getRemoveDate())) {
-            cardMapper.deleteCardDates(cardId);
-        }
-        // 라벨 삭제 요청 처리
-        if (Boolean.TRUE.equals(req.getRemoveLabel())) {
-            cardMapper.deleteCardLabel(cardId);
+            // 상세 변경 이벤트 발행 (A -> B)
+            cardEventHelper.publishCardUpdateEvent(actor, card, boardId, teamId, null, fieldName, oldStr, newStr);
+            setter.accept(newValue);
         }
     }
 
+    // 담당자 변경 이벤트 발행
+    private void handleAssigneeChange(CardVo card, Long newAssigneeId, Long boardId, Long teamId, UserVo actor) {
+        if (newAssigneeId != null && !newAssigneeId.equals(card.getAssigneeId())) {
+            memberVal.validateBoardViewer(boardId, newAssigneeId); // 권한 체크
+
+            String nickname = userMapper.findById(newAssigneeId)
+                    .map(UserVo::getNickname).orElse("알 수 없음"); // 닉네임 조회
+
+            card.setAssigneeId(newAssigneeId);
+            cardMapper.updateCardAssignee(card.getId(), newAssigneeId);
+
+            // 담당자 변경 이벤트 발행
+            cardEventHelper.publishCardUpdateEvent(actor, card, boardId, teamId, nickname, null, null, null);
+        }
+    }
+
+    // 삭제 플래그 처리 (초기화)
+    private void handleRemovals(UpdateCardRequest req, CardVo card, UserVo actor, Long boardId, Long teamId) {
+        // 제거 요청이 있고, 기존 값이 존재할 때만 이벤트 발생 및 삭제
+        if (Boolean.TRUE.equals(req.getRemovePriority()) && card.getPriority() != null) {
+            String oldVal = convertPriority(card.getPriority());
+            cardEventHelper.publishCardUpdateEvent(actor, card, boardId, teamId, null, "중요도", oldVal, "없음");
+            card.setPriority(null);
+            cardMapper.deleteCardPriority(card.getId());
+        }
+        if (Boolean.TRUE.equals(req.getRemoveDate()) && card.getDueDate() != null) {
+            String oldVal = formatDate(card.getDueDate());
+            cardEventHelper.publishCardUpdateEvent(actor, card, boardId, teamId, null, "마감일", oldVal, "미지정");
+            card.setDueDate(null);
+            card.setStartDate(null);
+            cardMapper.deleteCardDates(card.getId());
+        }
+        if (Boolean.TRUE.equals(req.getRemoveLabel()) && card.getLabel() != null) {
+            cardEventHelper.publishCardUpdateEvent(actor, card, boardId, teamId, null, "라벨", card.getLabel(), "삭제됨");
+            card.setLabel(null);
+            card.setLabelColor(null);
+            cardMapper.deleteCardLabel(card.getId());
+        }
+    }
+
+    private boolean updateContentFields(CardVo card, UpdateCardRequest req, UserVo actor, Long boardId, Long teamId) {
+        boolean changed = false;
+        if (req.getTitle() != null && !req.getTitle().equals(card.getTitle())) {
+            card.setTitle(req.getTitle());
+            changed = true;
+        }
+        if (req.getDescription() != null && !req.getDescription().equals(card.getDescription())) {
+            cardEventHelper.processDescriptionMentions(actor, card, boardId, teamId, req.getDescription());
+            card.setDescription(req.getDescription());
+            changed = true;
+        }
+        // 라벨 변경 로직 등
+        return changed;
+    }
+
+    // --- Converters ---
+    private String convertPriority(Priority p) {
+        return p == null ? "없음" : p.getLabel();
+    }
+
+    private String convertComplete(Boolean b) {
+        return Boolean.TRUE.equals(b) ? "완료" : "진행 중";
+    }
+
+    private String convertArchive(Boolean b) {
+        return Boolean.TRUE.equals(b) ? "보관" : "일반";
+    }
+
+    private String formatDate(LocalDateTime d) {
+        return d == null ? "미지정" : d.format(DateTimeFormatter.ofPattern("MM월 dd일"));
+    }
 }
