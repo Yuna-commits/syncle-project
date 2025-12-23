@@ -3,6 +3,7 @@ import { useEffect, useRef, useState } from 'react'
 import { Link, useLocation, useNavigate } from 'react-router-dom'
 import { boardApi } from '../../api/board.api'
 import defaultProfile from '../../assets/images/default.png'
+import logo from '../../assets/images/logo_v5.png'
 import { useAuthQuery } from '../../hooks/auth/useAuthQuery'
 import { useNotificationQuery } from '../../hooks/notification/useNotificationQuery'
 import useUiStore from '../../stores/useUiStore'
@@ -92,7 +93,12 @@ function Header({ onOpenTeamModal }) {
   return (
     <nav className="relative z-50 flex h-14 w-full items-center justify-between border-b border-gray-200 bg-white px-6 shadow-sm">
       {/* 좌측 로고 */}
-      <Link to="dashboard" className="flex items-center gap-3">
+      <Link to="dashboard" className="flex items-center gap-2">
+        <img
+          src={logo}
+          alt="Syncle Logo"
+          className="h-8 w-auto object-contain"
+        />
         <span className="text-xl font-bold tracking-tight text-gray-800">
           Syncle
         </span>
