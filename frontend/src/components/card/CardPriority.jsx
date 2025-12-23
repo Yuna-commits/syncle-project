@@ -6,8 +6,9 @@ import { PRIORITY_OPTIONS } from '../../constants/priority'
 import { useBoardQuery } from '../../hooks/board/useBoardQuery'
 import { useCardMutations } from '../../hooks/card/useCardMutations'
 import useBoardStore from '../../stores/useBoardStore'
+import useBoardPermission from '../../hooks/board/useBoardPermission'
 
-export default function CardPriority() {
+export default function CardPriority({ handleMenuClick }) {
   const { boardId } = useParams()
   const { selectedCard } = useBoardStore()
   const { data: activeBoard } = useBoardQuery(boardId)
@@ -16,9 +17,11 @@ export default function CardPriority() {
   const [isOpen, setIsOpen] = useState(false)
   const buttonRef = useRef(null)
   const [popupPos, setPopupPos] = useState({ top: 0, left: 0 })
+  const { canEdit } = useBoardPermission(activeBoard)
 
   // 메뉴 토글
   const toggleMenu = () => {
+    if (canEdit) return
     if (!isOpen && buttonRef.current) {
       const rect = buttonRef.current.getBoundingClientRect()
       setPopupPos({ top: rect.bottom + 8, left: rect.left })
@@ -54,8 +57,8 @@ export default function CardPriority() {
       {/* 사이드바 버튼 */}
       <button
         ref={buttonRef}
-        onClick={toggleMenu}
-        className={`flex w-full items-center gap-2 rounded-md px-2 py-1.5 text-left text-sm transition-colors hover:cursor-pointer ${
+        onClick={() => handleMenuClick(toggleMenu)}
+        className={`flex w-full items-center gap-2 rounded-md px-2 py-1.5 text-left text-sm transition-colors ${canEdit ? 'hover:cursor-pointer' : 'cursor-default opacity-60'} ${
           isOpen ? 'bg-blue-100' : 'text-gray-700 hover:bg-gray-200'
         }`}
       >

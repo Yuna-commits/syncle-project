@@ -3,7 +3,7 @@ import AddListButton from './AddListButton'
 import BoardList from './BoardList'
 
 function BoardCanvas({ board, columnRefs, listContainerRef }) {
-  const { canEditList } = useBoardPermission(board)
+  const { canEdit, canEditList } = useBoardPermission(board)
 
   const orderedColumns = board.columnOrder
     ? board.columnOrder.map((id) => board.columns[id])
@@ -35,7 +35,7 @@ function BoardCanvas({ board, columnRefs, listContainerRef }) {
                 column={column}
                 innerRef={(el) => (columnRefs.current[column.id] = el)}
                 boardId={board.id}
-                canEditList={canEditList}
+                canEdit={canEdit}
               />
             ))}
           {canEditList && <AddListButton boardId={board.id} />}

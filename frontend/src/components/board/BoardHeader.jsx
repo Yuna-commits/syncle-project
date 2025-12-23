@@ -150,7 +150,10 @@ function BoardHeader({ board }) {
 
           {/* 필터 버튼 */}
           <button
-            onClick={() => setIsFilterOpen(!isFilterOpen)}
+            onClick={(e) => {
+              e.stopPropagation()
+              setIsFilterOpen(!isFilterOpen)
+            }}
             className={`flex items-center space-x-2 rounded-md px-3 py-1.5 transition-colors ${isFilterOpen ? 'bg-blue-100 text-blue-700' : 'bg-gray-100 text-gray-700 hover:bg-gray-200'}`}
           >
             <svg

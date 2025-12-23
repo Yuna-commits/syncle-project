@@ -35,7 +35,7 @@ function CardSidebar({
   const { selectedCard, closeCardModal } = useBoardStore()
   const { data: activeBoard } = useBoardQuery(boardId)
   const { updateCard, moveCard, deleteCard } = useCardMutations(activeBoard?.id)
-  const { canDeleteCard } = useBoardPermission(activeBoard)
+  const { canEdit, canDeleteCard } = useBoardPermission(activeBoard)
 
   // 파일 업로드 훅 사용
   const { uploadFile } = useFileMutations(Number(boardId))
@@ -134,8 +134,23 @@ function CardSidebar({
     setIsMoveOpen(!isMoveOpen)
   }
 
+  // 권한이 없으면 메뉴를 열지 않도록 차단
+  const handleMenuClick = (toggleFn) => {
+    if (canEdit) toggleFn()
+  }
+
+  // 파일 선택 핸들러
+  const handleFileClick = () => {
+    if (canEdit && fileInputRef.current) {
+      fileInputRef.current.click()
+    }
+  }
+
   // 파일 업로드 핸들러
   const handleFileChange = (e) => {
+    if (canEdit) {
+      fileInputRef.current?.click()
+    }
     const file = e.target.files?.[0]
     if (!file) return
 
@@ -265,8 +280,8 @@ function CardSidebar({
           {/* 담당자 버튼 */}
           <button
             ref={memberButtonRef}
-            onClick={toggleMemberMenu}
-            className={`flex w-full items-center gap-2 rounded-md px-2 py-1.5 text-left text-sm transition-colors hover:cursor-pointer ${
+            onClick={() => handleMenuClick(toggleMemberMenu)}
+            className={`flex w-full items-center gap-2 rounded-md px-2 py-1.5 text-left text-sm transition-colors ${canEdit ? 'hover:cursor-pointer' : 'cursor-default opacity-60'} ${
               isMemberOpen ? 'bg-blue-100' : 'text-gray-700 hover:bg-gray-200'
             }`}
           >
@@ -292,16 +307,16 @@ function CardSidebar({
           />
 
           {/* 라벨 컴포넌트 */}
-          <CardLabel />
+          <CardLabel handleMenuClick={handleMenuClick} />
 
           {/* 우선순위 컴포넌트 */}
-          <CardPriority />
+          <CardPriority handleMenuClick={handleMenuClick} />
 
           {/* 마감일 버튼 */}
           <button
             ref={dateButtonRef}
-            onClick={toggleDateMenu}
-            className={`flex w-full items-center gap-2 rounded-md px-2 py-1.5 text-left text-sm transition-colors hover:cursor-pointer ${
+            onClick={() => handleMenuClick(toggleDateMenu)}
+            className={`flex w-full items-center gap-2 rounded-md px-2 py-1.5 text-left text-sm transition-colors ${canEdit ? 'hover:cursor-pointer' : 'cursor-default opacity-60'} ${
               isDateOpen ? 'bg-blue-100' : 'text-gray-700 hover:bg-gray-200'
             }`}
           >
@@ -329,10 +344,10 @@ function CardSidebar({
             buttonRef={dateButtonRef}
           />
 
-          {/* 첨부파일 버튼 (추가됨) */}
+          {/* 첨부파일 버튼 */}
           <button
-            onClick={() => fileInputRef.current?.click()}
-            className="flex w-full items-center gap-2 rounded-md px-2 py-1.5 text-left text-sm text-gray-700 transition-colors hover:cursor-pointer hover:bg-gray-200"
+            onClick={handleFileClick}
+            className={`flex w-full items-center gap-2 rounded-md px-2 py-1.5 text-left text-sm text-gray-700 transition-colors ${canEdit ? 'hover:cursor-pointer' : 'cursor-default opacity-60'} hover:bg-gray-200`}
           >
             <Paperclip size={16} className="text-gray-500" />
             <span className="text-gray-500">첨부파일</span>
@@ -340,14 +355,14 @@ function CardSidebar({
           <input
             type="file"
             ref={fileInputRef}
-            onChange={handleFileChange}
+            onChange={() => handleFileChange}
             className="hidden"
           />
 
           {/* 체크리스트 버튼 */}
           <button
-            onClick={onAddChecklist}
-            className={`flex w-full items-center gap-2 rounded-md px-2 py-1.5 text-left text-sm transition-colors hover:cursor-pointer ${
+            onClick={() => handleMenuClick(onAddChecklist)}
+            className={`flex w-full items-center gap-2 rounded-md px-2 py-1.5 text-left text-sm transition-colors ${canEdit ? 'hover:cursor-pointer' : 'cursor-default opacity-60'} ${
               showChecklist ? 'bg-blue-100' : 'text-gray-700 hover:bg-gray-200'
             }`}
           >
@@ -357,8 +372,8 @@ function CardSidebar({
 
           {/* 댓글 버튼 */}
           <button
-            onClick={onToggleComment}
-            className={`flex w-full items-center gap-2 rounded-md px-2 py-1.5 text-left text-sm transition-colors hover:cursor-pointer ${
+            onClick={() => handleMenuClick(onToggleComment)}
+            className={`flex w-full items-center gap-2 rounded-md px-2 py-1.5 text-left text-sm transition-colors ${canEdit ? 'hover:cursor-pointer' : 'cursor-default opacity-60'} ${
               showComment ? 'bg-blue-100' : 'text-gray-700 hover:bg-gray-200'
             }`}
           >
@@ -370,7 +385,7 @@ function CardSidebar({
 
       <div className="space-y-2">
         {/* 이동 및 삭제 섹션 */}
-        {!selectedCard.isComplete && (
+        {!selectedCard.isComplete && canEdit && (
           <>
             <h4 className="mb-2 text-xs font-bold tracking-wider text-gray-500 uppercase">
               작업
@@ -397,23 +412,24 @@ function CardSidebar({
             />
           </>
         )}
-
-        <button
-          onClick={() => onArchiveToggle(!selectedCard.isArchived)}
-          className="flex w-full items-center gap-2 rounded-md px-3 py-1.5 text-left text-sm font-medium text-gray-700 transition-colors hover:cursor-pointer hover:bg-gray-200"
-        >
-          {selectedCard.isArchived ? (
-            <>
-              <ArrowUpCircle size={16} className="text-blue-600" />
-              <span>보드로 이동</span>
-            </>
-          ) : (
-            <>
-              <Archive size={16} className="text-orange-600" />
-              <span>아카이브로 이동</span>
-            </>
-          )}
-        </button>
+        {canEdit && (
+          <button
+            onClick={() => onArchiveToggle(!selectedCard.isArchived)}
+            className="flex w-full items-center gap-2 rounded-md px-3 py-1.5 text-left text-sm font-medium text-gray-700 transition-colors hover:cursor-pointer hover:bg-gray-200"
+          >
+            {selectedCard.isArchived ? (
+              <>
+                <ArrowUpCircle size={16} className="text-blue-600" />
+                <span>보드로 이동</span>
+              </>
+            ) : (
+              <>
+                <Archive size={16} className="text-orange-600" />
+                <span>아카이브로 이동</span>
+              </>
+            )}
+          </button>
+        )}
         {canDeleteCard && (
           <button
             onClick={handleDeleteCard}
