@@ -9,7 +9,6 @@ import com.nullpointer.global.common.annotation.LoginUser;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
-import org.springframework.security.core.parameters.P;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -42,19 +41,8 @@ public class CardManageController {
         return ApiResponse.success("카드 이동 성공");
     }
 
-    // 아카이브 변경
-    @Operation(summary = "아카이브 변경", description = "카드 아카이브 상태를 변경합니다.")
-    @PatchMapping("/{cardId}/archive")
-    public ApiResponse<String> updateCardArchiveStatus(
-            @PathVariable Long cardId,
-            @RequestParam boolean isArchived,
-            @LoginUser Long userId) {
-        cardService.updateArchiveStatus(cardId, isArchived, userId);
-        return ApiResponse.success("카드 아카이브 변경");
-    }
-
     // 카드 수정
-    @Operation(summary = "카드 수정", description = "카드 제목, 설명, 마감일 등 정보를 수정합니다.")
+    @Operation(summary = "카드 수정", description = "카드 제목, 설명, 마감일, 아카이브 등 정보를 수정합니다.")
     @PatchMapping("/{cardId}")
     public ApiResponse<String> updateCard(@PathVariable Long cardId,
                                           @RequestBody UpdateCardRequest req,
@@ -67,7 +55,7 @@ public class CardManageController {
     @Operation(summary = "카드 삭제", description = "카드를 삭제합니다 (멤버 등급 이상).")
     @DeleteMapping("/{cardId}")
     public ApiResponse<String> deleteCard(@PathVariable Long cardId,
-                                          @LoginUser  Long userId) {
+                                          @LoginUser Long userId) {
         cardService.deleteCard(cardId, userId);
         return ApiResponse.success("카드 삭제");
     }

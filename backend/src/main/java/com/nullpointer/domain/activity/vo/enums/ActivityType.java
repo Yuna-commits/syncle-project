@@ -6,26 +6,10 @@ import lombok.Getter;
 public enum ActivityType {
 
     // 1. 카드 작업
-    CREATE_CARD("카드 생성"),
-    MOVE_CARD("카드 이동"),
-    UPDATE_CARD("카드 수정"),
-    DELETE_CARD("카드 삭제"),
-    UPDATE_DUE_DATE("마감일 변경"),
-    UPDATE_PRIORITY("중요도 변경"),
-    COMPLETE_CARD("카드 완료"),
-    UNCOMPLETE_CARD("카드 완료 취소"),
-
-    // 2. 댓글
-    ADD_COMMENT("댓글 작성"),
-    ADD_REPLY("답글 작성"),
-
-    // 3. 파일/체크리스트
-    UPLOAD_FILE("파일 첨부"),
-    CHECKLIST_COMPLETED("체크리스트 완료"),
-
-    // 아카이브
-    ARCHIVE_CARD("카드 보관"),
-    RESTORE_CARD("카드 보관 복구"),
+    CREATE_CARD("카드를 생성했습니다."),
+    UPDATE_CARD("카드를 수정했습니다."), // 중요도, 보관, 완료, 라벨, 이동 등 모든 변경사항 매핑
+    ADD_COMMENT("댓글을 남겼습니다."),
+    CHECKLIST_COMPLETED("체크리스트를 완료했습니다."),
 
     // 4. 멤버/권한
     INVITE_MEMBER("멤버 초대"),

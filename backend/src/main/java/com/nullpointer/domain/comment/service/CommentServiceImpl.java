@@ -1,5 +1,7 @@
 package com.nullpointer.domain.comment.service;
 
+import com.nullpointer.domain.board.mapper.BoardMapper;
+import com.nullpointer.domain.board.vo.BoardVo;
 import com.nullpointer.domain.card.event.CardEvent;
 import com.nullpointer.domain.card.mapper.CardMapper;
 import com.nullpointer.domain.card.vo.CardVo;
@@ -37,6 +39,7 @@ public class CommentServiceImpl implements CommentService {
 
     private final MentionProcessor mentionProcessor;
     private final ApplicationEventPublisher publisher; // 이벤트 발행기
+    private final BoardMapper boardMapper;
 
 
     // 목록 조회
@@ -80,6 +83,8 @@ public class CommentServiceImpl implements CommentService {
     public CommentResponse createComment(Long cardId, Long userId, CommentRequest request) {
         // [권한 검증] MEMBER 이상 & boardId 조회
         Long boardId = validateCardAndPermission((cardId), userId, false);
+        BoardVo board = boardMapper.findBoardByBoardId(boardId)
+                .orElseThrow(() -> new BusinessException(ErrorCode.BOARD_NOT_FOUND));
 
         // 작성자 ID, 카드 ID 주입
         request.setWriterId(userId);
@@ -101,7 +106,7 @@ public class CommentServiceImpl implements CommentService {
         socketSender.sendSocketMessage(boardId, "CHECKLIST_CREATE", userId, null);
 
         // [알림] 멘션/댓글/답글 알림 처리
-        handleNotification(card, boardId, actor, request);
+        handleNotification(card, boardId, board.getTeamId(), actor, request);
 
         // 저장된 데이터를 Full 정보(작성자 포함)로 다시 조회해서 리턴
         return commentMapper.selectCommentById(request.getId());
@@ -173,7 +178,7 @@ public class CommentServiceImpl implements CommentService {
     }
 
     // 알림 처리 (멘션 + 댓글)
-    private void handleNotification(CardVo card, Long boardId, UserVo actor, CommentRequest request) {
+    private void handleNotification(CardVo card, Long boardId, Long teamId, UserVo actor, CommentRequest request) {
         // 멘션 파싱
         Set<Long> mentionedUserIds = mentionProcessor.parseMentions(request.getContent());
 
@@ -181,7 +186,7 @@ public class CommentServiceImpl implements CommentService {
         for (Long targetId : mentionedUserIds) {
             if (targetId.equals(actor.getId())) continue; // 본인 제외
 
-            publishCommentEvent(card, boardId, actor, request.getContent(),
+            publishCommentEvent(card, boardId, teamId, actor, request.getContent(),
                     CardEvent.EventType.MENTION, targetId);
         }
 
@@ -204,19 +209,20 @@ public class CommentServiceImpl implements CommentService {
         if (primaryTargetId != null
                 && !primaryTargetId.equals(actor.getId())
                 && !mentionedUserIds.contains(primaryTargetId)) {
-            publishCommentEvent(card, boardId, actor, request.getContent(), eventType, primaryTargetId);
+            publishCommentEvent(card, boardId, teamId, actor, request.getContent(), eventType, primaryTargetId);
         }
     }
 
     // [이벤트] 댓글 이벤트 발행
-    private void publishCommentEvent(CardVo card, Long boardId, UserVo actor, String content, CardEvent.EventType type, Long targetUserId) {
+    private void publishCommentEvent(CardVo card, Long boardId, Long teamId, UserVo actor, String content, CardEvent.EventType type, Long targetUserId) {
         CardEvent event = CardEvent.builder()
                 .cardId(card.getId())
                 .cardTitle(card.getTitle())
                 .boardId(boardId)
+                .teamId(teamId)
                 .listId(card.getListId())
                 .eventType(type) // COMMENT || REPLY || MENTION
-                .commentContent(content)
+                .content(content)
                 .actorId(actor.getId()) // 댓글 작성자
                 .actorNickname(actor.getNickname())
                 .actorProfileImg(actor.getProfileImg())

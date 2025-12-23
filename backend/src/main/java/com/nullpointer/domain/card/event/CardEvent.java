@@ -1,74 +1,50 @@
 package com.nullpointer.domain.card.event;
 
-import com.nullpointer.domain.card.vo.enums.Priority;
 import lombok.Builder;
 import lombok.Getter;
-
-import java.time.LocalDateTime;
-import java.util.Set;
 
 @Getter
 @Builder
 public class CardEvent {
+
+    public enum EventType {
+        CREATED, UPDATED, MOVED, DELETED,
+        ASSIGNED, COMMENT, REPLY, MENTION,
+        CHECKLIST, LABEL, ATTACHMENT,
+        DEADLINE_NEAR,
+    }
+
+    // 필수 정보
+    private EventType eventType;
     private Long cardId;
     private String cardTitle;
-    private String prevTitle; // 변경 전 제목
-
     private Long boardId;
     private Long teamId;
 
-    private Long listId; // 카드가 속한/이동한 리스트 id
-    private String listTitle;
-
-    private Long prevListId; // 이동 전 리스트 id
-    private String prevListTitle;
-
+    // 행위자 정보
     private Long actorId; // 행동한 사람
     private String actorNickname; // 행동한 사람의 닉네임
     private String actorProfileImg;
 
+    // 알림 타겟 정보
     private Long assigneeId; // 카드 담당자 (기본 수신자)
     private String assigneeNickname;
-
-    private Boolean isComplete; // 완료 여부
-
-    private String label;
-    private String prevLabel;
-
-    private Priority priority; // 중요도
-    private Priority prevPriority; // 변경 전 중요도
-
-    private LocalDateTime dueDate; // 마감일
-    private LocalDateTime prevDueDate;
-
-    private LocalDateTime startDate; // 현재 시작일
-    private LocalDateTime prevStartDate;
-
-    private String commentContent; // 댓글
-    private Long commentId;
     private Long targetUserId; // 타겟 수신자 id (답글, 멘션용)
 
-    private String checklistContent; // 체크리스트 내용
-    private Boolean checklistDone; // 완료 여부
+    // 상세 메시지 정보
+    private Long listId; // 카드가 속한/이동한 리스트 id
+    private String listTitle;
+    private String prevListTitle; // 이동 전 리스트명
 
-    private Boolean isArchived;
+    private String content; // 댓글, 체크리스트, 파일명
+    private Boolean isChecked; // 체크리스트 완료 여부
 
-    // 변경된 속성 목록
-    private Set<String> changedFields;
+    private String labelName;
+    private Boolean isLabelAdded;
 
-    private EventType eventType;
+    // 변경 상세 정보
+    private String fieldName;         // 변경된 항목의 이름 (예: "제목", "마감일", "설명")
+    private String oldValue;          // 변경 전 값
+    private String newValue;          // 변경 후 값
 
-    public enum EventType {
-        ASSIGNED,
-        MOVED,
-        CREATED,
-        UPDATED,
-        DELETED,
-        COMMENT,
-        REPLY,
-        MENTION,
-        CHECKLIST,
-        DEADLINE_NEAR,
-        ATTACHMENT,
-    }
 }

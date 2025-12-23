@@ -19,11 +19,10 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.event.EventListener;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Component;
+import org.springframework.util.StringUtils;
 import org.springframework.web.util.UriComponentsBuilder;
 
 import java.time.LocalDateTime;
-import java.time.format.DateTimeFormatter;
-import java.util.Set;
 
 @Slf4j
 @Component
@@ -49,87 +48,23 @@ public class NotificationEventListener {
 
         // 1. 알림 대상 판별 (본인 제외)
         Long actorId = event.getActorId();
-        Long receiverId = null; // 카드 담당자에게 알림
-        String message = "";
-        NotificationType type = null;
-        String targetUrl = String.format("/board/%d?cardId=%d", event.getBoardId(), event.getCardId());
-
-        // 2. 이벤트 타입에 따라 수신자와 메시지 결정
-        switch (event.getEventType()) {
-            case ASSIGNED:
-                receiverId = event.getAssigneeId(); // 담당자에게 알림
-                type = NotificationType.CARD_ASSIGNED; // 담당자 지정
-                message = String.format(
-                        "'%s' 카드의 담당자로 지정되었습니다.",
-                        event.getCardTitle());
-                break;
-            case MOVED:
-                receiverId = event.getAssigneeId(); // 담당자에게 알림
-                type = NotificationType.CARD_MOVED;
-                message = String.format("담당 카드 '%s'가 '%s' 리스트로 이동되었습니다.",
-                        event.getCardTitle(), event.getListTitle());
-                break;
-            case UPDATED:
-                receiverId = event.getAssigneeId();
-                type = NotificationType.CARD_UPDATED;
-                message = generateUpdateMessage(event);
-                break;
-            case COMMENT:
-                receiverId = event.getAssigneeId(); // 담당자에게 알림
-                type = NotificationType.COMMENT;
-                message = String.format("담당 카드 '%s'에 새 댓글이 달렸습니다.:%s",
-                        event.getCardTitle(), getSafeSubstring(event.getCommentContent(), 20));
-                break;
-            case REPLY:
-                receiverId = event.getTargetUserId(); // 원 댓글 작성자에게 알림
-                type = NotificationType.COMMENT_REPLY;
-                message = String.format("회원님의 댓글에 답글이 달렸습니다.:%s",
-                        getSafeSubstring(event.getCommentContent(), 20));
-                break;
-            case MENTION:
-                receiverId = event.getTargetUserId(); // 멘션된 사람에게 알림
-                type = NotificationType.MENTION;
-                message = String.format("'%s'님이 회원님을 언급했습니다:%s",
-                        event.getActorNickname(),
-                        getSafeSubstring(event.getCommentContent(), 20));
-                break;
-            case CHECKLIST:
-                // 완료일 때만 알림 발송
-                if (Boolean.TRUE.equals(event.getChecklistDone())) {
-                    receiverId = event.getAssigneeId(); // 담당자에게 알림
-                    type = NotificationType.CHECKLIST_COMPLETED;
-                    message = String.format("'%s'님이 담당 카드 '%s'의 항목을 완료했습니다.:%s",
-                            event.getActorNickname(),
-                            event.getCardTitle(), getSafeSubstring(event.getChecklistContent(), 20));
-                }
-                break;
-            case DEADLINE_NEAR:
-                receiverId = event.getAssigneeId(); // 담당자에게 알림
-                type = NotificationType.DEADLINE_NEAR;
-                message = String.format("'%s'님이 담당 카드 '%s'의 마감이 임박했습니다.",
-                        event.getActorNickname(), event.getCardTitle());
-                break;
-            case ATTACHMENT:
-                String fileName = event.getChangedFields().iterator().next();
-                receiverId = event.getAssigneeId();
-                type = NotificationType.FILE_UPLOAD;
-                message = String.format("'%s'님이 담당 카드 '%s'에 파일을 첨부했습니다.: %s",
-                        event.getActorNickname(),
-                        event.getCardTitle(), fileName);
-                break;
-            default:
-                return;
-        }
+        Long receiverId = determineReceiver(event);
 
         // 수신자가 없거나 본인에게 보내는 알림이면 중단
         if (receiverId == null || receiverId.equals(actorId)) {
             return;
         }
 
-        // 메시지가 없으면 알림 생략
-        if (message.isEmpty()) return;
+        NotificationType type = mapToNotificationType(event.getEventType());
+        String targetUrl = String.format("/board/%d?cardId=%d", event.getBoardId(), event.getCardId());
 
-        // 알림 객체 생성
+        // 2. 메시지 생성
+        String message = generateCardMessage(event);
+
+        // 메시지가 없으면 알림 생략
+        if (!StringUtils.hasText(message)) return;
+
+        // 3. 알림 객체 생성
         NotificationDto noti = NotificationDto.builder()
                 .id(System.currentTimeMillis())
                 .receiverId(receiverId)
@@ -147,6 +82,89 @@ public class NotificationEventListener {
 
         // redis 저장, 소켓 전송
         saveAndSendNotification(noti);
+    }
+
+    /**
+     * 수신자 결정
+     */
+    private Long determineReceiver(CardEvent event) {
+        return switch (event.getEventType()) {
+            case MENTION, REPLY -> event.getTargetUserId(); // 멘션된 사람, 원 댓글 작성자
+            default -> event.getAssigneeId(); // 기본적으로 담당자에게 알림
+        };
+    }
+
+    /**
+     * 알림 타입 매핑
+     */
+    private NotificationType mapToNotificationType(CardEvent.EventType type) {
+        return switch (type) {
+            case ASSIGNED -> NotificationType.CARD_ASSIGNED;
+            case MOVED -> NotificationType.CARD_MOVED;
+            case UPDATED, LABEL -> NotificationType.CARD_UPDATED;
+            case COMMENT -> NotificationType.COMMENT;
+            case REPLY -> NotificationType.COMMENT_REPLY;
+            case MENTION -> NotificationType.MENTION;
+            case CHECKLIST -> NotificationType.CHECKLIST_COMPLETED;
+            case DEADLINE_NEAR -> NotificationType.DEADLINE_NEAR;
+            case ATTACHMENT -> NotificationType.FILE_UPLOAD;
+            default -> NotificationType.CARD_UPDATED;
+        };
+    }
+
+    /**
+     * 카드 이벤트 메시지 생성
+     */
+    private String generateCardMessage(CardEvent event) {
+        String cardTitle = event.getCardTitle();
+        String actor = event.getActorNickname();
+
+        return switch (event.getEventType()) {
+            case ASSIGNED -> String.format("'%s' 카드의 담당자로 지정되었습니다.", cardTitle);
+
+            case MOVED -> String.format("담당 카드 '%s'가 '%s' 리스트로 이동되었습니다.",
+                    cardTitle, event.getListTitle());
+
+            case UPDATED -> {
+                if (event.getFieldName() != null) {
+                    yield String.format("%s님이 담당 카드 '%s'의 '%s'를 '%s'에서 '%s'로 변경했습니다.",
+                            actor, cardTitle, event.getFieldName(),
+                            event.getOldValue(), event.getNewValue());
+                }
+                yield String.format("%s님이 담당 카드 '%s'의 내용을 수정했습니다.", actor, cardTitle);
+            }
+
+            case COMMENT -> String.format("담당 카드 '%s'에 새 댓글이 달렸습니다: %s",
+                    cardTitle, getSafeSubstring(event.getContent(), 20));
+
+            case REPLY -> String.format("회원님의 댓글에 답글이 달렸습니다: %s",
+                    getSafeSubstring(event.getContent(), 20));
+
+            case MENTION -> String.format("'%s'님이 회원님을 언급했습니다: %s",
+                    actor, getSafeSubstring(event.getContent(), 20));
+
+            case CHECKLIST -> {
+                // [변경] isChecked 필드 활용
+                if (Boolean.TRUE.equals(event.getIsChecked())) {
+                    yield String.format("'%s'님이 담당 카드 '%s'의 체크리스트 항목을 완료했습니다: %s",
+                            actor, cardTitle, getSafeSubstring(event.getContent(), 20));
+                }
+                yield ""; // 완료 해제는 알림 안 보냄
+            }
+
+            case DEADLINE_NEAR -> String.format("'%s'님이 담당 카드 '%s'의 마감이 임박했습니다.", actor, cardTitle);
+
+            case ATTACHMENT -> String.format("'%s'님이 담당 카드 '%s'에 파일을 첨부했습니다: %s",
+                    actor, cardTitle, event.getContent()); // content에 파일명 저장됨
+
+            case LABEL -> {
+                boolean isAdded = Boolean.TRUE.equals(event.getIsLabelAdded());
+                yield String.format("'%s'님이 담당 카드 '%s'에 라벨 '%s'를 %s했습니다.",
+                        actor, cardTitle, event.getLabelName(), isAdded ? "추가" : "삭제");
+            }
+
+            default -> "";
+        };
     }
 
     /**
@@ -270,39 +288,6 @@ public class NotificationEventListener {
         if (content == null) return "";
         if (content.length() <= length) return content;
         return content.substring(0, length) + "...";
-    }
-
-    private String generateUpdateMessage(CardEvent event) {
-        Set<String> fields = event.getChangedFields();
-        if (fields == null || fields.isEmpty()) return "";
-
-        String cardTitle = event.getCardTitle();
-
-        // 1. 완료 처리
-        if (fields.contains("COMPLETE")) {
-            return Boolean.TRUE.equals(event.getIsComplete())
-                    ? String.format("담당 카드 '%s'가 완료 처리되었습니다.", cardTitle)
-                    : String.format("담당 카드 '%s'의 완료 처리가 취소되었습니다.", cardTitle);
-        }
-
-        // 2. 중요도 변경 (Priority Enum의 label 활용)
-        if (fields.contains("PRIORITY")) {
-            String label = event.getPriority().getLabel(); // "높음", "보통", "낮음"
-            return String.format("담당 카드 '%s'의 중요도가 '%s'(으)로 변경되었습니다.", cardTitle, label);
-        }
-
-        // 3. 마감일 변경
-        if (fields.contains("DUE_DATE")) {
-            if (event.getDueDate() != null) {
-                String dateStr = event.getDueDate().format(DateTimeFormatter.ofPattern("yyyy년 MM월 dd일"));
-                return String.format("담당 카드 '%s'의 마감일이 %s로 변경되었습니다.", cardTitle, dateStr);
-            } else {
-                return String.format("담당 카드 '%s'의 마감일 설정이 해제되었습니다.", cardTitle);
-            }
-        }
-
-        // 그 외 (제목, 설명 등)
-        return String.format("담당 카드 '%s'의 내용이 수정되었습니다.", cardTitle);
     }
 
     // Redis 알림 저장, 소켓 전송 (소켓/푸시/이메일)

@@ -1,5 +1,7 @@
 package com.nullpointer.domain.checklist.service;
 
+import com.nullpointer.domain.board.mapper.BoardMapper;
+import com.nullpointer.domain.board.vo.BoardVo;
 import com.nullpointer.domain.card.event.CardEvent;
 import com.nullpointer.domain.card.mapper.CardMapper;
 import com.nullpointer.domain.card.vo.CardVo;
@@ -33,6 +35,7 @@ public class ChecklistServiceImpl implements ChecklistService {
     private final SocketSender socketSender;
     private final ApplicationEventPublisher publisher;
     private final CardMapper cardMapper;
+    private final BoardMapper boardMapper;
 
     @Override
     @Transactional
@@ -122,18 +125,21 @@ public class ChecklistServiceImpl implements ChecklistService {
         UserVo actor = userMapper.findById(actorId)
                 .orElseThrow(() -> new BusinessException(ErrorCode.USER_NOT_FOUND));
         Long boardId = cardVal.findBoardIdByCardId(cardId);
+        BoardVo board = boardMapper.findBoardByBoardId(boardId)
+                .orElseThrow(() -> new BusinessException(ErrorCode.BOARD_NOT_FOUND));
 
         CardEvent event = CardEvent.builder()
                 .cardId(card.getId())
                 .cardTitle(card.getTitle())
                 .boardId(boardId)
+                .teamId(board.getTeamId())
                 .listId(card.getListId())
                 .actorId(actor.getId())
                 .actorNickname(actor.getNickname())
                 .actorProfileImg(actor.getProfileImg())
                 .assigneeId(card.getAssigneeId()) // 담당자에게 알림
-                .checklistContent(content) // 체크리스트 내용
-                .checklistDone(isDone) // 완료 여부
+                .content(content)
+                .isChecked(isDone)
                 .eventType(CardEvent.EventType.CHECKLIST)
                 .build();
 
