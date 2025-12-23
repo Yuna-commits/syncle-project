@@ -3,16 +3,17 @@ package com.nullpointer.domain.activity.listener;
 import com.nullpointer.domain.activity.dto.request.ActivitySaveRequest;
 import com.nullpointer.domain.activity.service.ActivityService;
 import com.nullpointer.domain.activity.vo.enums.ActivityType;
+import com.nullpointer.domain.board.event.BoardEvent;
 import com.nullpointer.domain.card.event.CardEvent;
+import com.nullpointer.domain.team.event.TeamEvent;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.context.event.EventListener;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.event.TransactionPhase;
 import org.springframework.transaction.event.TransactionalEventListener;
 import org.springframework.util.StringUtils;
-
-import java.time.format.DateTimeFormatter;
 
 @Slf4j
 @Component
@@ -20,7 +21,6 @@ import java.time.format.DateTimeFormatter;
 public class ActivityEventListener {
 
     private final ActivityService activityService;
-    private static final DateTimeFormatter DATE_FORMATTER = DateTimeFormatter.ofPattern("M월 d일");
 
     /**
      * 카드 이벤트 활동 기록
@@ -53,6 +53,95 @@ public class ActivityEventListener {
         } catch (Exception e) {
             log.error("활동 로그 저장 실패: cardId={}, error={}", event.getCardId(), e.getMessage());
         }
+    }
+
+    /**
+     * 보드 이벤트 활동 기록
+     */
+    @Async
+    @EventListener
+    public void handleBoardEvent(BoardEvent event) {
+        ActivityType type = null;
+        String description = "";
+
+        switch (event.getEventType()) {
+            case CREATE_BOARD -> {
+                type = ActivityType.CREATE_BOARD;
+                description = "보드를 생성했습니다.";
+            }
+            case UPDATE_BOARD -> {
+                type = ActivityType.UPDATE_BOARD;
+                description = "보드 설정을 변경했습니다.";
+            }
+            case DELETE_BOARD -> {
+                type = ActivityType.DELETE_BOARD;
+                description = "보드를 삭제했습니다.";
+            }
+            // 리스트 관련 처리
+            case CREATE_LIST -> {
+                type = ActivityType.CREATE_LIST;
+                description = String.format("'%s' 리스트를 생성했습니다.", event.getListTitle());
+            }
+            case DELETE_LIST -> {
+                type = ActivityType.DELETE_LIST;
+                description = String.format("'%s' 리스트를 삭제했습니다.", event.getListTitle());
+            }
+            default -> {
+                return;
+            } // 처리하지 않는 타입
+        }
+
+        ActivitySaveRequest req = ActivitySaveRequest.builder()
+                .type(type)
+                .userId(event.getActorId())
+                .teamId(event.getTeamId())
+                .boardId(event.getBoardId())
+                .targetId(event.getBoardId()) // 타겟은 보드
+                .targetName(event.getBoardTitle())
+                .description(description)
+                .build();
+
+        activityService.saveLog(req);
+    }
+
+    /**
+     * 팀 이벤트 활동 기록
+     */
+    @Async
+    @EventListener
+    public void handleTeamEvent(TeamEvent event) {
+        ActivityType type = null;
+        String description = "";
+
+        switch (event.getEventType()) {
+            case CREATE_TEAM -> {
+                type = ActivityType.CREATE_TEAM;
+                description = "팀을 생성했습니다.";
+            }
+            case UPDATE_TEAM -> {
+                type = ActivityType.UPDATE_TEAM;
+                description = "팀 설정을 변경했습니다.";
+            }
+            case DELETE_TEAM -> {
+                type = ActivityType.DELETE_TEAM;
+                description = "팀을 삭제했습니다.";
+            }
+            default -> {
+                return;
+            }
+        }
+
+        ActivitySaveRequest req = ActivitySaveRequest.builder()
+                .type(type)
+                .userId(event.getActorId())
+                .teamId(event.getTeamId())
+                .boardId(null) // 팀 로그는 보드 ID 없음
+                .targetId(event.getTeamId())
+                .targetName(event.getTeamName())
+                .description(description)
+                .build();
+
+        activityService.saveLog(req);
     }
 
     /**
@@ -126,5 +215,6 @@ public class ActivityEventListener {
         if (str == null) return "";
         return str.length() > length ? str.substring(0, length) + "..." : str;
     }
+
 
 }

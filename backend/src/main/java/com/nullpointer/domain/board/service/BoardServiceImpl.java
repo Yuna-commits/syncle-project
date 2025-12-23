@@ -1,11 +1,9 @@
 package com.nullpointer.domain.board.service;
 
-import com.nullpointer.domain.activity.dto.request.ActivitySaveRequest;
-import com.nullpointer.domain.activity.service.ActivityService;
-import com.nullpointer.domain.activity.vo.enums.ActivityType;
 import com.nullpointer.domain.board.dto.request.CreateBoardRequest;
 import com.nullpointer.domain.board.dto.request.UpdateBoardRequest;
 import com.nullpointer.domain.board.dto.response.*;
+import com.nullpointer.domain.board.event.BoardEvent;
 import com.nullpointer.domain.board.mapper.BoardMapper;
 import com.nullpointer.domain.board.mapper.BoardSettingMapper;
 import com.nullpointer.domain.board.vo.BoardSettingVo;
@@ -13,7 +11,6 @@ import com.nullpointer.domain.board.vo.BoardVo;
 import com.nullpointer.domain.board.vo.enums.PermissionLevel;
 import com.nullpointer.domain.board.vo.enums.Visibility;
 import com.nullpointer.domain.file.service.S3FileStorageService;
-import com.nullpointer.domain.invitation.event.InvitationEvent;
 import com.nullpointer.domain.list.mapper.ListMapper;
 import com.nullpointer.domain.list.vo.ListVo;
 import com.nullpointer.domain.member.dto.board.BoardMemberResponse;
@@ -23,7 +20,6 @@ import com.nullpointer.domain.member.mapper.TeamMemberMapper;
 import com.nullpointer.domain.member.vo.BoardMemberVo;
 import com.nullpointer.domain.member.vo.TeamMemberVo;
 import com.nullpointer.domain.member.vo.enums.Role;
-import com.nullpointer.domain.notification.vo.enums.NotificationType;
 import com.nullpointer.domain.team.vo.TeamVo;
 import com.nullpointer.domain.user.mapper.UserMapper;
 import com.nullpointer.domain.user.vo.UserVo;
@@ -55,7 +51,6 @@ public class BoardServiceImpl implements BoardService {
     private final MemberValidator memberVal;
     private final BoardValidator boardVal;
     private final ListMapper listMapper;
-    private final ActivityService activityService;
     private final TeamMemberMapper teamMemberMapper;
     private final ApplicationEventPublisher publisher;
     private final SocketSender socketSender;
@@ -72,6 +67,9 @@ public class BoardServiceImpl implements BoardService {
     @Override
     @Transactional
     public void createBoard(Long teamId, CreateBoardRequest req, Long userId) {
+        // 사용자 정보 조회
+        UserVo actor = userMapper.findById(userId)
+                .orElseThrow(() -> new BusinessException(ErrorCode.USER_NOT_FOUND));
 
         // 팀 유효성 확인
         TeamVo team = teamVal.getValidTeam(teamId);
@@ -109,9 +107,6 @@ public class BoardServiceImpl implements BoardService {
                 .build();
         boardSettingMapper.insertBoardSettings(defaultSettings);
 
-        // 보드 생성 로그 저장
-        createBoardLog(userId, teamId, boardVo);
-
         // 방금 만든 보드 ID 가져오기
         Long createBoardId = boardVo.getId();
 
@@ -119,18 +114,22 @@ public class BoardServiceImpl implements BoardService {
         BoardMemberVo boardMemberVo = BoardMemberVo.builder().boardId(createBoardId).userId(userId).role(Role.OWNER).build();
 
         boardMemberMapper.insertBoardMember(boardMemberVo);
+
+        // [이벤트] 보드 생성 이벤트 발행
+        publishBoardEvent(actor, boardVo, null, BoardEvent.EventType.CREATE_BOARD);
     }
 
     @Override
     @Transactional
     public void createDefaultBoard(Long teamId, Long userId) {
+        // 사용자 정보 조회
+        UserVo actor = userMapper.findById(userId)
+                .orElseThrow(() -> new BusinessException(ErrorCode.USER_NOT_FOUND));
+
         // 1. 기본 보드 생성
         BoardVo board = BoardVo.builder().teamId(teamId).title("기본 보드").description("자유롭게 일정을 관리해보세요.").visibility(Visibility.PRIVATE).build();
 
         boardMapper.insertBoard(board);
-
-        // 보드 생성 로그 저장
-        createBoardLog(userId, teamId, board);
 
         // 방금 만든 보드 ID 가져오기
         Long boardId = board.getId();
@@ -154,6 +153,9 @@ public class BoardServiceImpl implements BoardService {
         listMapper.insertList(createDefaultList(boardId, "To Do", 1));
         listMapper.insertList(createDefaultList(boardId, "In Progress", 2));
         listMapper.insertList(createDefaultList(boardId, "Done", 3));
+
+        // [이벤트] 보드 생성 이벤트 발행
+        publishBoardEvent(actor, board, null, BoardEvent.EventType.CREATE_BOARD);
     }
 
     // 내 보드 조회
@@ -191,6 +193,10 @@ public class BoardServiceImpl implements BoardService {
         // 1. 보드 설정 변경 - 관리자(OWNER)만 가능
         memberVal.validateBoardManager(boardId, userId);
 
+        // 관리자 정보 조회
+        UserVo actor = userMapper.findById(userId)
+                .orElseThrow(() -> new BusinessException(ErrorCode.USER_NOT_FOUND));
+
         // 2. 공통 검증 메서드로 보드 조회
         BoardVo boardVo = boardVal.getValidBoard(boardId);
 
@@ -209,8 +215,8 @@ public class BoardServiceImpl implements BoardService {
 
         boardMapper.updateBoard(boardVo);
 
-        // 보드 수정 로그 저장
-        updateBoardLog(userId, boardVo.getTeamId(), boardVo);
+        // [이벤트] 보드 수정 이벤트 발행
+        publishBoardEvent(actor, boardVo, null, BoardEvent.EventType.UPDATE_BOARD);
 
         // 소켓 전송
         socketSender.sendSocketMessage(boardId, "BOARD_UPDATED", userId, null);
@@ -236,8 +242,6 @@ public class BoardServiceImpl implements BoardService {
 
         boardSettingMapper.updateBoardSettings(settingVo);
 
-        // (선택 사항) 로그 저장, 소켓 전송 등 추가 가능
-
         // 소켓 전송
         socketSender.sendSocketMessage(boardId, "BOARD_SETTINGS_UPDATED", userId, null);
     }
@@ -255,20 +259,13 @@ public class BoardServiceImpl implements BoardService {
         UserVo actor = userMapper.findById(userId)
                 .orElseThrow(() -> new BusinessException(ErrorCode.USER_NOT_FOUND));
 
-        // 삭제 전에 알림을 받을 멤버 조회
         List<Long> memberIds = boardMemberMapper.findAllMemberIdsByBoardId(boardId);
 
         // 3. 삭제 진행
         boardMapper.deleteBoard(boardId);
 
-        // 보드 삭제 로그 저장
-        // deleteBoardLog(userId, teamId, boardId, boardTitle);
-
-        // [알림] 보드 삭제 알림 발송
-        for (Long memberId : memberIds) {
-            if (memberId.equals(actor.getId())) continue; // 본인은 알림 발송 x
-            publishDeleteEvent(actor, memberId, boardVo);
-        }
+        // [이벤트] 보드 삭제 이벤트 발행
+        publishBoardEvent(actor, boardVo, memberIds, BoardEvent.EventType.DELETE_BOARD);
 
         // 소켓 전송
         socketSender.sendSocketMessage(boardId, "BOARD_DELETED", userId, null);
@@ -288,25 +285,6 @@ public class BoardServiceImpl implements BoardService {
         // owner 만 볼수 있게
         List<BoardVo> boards = boardMapper.findMemberBoard(teamId, memberId);
         return boards.stream().map(MemberBoardResponse::from).toList();
-    }
-
-    /**
-     * 보드 관리 로그
-     */
-
-    // 보드 생성 로그
-    private void createBoardLog(Long userId, Long teamId, BoardVo board) {
-        activityService.saveLog(ActivitySaveRequest.builder().userId(userId).teamId(teamId).boardId(board.getId()).type(ActivityType.CREATE_BOARD).targetId(board.getId()).targetName(board.getTitle()).description("보드가 생성되었습니다.").build());
-    }
-
-    // 보드 수정 로그
-    private void updateBoardLog(Long userId, Long teamId, BoardVo board) {
-        activityService.saveLog(ActivitySaveRequest.builder().userId(userId).teamId(teamId).boardId(board.getId()).type(ActivityType.UPDATE_BOARD).targetId(board.getId()).targetName(board.getTitle()).description("보드 설정을 변경했습니다.").build());
-    }
-
-    // 보드 삭제 로그
-    private void deleteBoardLog(Long userId, Long teamId, Long boardId, String boardTitle) {
-        activityService.saveLog(ActivitySaveRequest.builder().userId(userId).teamId(teamId).boardId(boardId).type(ActivityType.DELETE_BOARD).targetId(boardId).targetName(boardTitle).description("보드를 삭제했습니다.").build());
     }
 
     // 즐겨찾기 토글
@@ -443,15 +421,17 @@ public class BoardServiceImpl implements BoardService {
      * Helper Methods
      */
 
-    // [이벤트] 보드 삭제 이벤트 발행
-    private void publishDeleteEvent(UserVo sender, Long receiverId, BoardVo board) {
-        InvitationEvent event = InvitationEvent.builder()
-                .senderId(sender.getId())
-                .senderNickname(sender.getNickname())
-                .senderProfileImg(sender.getProfileImg())
-                .receiverId(receiverId)
-                .targetName(board.getTitle())
-                .type(NotificationType.BOARD_DELETED)
+    // [이벤트] 보드 이벤트 발행
+    private void publishBoardEvent(UserVo actor, BoardVo board, List<Long> memberIds, BoardEvent.EventType type) {
+        BoardEvent event = BoardEvent.builder()
+                .eventType(type)
+                .boardId(board.getId())
+                .teamId(board.getTeamId())
+                .boardTitle(board.getTitle())
+                .actorId(actor.getId())
+                .actorNickname(actor.getNickname())
+                .actorProfileImg(actor.getProfileImg())
+                .targetMemberIds(memberIds)
                 .build();
 
         publisher.publishEvent(event);

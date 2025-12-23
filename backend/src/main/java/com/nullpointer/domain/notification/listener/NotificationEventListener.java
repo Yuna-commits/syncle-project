@@ -1,12 +1,15 @@
 package com.nullpointer.domain.notification.listener;
 
+import com.nullpointer.domain.board.event.BoardEvent;
 import com.nullpointer.domain.card.event.CardEvent;
 import com.nullpointer.domain.invitation.event.InvitationEvent;
 import com.nullpointer.domain.member.event.MemberEvent;
+import com.nullpointer.domain.member.mapper.BoardMemberMapper;
 import com.nullpointer.domain.notification.dto.NotificationDto;
 import com.nullpointer.domain.notification.mapper.NotificationSettingMapper;
 import com.nullpointer.domain.notification.vo.NotificationSettingVo;
 import com.nullpointer.domain.notification.vo.enums.NotificationType;
+import com.nullpointer.domain.team.event.TeamEvent;
 import com.nullpointer.domain.user.mapper.UserMapper;
 import com.nullpointer.domain.user.vo.UserVo;
 import com.nullpointer.global.common.SocketSender;
@@ -23,6 +26,7 @@ import org.springframework.util.StringUtils;
 import org.springframework.web.util.UriComponentsBuilder;
 
 import java.time.LocalDateTime;
+import java.util.List;
 
 @Slf4j
 @Component
@@ -37,6 +41,7 @@ public class NotificationEventListener {
 
     @Value("${app.domain.frontend.url}")
     private String frontendUrl;
+    private BoardMemberMapper boardMemberMapper;
 
     /**
      * 카드 이벤트 처리 리스너
@@ -213,14 +218,6 @@ public class NotificationEventListener {
                 message = String.format("'%s'님이 '%s' 보드를 떠났습니다.", event.getSenderNickname(), event.getTargetName());
                 targetUrl = "/board/" + event.getTargetId(); // 해당 보드로 이동
                 break;
-            case TEAM_DELETED:
-                message = String.format("'%s' 팀이 삭제되었습니다.", event.getTargetName());
-                targetUrl = "/dashboard";
-                break;
-            case BOARD_DELETED:
-                message = String.format("'%s' 보드가 삭제되었습니다.", event.getTargetName());
-                targetUrl = "/dashboard";
-                break;
             default:
                 return;
         }
@@ -242,6 +239,103 @@ public class NotificationEventListener {
 
         // redis 저장, 소켓 전송
         saveAndSendNotification(noti);
+    }
+
+    /**
+     * 팀 삭제 이벤트 리스너
+     */
+    @Async
+    @EventListener
+    public void handleTeamEvent(TeamEvent event) {
+        // 1. '팀 삭제'가 아니면 알림을 보내지 않음
+        if (event.getEventType() != TeamEvent.EventType.DELETE_TEAM) {
+            return;
+        }
+
+        log.info("팀 삭제 알림 수신: boardId={}", event.getTeamId());
+
+        // 2. 수신자 조회 (보드 멤버 전체)
+        List<Long> memberIds = event.getTargetMemberIds();
+
+        if (memberIds == null || memberIds.isEmpty()) return;
+
+        // 3. 메시지 생성
+        String message = String.format("'%s'님이 '%s' 팀(을)를 삭제했습니다.",
+                event.getActorNickname(), event.getTeamName());
+
+        // 클릭 시 이동할 경로
+        String targetUrl = "/dashboard";
+
+        // 4. 멤버별 알림 발송
+        for (Long receiverId : memberIds) {
+            // 본인에게는 보내지 않음
+            if (receiverId.equals(event.getActorId())) continue;
+
+            NotificationDto noti = NotificationDto.builder()
+                    .id(System.currentTimeMillis())
+                    .receiverId(receiverId)
+                    .senderId(event.getActorId())
+                    .senderNickname(event.getActorNickname())
+                    .senderProfileImg(event.getActorProfileImg())
+                    .targetId(event.getTeamId())
+                    .type(NotificationType.BOARD_DELETED)
+                    .message(message)
+                    .targetUrl(targetUrl)
+                    .isRead(false)
+                    .createdAt(LocalDateTime.now())
+                    .build();
+
+            saveAndSendNotification(noti);
+        }
+    }
+
+    /**
+     * 보드 삭제 이벤트 리스너
+     */
+    @Async
+    @EventListener
+    public void handleBoardEvent(BoardEvent event) {
+        // 1. '보드 삭제'가 아니면 알림을 보내지 않음
+        if (event.getEventType() != BoardEvent.EventType.DELETE_BOARD) {
+            return;
+        }
+
+        log.info("보드 삭제 알림 수신: boardId={}", event.getBoardId());
+
+        // 2. 수신자 조회 (보드 멤버 전체)
+        List<Long> memberIds = event.getTargetMemberIds();
+
+        if (memberIds == null || memberIds.isEmpty()) return;
+
+        // 3. 메시지 생성
+        String message = String.format("'%s'님이 '%s' 보드(을)를 삭제했습니다.",
+                event.getActorNickname(), event.getBoardTitle());
+
+        // 클릭 시 이동할 경로
+        String targetUrl = "/dashboard";
+
+        // 4. 멤버별 알림 발송
+        for (Long receiverId : memberIds) {
+            // 본인에게는 보내지 않음
+            if (receiverId.equals(event.getActorId())) continue;
+
+            NotificationDto noti = NotificationDto.builder()
+                    .id(System.currentTimeMillis())
+                    .receiverId(receiverId)
+                    .senderId(event.getActorId())
+                    .senderNickname(event.getActorNickname())
+                    .senderProfileImg(event.getActorProfileImg())
+                    .boardId(event.getBoardId())
+                    .targetId(event.getBoardId())
+                    .type(NotificationType.BOARD_DELETED)
+                    .message(message)
+                    .targetUrl(targetUrl)
+                    .isRead(false)
+                    .createdAt(LocalDateTime.now())
+                    .build();
+
+            saveAndSendNotification(noti);
+        }
     }
 
     @Async

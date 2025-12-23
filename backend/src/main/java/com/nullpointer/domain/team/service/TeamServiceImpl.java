@@ -1,21 +1,17 @@
 package com.nullpointer.domain.team.service;
 
-import com.nullpointer.domain.activity.dto.request.ActivitySaveRequest;
-import com.nullpointer.domain.activity.service.ActivityService;
-import com.nullpointer.domain.activity.vo.enums.ActivityType;
 import com.nullpointer.domain.board.dto.response.BoardResponse;
 import com.nullpointer.domain.board.mapper.BoardMapper;
 import com.nullpointer.domain.board.service.BoardService;
-import com.nullpointer.domain.invitation.event.InvitationEvent;
 import com.nullpointer.domain.member.dto.team.TeamMemberResponse;
 import com.nullpointer.domain.member.mapper.TeamMemberMapper;
 import com.nullpointer.domain.member.vo.TeamMemberVo;
 import com.nullpointer.domain.member.vo.enums.Role;
-import com.nullpointer.domain.notification.vo.enums.NotificationType;
 import com.nullpointer.domain.team.dto.request.CreateTeamRequest;
 import com.nullpointer.domain.team.dto.request.UpdateTeamRequest;
 import com.nullpointer.domain.team.dto.response.TeamDetailResponse;
 import com.nullpointer.domain.team.dto.response.TeamResponse;
+import com.nullpointer.domain.team.event.TeamEvent;
 import com.nullpointer.domain.team.mapper.TeamMapper;
 import com.nullpointer.domain.team.vo.TeamVo;
 import com.nullpointer.domain.user.mapper.UserMapper;
@@ -45,19 +41,18 @@ public class TeamServiceImpl implements TeamService {
     private final SocketSender socketSender;
 
     private final BoardService boardService;
-    private final ActivityService activityService;
     private final UserMapper userMapper;
 
     @Override
     @Transactional
     public void createTeam(CreateTeamRequest req, Long userId) {
+        // 관리자 정보 조회
+        UserVo actor = userMapper.findById(userId)
+                .orElseThrow(() -> new BusinessException(ErrorCode.USER_NOT_FOUND));
 
         // 1. 팀 VO 생성 (DTO -> VO)
         TeamVo teamVo = req.toVo();
         teamMapper.insertTeam(teamVo);
-
-        // 팀 생성 로그 저장
-        createTeamLog(userId, teamVo);
 
         // 2. 방금 만든 팀 ID 가져오기
         Long createTeamId = teamVo.getId();
@@ -70,11 +65,18 @@ public class TeamServiceImpl implements TeamService {
                 .build();
 
         teamMemberMapper.insertTeamMember(teamMemberVo);
+
+        // [이벤트] 팀 생성 이벤트 발행
+        publishTeamEvent(actor, teamVo, TeamEvent.EventType.CREATE_TEAM, null);
     }
 
     @Override
     @Transactional
     public void createPersonalTeam(Long userId, String nickname) {
+        // 관리자 정보 조회
+        UserVo actor = userMapper.findById(userId)
+                .orElseThrow(() -> new BusinessException(ErrorCode.USER_NOT_FOUND));
+
         // 1. 기본 팀 생성
         TeamVo team = TeamVo.builder()
                 .name(nickname + "의 워크스페이스")
@@ -97,6 +99,9 @@ public class TeamServiceImpl implements TeamService {
 
         // 3. 기본 보드, 리스트 생성 -> BoardService에 위임
         boardService.createDefaultBoard(teamId, userId);
+
+        // [이벤트] 팀 생성 이벤트 발행
+        publishTeamEvent(actor, team, TeamEvent.EventType.CREATE_TEAM, null);
     }
 
     @Override
@@ -131,6 +136,10 @@ public class TeamServiceImpl implements TeamService {
         // 1. 팀 유효성 검증
         TeamVo teamVo = teamVal.getValidTeam(teamId);
 
+        // 관리자 정보 조회
+        UserVo actor = userMapper.findById(userId)
+                .orElseThrow(() -> new BusinessException(ErrorCode.USER_NOT_FOUND));
+
         // 2. 수정 권한 검증 (OWNER 여부)
         memberVal.validateTeamOwner(teamId, userId, ErrorCode.TEAM_UPDATE_FORBIDDEN);
 
@@ -147,8 +156,8 @@ public class TeamServiceImpl implements TeamService {
 
         teamMapper.updateTeam(teamVo);
 
-        // 팀 수정 로그 저장
-        updateTeamLog(userId, teamVo);
+        // [이벤트] 팀 수정 이벤트 발행
+        publishTeamEvent(actor, teamVo, TeamEvent.EventType.UPDATE_TEAM, null);
 
         // 소켓 전송
         socketSender.sendTeamSocketMessage(teamId, "TEAM_UPDATED", userId, null);
@@ -174,59 +183,27 @@ public class TeamServiceImpl implements TeamService {
         // 3. 삭제 진행 (Soft Delete)
         teamMapper.deleteTeam(teamId);
 
-        // [알림] 팀 삭제 알림 발송
-        for (Long memberId : memberIds) {
-            if (memberId.equals(actor.getId())) continue;
-            publishDeleteEvent(actor, memberId, teamVo);
-        }
+        // [이벤트] 팀 삭제 이벤트 발행
+        publishTeamEvent(actor, teamVo, TeamEvent.EventType.DELETE_TEAM, memberIds);
 
         // 소켓 전송
         socketSender.sendTeamSocketMessage(teamId, "TEAM_DELETED", userId, null);
     }
 
     /**
-     * 팀 관리 로그
-     */
-
-    // 팀 생성 로그
-    private void createTeamLog(Long userId, TeamVo team) {
-        activityService.saveLog(ActivitySaveRequest.builder()
-                .userId(userId)
-                .teamId(team.getId())
-                .boardId(null)
-                .type(ActivityType.CREATE_TEAM)
-                .targetId(team.getId())
-                .targetName(team.getName())
-                .description("팀이 생성되었습니다.")
-                .build());
-    }
-
-    // 팀 수정 로그
-    private void updateTeamLog(Long userId, TeamVo team) {
-        activityService.saveLog(ActivitySaveRequest.builder()
-                .userId(userId)
-                .teamId(team.getId())
-                .boardId(null)
-                .type(ActivityType.UPDATE_TEAM)
-                .targetId(team.getId())
-                .targetName(team.getName())
-                .description("팀 설정을 변경했습니다.")
-                .build());
-    }
-
-    /**
      * Helper Methods
      */
 
-    // [이벤트] 팀 삭제 이벤트 발행
-    private void publishDeleteEvent(UserVo sender, Long receiverId, TeamVo team) {
-        InvitationEvent event = InvitationEvent.builder()
-                .senderId(sender.getId())
-                .senderNickname(sender.getNickname())
-                .senderProfileImg(sender.getProfileImg())
-                .receiverId(receiverId)
-                .targetName(team.getName())
-                .type(NotificationType.TEAM_DELETED)
+    // [이벤트] 팀 이벤트 발행
+    private void publishTeamEvent(UserVo actor, TeamVo team, TeamEvent.EventType type, List<Long> memberIds) {
+        TeamEvent event = TeamEvent.builder()
+                .eventType(type)
+                .teamId(team.getId())
+                .teamName(team.getName())
+                .actorId(actor.getId())
+                .actorNickname(actor.getNickname())
+                .actorProfileImg(actor.getProfileImg())
+                .targetMemberIds(memberIds)
                 .build();
 
         publisher.publishEvent(event);

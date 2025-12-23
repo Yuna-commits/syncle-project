@@ -1,9 +1,6 @@
 package com.nullpointer.domain.list.service;
 
-import com.nullpointer.domain.activity.dto.request.ActivitySaveRequest;
-import com.nullpointer.domain.activity.service.ActivityService;
-import com.nullpointer.domain.activity.vo.enums.ActivityType;
-import com.nullpointer.domain.board.mapper.BoardMapper;
+import com.nullpointer.domain.board.event.BoardEvent;
 import com.nullpointer.domain.board.vo.BoardSettingVo;
 import com.nullpointer.domain.board.vo.BoardVo;
 import com.nullpointer.domain.list.dto.CreateListRequest;
@@ -12,12 +9,17 @@ import com.nullpointer.domain.list.dto.UpdateListOrderRequest;
 import com.nullpointer.domain.list.dto.UpdateListRequest;
 import com.nullpointer.domain.list.mapper.ListMapper;
 import com.nullpointer.domain.list.vo.ListVo;
+import com.nullpointer.domain.member.mapper.BoardMemberMapper;
+import com.nullpointer.domain.user.mapper.UserMapper;
+import com.nullpointer.domain.user.vo.UserVo;
 import com.nullpointer.global.common.SocketSender;
 import com.nullpointer.global.common.constants.AppConstants;
 import com.nullpointer.global.common.enums.ErrorCode;
 import com.nullpointer.global.exception.BusinessException;
+import com.nullpointer.global.validator.BoardValidator;
 import com.nullpointer.global.validator.MemberValidator;
 import lombok.RequiredArgsConstructor;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -35,9 +37,11 @@ public class ListServiceImpl implements ListService {
 
     private final ListMapper listMapper;
     private final MemberValidator memberVal;
-    private final BoardMapper boardMapper;
-    private final ActivityService activityService;
     private final SocketSender socketSender;
+    private final ApplicationEventPublisher publisher;
+    private final UserMapper userMapper;
+    private final BoardValidator boardVal;
+    private final BoardMemberMapper boardMemberMapper;
 
     /**
      * 리스트 권한
@@ -48,6 +52,12 @@ public class ListServiceImpl implements ListService {
     @Override
     @Transactional
     public ListResponse createList(Long boardId, CreateListRequest request, Long userId) {
+        // 사용자 조회
+        UserVo actor = userMapper.findById(userId)
+                .orElseThrow(() -> new BusinessException(ErrorCode.USER_NOT_FOUND));
+
+        BoardVo board = boardVal.getValidBoard(boardId);
+
         // 권한 확인 (보드 권한 설정에 따라)
         memberVal.validateBoardSetting(boardId, userId, BoardSettingVo::getListEditPermission);
 
@@ -59,8 +69,8 @@ public class ListServiceImpl implements ListService {
 
         listMapper.insertList(listVo);
 
-        // 로그 저장
-        saveActivityLog(userId, boardId, ActivityType.CREATE_LIST, listVo.getId(), listVo.getTitle(), "리스트를 생성했습니다.");
+        // [이벤트] 리스트 생성 이벤트 발행
+        publishListEvent(actor, board, null, BoardEvent.EventType.CREATE_LIST, listVo);
 
         ListResponse response = ListResponse.builder()
                 .id(listVo.getId())
@@ -96,6 +106,12 @@ public class ListServiceImpl implements ListService {
     @Override
     @Transactional
     public void updateListOrders(Long boardId, List<UpdateListOrderRequest> request, Long userId) {
+        // 사용자 조회
+        UserVo actor = userMapper.findById(userId)
+                .orElseThrow(() -> new BusinessException(ErrorCode.USER_NOT_FOUND));
+
+        BoardVo board = boardVal.getValidBoard(boardId);
+
         // 권한 확인 (보드 권한 설정에 따라)
         memberVal.validateBoardSetting(boardId, userId, BoardSettingVo::getListEditPermission);
 
@@ -106,6 +122,9 @@ public class ListServiceImpl implements ListService {
         if (!updateList.isEmpty()) {
             listMapper.updateListOrdersBulk(updateList);
         }
+
+        // [이벤트] 리스트 순서 수정 이벤트 발행
+        // publishBoardEvent(actor, board, null, BoardEvent.EventType.UPDATE_LIST_ORDER, list);
 
         // 소켓 전송
         socketSender.sendSocketMessage(boardId, "LIST_MOVE", userId, request);
@@ -135,14 +154,23 @@ public class ListServiceImpl implements ListService {
     @Override
     @Transactional
     public void updateArchiveStatus(Long listId, boolean isArchived, Long userId) {
+        // 사용자 조회
+        UserVo actor = userMapper.findById(userId)
+                .orElseThrow(() -> new BusinessException(ErrorCode.USER_NOT_FOUND));
+
         // 리스트 존재 확인 & 보드 id 조회
         ListVo list = listMapper.findById(listId).orElseThrow(() -> new BusinessException(ErrorCode.BOARD_NOT_FOUND));
+
+        BoardVo board = boardVal.getValidBoard(list.getBoardId());
 
         // 권한 확인 (보드 권한 설정에 따라)
         memberVal.validateBoardSetting(list.getBoardId(), userId, BoardSettingVo::getListEditPermission);
 
         // 업데이트
         listMapper.updateListArchiveStatus(listId, isArchived);
+
+        // [이벤트] 리스트 보관 이벤트 발행
+        // publishListEvent(actor, board, null, BoardEvent.EventType.UPDATE_LIST, list);
 
         // 변경된 리스트 정보 저장
         Map<String, Object> data = new HashMap<>();
@@ -156,17 +184,25 @@ public class ListServiceImpl implements ListService {
     @Override
     @Transactional
     public void deleteList(Long listId, Long userId) {
+        // 사용자 조회
+        UserVo actor = userMapper.findById(userId)
+                .orElseThrow(() -> new BusinessException(ErrorCode.USER_NOT_FOUND));
+
         // 리스트 존재 확인 & 보드 id 조회
         ListVo list = listMapper.findById(listId).orElseThrow(() -> new BusinessException(ErrorCode.BOARD_NOT_FOUND));
+
+        BoardVo board = boardVal.getValidBoard(list.getBoardId());
 
         // 권한 확인 (보드 권한 설정에 따라)
         memberVal.validateBoardSetting(list.getBoardId(), userId, BoardSettingVo::getListEditPermission);
 
+        List<Long> memberIds = boardMemberMapper.findAllMemberIdsByBoardId(board.getId());
+
         // 삭제
         listMapper.softDeleteList(listId);
 
-        // 로그 저장
-        saveActivityLog(userId, list.getBoardId(), ActivityType.DELETE_LIST, listId, list.getTitle(), "리스트를 삭제했습니다.");
+        // [이벤트] 리스트 삭제 이벤트 발행
+        publishListEvent(actor, board, memberIds, BoardEvent.EventType.DELETE_LIST, list);
 
         // 삭제된 리스트 정보 저장
         Map<String, Object> data = new HashMap<>();
@@ -176,14 +212,26 @@ public class ListServiceImpl implements ListService {
         socketSender.sendSocketMessage(list.getBoardId(), "LIST_DELETE", userId, data);
     }
 
-    // 리스트 활동 로그 저장
-    private void saveActivityLog(Long userId, Long boardId, ActivityType type, Long targetId, String targetName, String description) {
-        // 팀 ID 조회를 위해 보드 정보 가져오기
-        BoardVo board = boardMapper.findBoardByBoardId(boardId)
-                .orElseThrow(() -> new BusinessException(ErrorCode.BOARD_NOT_FOUND));
-        Long teamId = board.getTeamId();
+    /**
+     * Helper Methods
+     */
 
-        activityService.saveLog(ActivitySaveRequest.builder().userId(userId).teamId(teamId).boardId(boardId).type(type).targetId(targetId).targetName(targetName).description(description).build());
+    // [이벤트] 보드 이벤트 발행
+    private void publishListEvent(UserVo actor, BoardVo board, List<Long> memberIds, BoardEvent.EventType type, ListVo list) {
+        BoardEvent event = BoardEvent.builder()
+                .eventType(type)
+                .boardId(board.getId())
+                .teamId(board.getTeamId())
+                .boardTitle(board.getTitle())
+                .actorId(actor.getId())
+                .actorNickname(actor.getNickname())
+                .actorProfileImg(actor.getProfileImg())
+                .targetMemberIds(memberIds)
+                .listId(list.getId())
+                .listTitle(list.getTitle())
+                .build();
+
+        publisher.publishEvent(event);
     }
 
 }
