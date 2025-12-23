@@ -8,6 +8,7 @@ import { useCommentMutations } from '../../hooks/card/useCommentMutations'
 import { useAuthQuery } from '../../hooks/auth/useAuthQuery'
 import CommentItem from './CommentItem'
 import MentionEditor from '../mention/MentionEditor'
+import useBoardPermission from '../../hooks/board/useBoardPermission'
 
 function CardActivity() {
   const { boardId } = useParams()
@@ -16,6 +17,7 @@ function CardActivity() {
 
   const { selectedCard } = useBoardStore()
   const { user: currentUser } = useAuthQuery()
+  const { canEdit } = useBoardPermission(activeBoard)
 
   // activeBoard가 로딩되기 전 방어
   const { createComment } = useCommentMutations(activeBoard?.id)
@@ -42,19 +44,21 @@ function CardActivity() {
 
       <div className="space-y-6 pl-8">
         {/* 메인 입력창 */}
-        <div className="flex gap-3">
-          <img
-            src={currentUser?.profileImg || defaultProfile}
-            alt="Me"
-            className="h-8 w-8 rounded-full bg-gray-100 object-cover"
-          />
-          <MentionEditor
-            onSubmit={handleCreateComment}
-            placeholder="댓글을 입력해주세요... (@멘션)"
-            submitLabel="저장"
-            minHeight={44} // 댓글창 높이
-          />
-        </div>
+        {canEdit && (
+          <div className="flex gap-3">
+            <img
+              src={currentUser?.profileImg || defaultProfile}
+              alt="Me"
+              className="h-8 w-8 rounded-full bg-gray-100 object-cover"
+            />
+            <MentionEditor
+              onSubmit={handleCreateComment}
+              placeholder="댓글을 입력해주세요... (@멘션)"
+              submitLabel="저장"
+              minHeight={44} // 댓글창 높이
+            />
+          </div>
+        )}
 
         {/* 댓글 목록 */}
         <div className="space-y-4">

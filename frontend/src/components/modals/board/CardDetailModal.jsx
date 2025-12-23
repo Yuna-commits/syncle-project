@@ -10,6 +10,7 @@ import CardChecklist from '../../card/CardChecklist'
 import CardDescription from '../../card/CardDescription'
 import CardSidebar from '../../card/CardSidebar'
 import CardAttachment from '../../card/CardAttachment'
+import useBoardPermission from '../../../hooks/board/useBoardPermission'
 
 export default function CardDetailModal() {
   const { boardId: boardIdParam } = useParams()
@@ -18,6 +19,7 @@ export default function CardDetailModal() {
   const { selectedCard, closeCardModal } = useBoardStore()
 
   const { data: activeBoard } = useBoardQuery(boardId)
+  const { canEdit } = useBoardPermission(activeBoard)
   const { updateCard } = useCardMutations(activeBoard?.id)
 
   // activeBoard가 갱신될 때 selectedCard 동기화
@@ -49,7 +51,9 @@ export default function CardDetailModal() {
   )
 
   // 댓글 표시 여부 상태
-  const [showComment, setShowComment] = useState(true)
+  const [showComment, setShowComment] = useState(
+    selectedCard.comments && selectedCard.comments.length > 0,
+  )
 
   const [isComplete, setIsComplete] = useState(false)
   const [isAnimating, setIsAnimating] = useState(false)
@@ -67,6 +71,8 @@ export default function CardDetailModal() {
 
   // 완료 토글 핸들러
   const toggleComplete = () => {
+    if (!canEdit) return
+
     const nextState = !isComplete
 
     // UI 즉시 반영 (낙관적 업데이트)
@@ -123,6 +129,7 @@ export default function CardDetailModal() {
           <div className="flex w-full gap-4 pr-10">
             <button
               onClick={toggleComplete}
+              disabled={!canEdit}
               className={`flex h-9 w-9 shrink-0 cursor-pointer items-center justify-center rounded-full border-2 transition-all duration-300 ease-out ${
                 isComplete
                   ? 'border-green-500 bg-green-500 text-white shadow-md shadow-green-200'
@@ -199,18 +206,15 @@ export default function CardDetailModal() {
             <div className="flex flex-1 flex-col gap-10">
               {/* Description */}
               <CardDescription />
-
               {/* Attachments */}
               {selectedCard.files && selectedCard.files.length > 0 && (
                 <CardAttachment files={selectedCard.files} />
               )}
-
               {/* Checklist Section */}
               {showChecklist && (
                 // 체크리스트가 있으면 렌더링
                 <CardChecklist items={selectedCard.checklists || []} />
               )}
-
               {/* Activity Section */}
               {showComment && <CardActivity />}
             </div>

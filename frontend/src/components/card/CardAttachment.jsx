@@ -3,10 +3,14 @@ import { Paperclip, X, File, Download } from 'lucide-react'
 import { useFileMutations } from '../../hooks/file/useFileMutations'
 import { useParams } from 'react-router-dom'
 import useBoardStore from '../../stores/useBoardStore'
+import { useBoardQuery } from '../../hooks/board/useBoardQuery'
+import useBoardPermission from '../../hooks/board/useBoardPermission'
 
 function CardAttachment({ files = [] }) {
   const { boardId } = useParams()
   const { selectedCard } = useBoardStore()
+  const { data: board } = useBoardQuery(boardId)
+  const { canEdit } = useBoardPermission(board)
   // useFileMutations 훅을 통해 deleteFile 함수 가져오기
   const { deleteFile } = useFileMutations(Number(boardId))
 
@@ -87,13 +91,15 @@ function CardAttachment({ files = [] }) {
                     >
                       <Download size={14} />
                     </a>
-                    <button
-                      onClick={() => handleDelete(file.id)}
-                      className="rounded bg-red-500/80 p-1.5 text-white backdrop-blur-sm hover:bg-red-600"
-                      title="삭제"
-                    >
-                      <X size={14} />
-                    </button>
+                    {canEdit && (
+                      <button
+                        onClick={() => handleDelete(file.id)}
+                        className="rounded bg-red-500/80 p-1.5 text-white backdrop-blur-sm hover:bg-red-600"
+                        title="삭제"
+                      >
+                        <X size={14} />
+                      </button>
+                    )}
                   </div>
                 </div>
               </div>

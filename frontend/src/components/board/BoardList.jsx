@@ -9,7 +9,7 @@ import { filterAndSortTasks } from '../../utils/boardFilterUtils'
 /**
  * N개의 카드 작업을 담을 하나의 리스트 랜더링
  */
-function BoardList({ column, innerRef, boardId, canEditList }) {
+function BoardList({ column, innerRef, boardId, canEditList, canEdit }) {
   const { addCard } = useCardMutations(boardId)
   const { deleteList, updateList, updateListArchiveStatus } =
     useListMutations(boardId)
@@ -218,13 +218,15 @@ function BoardList({ column, innerRef, boardId, canEditList }) {
             </div>
           </form>
         ) : (
-          <button
-            onClick={() => setIsAdding(true)}
-            className="mt-2 flex w-full items-center gap-2 rounded-lg p-2 text-left text-sm font-medium text-gray-600 transition-colors hover:cursor-pointer hover:bg-gray-200"
-          >
-            <Plus size={20} className="text-gray-600" />
-            카드 추가
-          </button>
+          canEdit && (
+            <button
+              onClick={() => setIsAdding(true)}
+              className="mt-2 flex w-full items-center gap-2 rounded-lg p-2 text-left text-sm font-medium text-gray-600 transition-colors hover:cursor-pointer hover:bg-gray-200"
+            >
+              <Plus size={20} className="text-gray-600" />
+              카드 추가
+            </button>
+          )
         ))}
     </div>
   )

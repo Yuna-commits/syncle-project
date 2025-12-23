@@ -1,4 +1,4 @@
-import React, { useMemo, useState } from 'react'
+import React, { useMemo, useRef, useState } from 'react'
 import {
   X,
   Search,
@@ -13,12 +13,16 @@ import {
 // eslint-disable-next-line no-unused-vars
 import { motion, AnimatePresence } from 'framer-motion'
 import useBoardStore from '../../stores/useBoardStore'
+import useClickOutside from '../../hooks/useClickOutside'
 
 const BoardFilter = ({ board, onClose }) => {
   const { filter, setFilter, resetFilter } = useBoardStore()
   const [activeTab, setActiveTab] = useState('properties')
   const [memberSearch, setMemberSearch] = useState('')
   const activeBoard = board || null
+  const filterRef = useRef(null)
+
+  useClickOutside(filterRef, onClose)
 
   // 1. 현재 보드에 존재하는 모든 라벨 추출 (중복 제거)
   const availableLabels = useMemo(() => {
@@ -107,7 +111,10 @@ const BoardFilter = ({ board, onClose }) => {
     filter.dueDates.length
 
   return (
-    <div className="absolute top-12 right-0 z-50 flex max-h-[85vh] w-96 flex-col overflow-hidden rounded-xl border border-gray-200 bg-white shadow-2xl">
+    <div
+      ref={filterRef}
+      className="absolute top-12 right-0 z-50 flex max-h-[85vh] w-96 flex-col overflow-hidden rounded-xl border border-gray-200 bg-white shadow-2xl"
+    >
       {/* 헤더 */}
       <div className="flex shrink-0 items-center justify-between border-b border-gray-100 bg-white px-5 py-4">
         <div className="flex items-center gap-2 font-semibold text-gray-800">
