@@ -94,7 +94,9 @@ export default function CardDetailModal() {
       updateCard({
         cardId: selectedCard.id,
         listId: selectedCard.listId,
-        isArchived: newStatus,
+        updates: {
+          isArchived: newStatus,
+        },
       })
 
       // 아카이브(보관) 처리 시 모달 닫기

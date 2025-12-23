@@ -205,9 +205,8 @@ public class CommentServiceImpl implements CommentService {
             primaryTargetId = card.getAssigneeId();
         }
 
-        // [댓글/답글] 알림 발송 (멘션된 사람이 아니고 본인이 아닐 때)
+        // [댓글/답글] 알림 발송 (멘션된 사람이 아닐 때 -> 로그 때문에 본인일 때도 이벤트 발행)
         if (primaryTargetId != null
-                && !primaryTargetId.equals(actor.getId())
                 && !mentionedUserIds.contains(primaryTargetId)) {
             publishCommentEvent(card, boardId, teamId, actor, request.getContent(), eventType, primaryTargetId);
         }

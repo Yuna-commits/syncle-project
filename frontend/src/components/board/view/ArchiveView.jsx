@@ -53,7 +53,9 @@ export default function ArchiveView({ board }) {
     updateCard({
       cardId: card.id,
       listId: card.listId,
-      isArchived: false,
+      updates: {
+        isArchived: false,
+      },
     })
   }
 
