@@ -59,7 +59,7 @@ function PermissionsView({ board, isOwner }) {
         {/* 2. 보드 공유 권한 */}
         <div>
           <label className="mb-1 block text-xs font-bold text-gray-500 uppercase">
-            보드 공유 설정 (공개/비공개)
+            보드 공유
           </label>
           <select
             className="w-full rounded-md border border-gray-300 px-3 py-2 text-sm focus:border-blue-500 focus:outline-none disabled:bg-gray-100 disabled:text-gray-500"
@@ -75,7 +75,7 @@ function PermissionsView({ board, isOwner }) {
         {/* 3. 리스트 편집 권한 */}
         <div>
           <label className="mb-1 block text-xs font-bold text-gray-500 uppercase">
-            리스트(컬럼) 추가 및 변경
+            리스트 추가 및 변경
           </label>
           <select
             className="w-full rounded-md border border-gray-300 px-3 py-2 text-sm focus:border-blue-500 focus:outline-none disabled:bg-gray-100 disabled:text-gray-500"

@@ -4,6 +4,7 @@ import com.nullpointer.domain.activity.dto.request.ActivitySaveRequest;
 import com.nullpointer.domain.activity.service.ActivityService;
 import com.nullpointer.domain.activity.vo.enums.ActivityType;
 import com.nullpointer.domain.board.mapper.BoardMapper;
+import com.nullpointer.domain.board.vo.BoardSettingVo;
 import com.nullpointer.domain.board.vo.BoardVo;
 import com.nullpointer.domain.list.dto.CreateListRequest;
 import com.nullpointer.domain.list.dto.ListResponse;
@@ -47,8 +48,8 @@ public class ListServiceImpl implements ListService {
     @Override
     @Transactional
     public ListResponse createList(Long boardId, CreateListRequest request, Long userId) {
-        // 권한 확인 - MEMBER 이상
-        memberVal.validateBoardEditor(boardId, userId);
+        // 권한 확인 (보드 권한 설정에 따라)
+        memberVal.validateBoardSetting(boardId, userId, BoardSettingVo::getListEditPermission);
 
         // 리스트 생성
         ListVo listVo = new ListVo();
@@ -95,8 +96,8 @@ public class ListServiceImpl implements ListService {
     @Override
     @Transactional
     public void updateListOrders(Long boardId, List<UpdateListOrderRequest> request, Long userId) {
-        // 권한 확인 - MEMBER 이상 (순서 변경도 작업 권한 필요)
-        memberVal.validateBoardEditor(boardId, userId);
+        // 권한 확인 (보드 권한 설정에 따라)
+        memberVal.validateBoardSetting(boardId, userId, BoardSettingVo::getListEditPermission);
 
         // 요청한 데이터를 변환
         List<ListVo> updateList = request.stream().map(item -> ListVo.builder().id(item.getListId()).boardId(boardId).orderIndex(item.getOrderIndex()).build()).toList();
@@ -116,8 +117,8 @@ public class ListServiceImpl implements ListService {
         // 리스트 존재 확인 & 보드 id 조회
         ListVo list = listMapper.findById(listId).orElseThrow(() -> new BusinessException(ErrorCode.BOARD_NOT_FOUND));
 
-        // 작업 권한 확인 -> VIEWER 불가
-        memberVal.validateBoardEditor(list.getBoardId(), userId);
+        // 권한 확인 (보드 권한 설정에 따라)
+        memberVal.validateBoardSetting(list.getBoardId(), userId, BoardSettingVo::getListEditPermission);
 
         // 업데이트
         listMapper.updateListInfo(ListVo.builder().id(listId).title(request.getTitle()).build());
@@ -137,8 +138,8 @@ public class ListServiceImpl implements ListService {
         // 리스트 존재 확인 & 보드 id 조회
         ListVo list = listMapper.findById(listId).orElseThrow(() -> new BusinessException(ErrorCode.BOARD_NOT_FOUND));
 
-        // 작업 권한 확인 -> VIEWER 불가
-        memberVal.validateBoardEditor(list.getBoardId(), userId);
+        // 권한 확인 (보드 권한 설정에 따라)
+        memberVal.validateBoardSetting(list.getBoardId(), userId, BoardSettingVo::getListEditPermission);
 
         // 업데이트
         listMapper.updateListArchiveStatus(listId, isArchived);
@@ -158,8 +159,8 @@ public class ListServiceImpl implements ListService {
         // 리스트 존재 확인 & 보드 id 조회
         ListVo list = listMapper.findById(listId).orElseThrow(() -> new BusinessException(ErrorCode.BOARD_NOT_FOUND));
 
-        // 작업 권한 확인 -> VIEWER 불가
-        memberVal.validateBoardEditor(list.getBoardId(), userId);
+        // 권한 확인 (보드 권한 설정에 따라)
+        memberVal.validateBoardSetting(list.getBoardId(), userId, BoardSettingVo::getListEditPermission);
 
         // 삭제
         listMapper.softDeleteList(listId);

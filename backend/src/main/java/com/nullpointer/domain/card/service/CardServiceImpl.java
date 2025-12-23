@@ -1,6 +1,7 @@
 package com.nullpointer.domain.card.service;
 
 import com.nullpointer.domain.board.mapper.BoardMapper;
+import com.nullpointer.domain.board.vo.BoardSettingVo;
 import com.nullpointer.domain.board.vo.BoardVo;
 import com.nullpointer.domain.card.dto.*;
 import com.nullpointer.domain.card.helper.CardEventHelper;
@@ -243,6 +244,9 @@ public class CardServiceImpl implements CardService {
                 .orElseThrow(() -> new BusinessException(ErrorCode.BOARD_NOT_FOUND));
         UserVo actor = userMapper.findById(userId)
                 .orElseThrow(() -> new BusinessException(ErrorCode.USER_NOT_FOUND));
+
+        // 권한 확인 (보드 권한 설정에 따라)
+        memberVal.validateBoardSetting(boardId, userId, BoardSettingVo::getCardDeletePermission);
 
         // 카드 삭제
         cardMapper.deleteCard(cardId);

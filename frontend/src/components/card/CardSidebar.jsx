@@ -22,6 +22,7 @@ import CardLabel from './CardLabel'
 import { useFileMutations } from '../../hooks/file/useFileMutations'
 import { getDateStatusStyle } from '../../utils/dateUtils'
 import { MAX_SIZE, ALLOWED_EXTENSIONS } from '../../constants/fileConstants'
+import useBoardPermission from '../../hooks/board/useBoardPermission'
 
 function CardSidebar({
   onAddChecklist,
@@ -34,6 +35,7 @@ function CardSidebar({
   const { selectedCard, closeCardModal } = useBoardStore()
   const { data: activeBoard } = useBoardQuery(boardId)
   const { updateCard, moveCard, deleteCard } = useCardMutations(activeBoard?.id)
+  const { canDeleteCard } = useBoardPermission(activeBoard)
 
   // 파일 업로드 훅 사용
   const { uploadFile } = useFileMutations(Number(boardId))
@@ -412,14 +414,15 @@ function CardSidebar({
             </>
           )}
         </button>
-
-        <button
-          onClick={handleDeleteCard}
-          className="flex w-full items-center gap-2 rounded-md bg-gray-100 px-3 py-1.5 text-sm font-medium text-red-500 transition-colors hover:cursor-pointer hover:bg-red-100"
-        >
-          <Trash2 size={14} />
-          <span>카드 삭제</span>
-        </button>
+        {canDeleteCard && (
+          <button
+            onClick={handleDeleteCard}
+            className="flex w-full items-center gap-2 rounded-md bg-gray-100 px-3 py-1.5 text-sm font-medium text-red-500 transition-colors hover:cursor-pointer hover:bg-red-100"
+          >
+            <Trash2 size={14} />
+            <span>카드 삭제</span>
+          </button>
+        )}
       </div>
     </div>
   )

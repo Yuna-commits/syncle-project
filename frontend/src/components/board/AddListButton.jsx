@@ -7,6 +7,8 @@ function AddListButton({ boardId }) {
   const [title, setTitle] = useState('')
   const [isAdding, setIsAdding] = useState(false)
 
+  // 보드 권한 체크
+
   const handleAddList = (e) => {
     e.preventDefault()
     if (title.trim()) {

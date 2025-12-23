@@ -237,6 +237,9 @@ public class BoardServiceImpl implements BoardService {
         boardSettingMapper.updateBoardSettings(settingVo);
 
         // (선택 사항) 로그 저장, 소켓 전송 등 추가 가능
+
+        // 소켓 전송
+        socketSender.sendSocketMessage(boardId, "BOARD_SETTINGS_UPDATED", userId, null);
     }
 
     @Override
@@ -412,7 +415,7 @@ public class BoardServiceImpl implements BoardService {
     public String createShareToken(Long boardId, Long userId) {
         // 1. 권한 체크: 보드 관리자(OWNER) 혹은 멤버인지 확인
         // 보드를 볼 수 있는 권한이 있는 사람만 공유 링크를 생성할 수 있도록 제한합니다.
-        memberVal.validateBoardViewer(boardId, userId);
+        memberVal.validateBoardSetting(boardId, userId, BoardSettingVo::getBoardSharingPermission);
 
         // 2. 고유 토큰 생성
         String token = UUID.randomUUID().toString();

@@ -1,7 +1,10 @@
 package com.nullpointer.global.validator;
 
 import com.nullpointer.domain.board.mapper.BoardMapper;
+import com.nullpointer.domain.board.mapper.BoardSettingMapper;
+import com.nullpointer.domain.board.vo.BoardSettingVo;
 import com.nullpointer.domain.board.vo.BoardVo;
+import com.nullpointer.domain.board.vo.enums.PermissionLevel;
 import com.nullpointer.domain.board.vo.enums.Visibility;
 import com.nullpointer.domain.member.mapper.BoardMemberMapper;
 import com.nullpointer.domain.member.mapper.TeamMemberMapper;
@@ -13,12 +16,15 @@ import com.nullpointer.global.exception.BusinessException;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
 
+import java.util.function.Function;
+
 @Component
 @RequiredArgsConstructor
 public class MemberValidator {
     private final TeamMemberMapper teamMemberMapper;
     private final BoardMemberMapper boardMemberMapper;
     private final BoardMapper boardMapper;
+    private final BoardSettingMapper boardSettingMapper;
     // ========================================================
     //  1. 팀 권한 확인
     // ========================================================
@@ -101,6 +107,38 @@ public class MemberValidator {
             throw new BusinessException(ErrorCode.BOARD_ACCESS_DENIED);
         }
     }
+
+    /**
+     * 보드 초대 권한 검증
+     * - OWNER: 관리자만 초대 가능
+     * - MEMBERS: 멤버 이상 초대 가능 (VIEWER 불가)
+     * - @param permissionExtractor BoardSettingVo에서 검사할 권한 필드를 꺼내는 함수
+     */
+    public void validateBoardSetting(Long boardId, Long userId, Function<BoardSettingVo, PermissionLevel> permissionExtractor) {
+        Role role = resolveEffectiveBoardRole(boardId, userId);
+
+        // 1. 권한이 없거나 VIEWER인 경우 초대 불가
+        if (role == null || role == Role.VIEWER) {
+            throw new BusinessException(ErrorCode.BOARD_ACCESS_DENIED);
+        }
+
+        // 2. OWNER는 설정과 무관하게 항상 가능
+        if (role == Role.OWNER) {
+            return;
+        }
+
+        // 3. MEMBER인 경우 설정을 확인
+        BoardSettingVo settings = boardSettingMapper.findBoardSettingsByBoardId(boardId);
+
+        // 함수형 인터페이스를 통해 필요한 설정값 가져오기
+        PermissionLevel requiredLevel = permissionExtractor.apply(settings);
+
+        // 설정이 '관리자만(OWNER)'으로 되어있다면 일반 멤버는 실패
+        if (requiredLevel == PermissionLevel.OWNER) {
+            throw new BusinessException(ErrorCode.PERMISSION_FORBIDDEN);
+        }
+    }
+
     // ========================================================
     //  3. 실질적 권한(Effective Role) 계산
     // ========================================================

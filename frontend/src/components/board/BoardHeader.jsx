@@ -6,11 +6,15 @@ import { useBoardMutations } from '../../hooks/board/useBoardMutations'
 import { Lock, Globe, MoreHorizontal, Plus, Share2, Star } from 'lucide-react'
 import BoardFilter from '../sidebar/BoardFilter'
 import { useBoardDisplayMembers } from '../../utils/useBoardDisplayMembers'
+import useBoardPermission from '../../hooks/board/useBoardPermission'
 
 function BoardHeader({ board }) {
   // UI 상태 제어 함수 (Store)
   const { toggleSettings, openSettings, isSettingsOpen, settingsView } =
     useBoardStore()
+
+  // 보드 권한 체크
+  const { canInvite, canShare } = useBoardPermission(board)
 
   // 임시 필터 함수
   const [isFilterOpen, setIsFilterOpen] = useState(false)
@@ -131,7 +135,7 @@ function BoardHeader({ board }) {
             </div>
 
             {/* 멤버 추가 버튼 */}
-            {isPrivate && (
+            {isPrivate && canInvite && (
               <button
                 onClick={() => setIsInviteModalOpen(true)}
                 className="flex h-8 w-8 items-center justify-center rounded-full border-2 border-dashed border-gray-300 bg-white text-gray-400 transition-colors hover:cursor-pointer hover:border-blue-400 hover:text-blue-600"
@@ -166,14 +170,16 @@ function BoardHeader({ board }) {
           </button>
 
           {/* 공유 버튼 */}
-          <button
-            onClick={() => createShareToken()}
-            disabled={isCreatingToken}
-            className="flex items-center gap-1.5 rounded-md bg-blue-600 px-3 py-1.5 text-sm font-medium text-white shadow-sm transition-all hover:cursor-pointer hover:bg-blue-700 active:scale-95"
-          >
-            <Share2 size={16} />
-            {isCreatingToken ? '생성 중...' : '공유'}
-          </button>
+          {canShare && (
+            <button
+              onClick={() => createShareToken()}
+              disabled={isCreatingToken}
+              className="flex items-center gap-1.5 rounded-md bg-blue-600 px-3 py-1.5 text-sm font-medium text-white shadow-sm transition-all hover:cursor-pointer hover:bg-blue-700 active:scale-95"
+            >
+              <Share2 size={16} />
+              {isCreatingToken ? '생성 중...' : '공유'}
+            </button>
+          )}
 
           {/* 더보기 메뉴 */}
           <button

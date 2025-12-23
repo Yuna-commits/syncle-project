@@ -9,7 +9,7 @@ import { filterAndSortTasks } from '../../utils/boardFilterUtils'
 /**
  * N개의 카드 작업을 담을 하나의 리스트 랜더링
  */
-function BoardList({ column, innerRef, boardId }) {
+function BoardList({ column, innerRef, boardId, canEditList }) {
   const { addCard } = useCardMutations(boardId)
   const { deleteList, updateList, updateListArchiveStatus } =
     useListMutations(boardId)
@@ -86,7 +86,7 @@ function BoardList({ column, innerRef, boardId }) {
       {/* 드래그 전용 핸들바 (Drag Handle)
         - board-list-header 클래스를 여기에만 적용합니다.
       */}
-      {!isDoneList && (
+      {!isDoneList && canEditList && (
         <div
           className="board-list-header group flex h-5 w-full cursor-grab items-center justify-center rounded-t-md hover:bg-gray-200/80 active:cursor-grabbing"
           title="이곳을 잡고 리스트를 이동하세요"
@@ -98,7 +98,7 @@ function BoardList({ column, innerRef, boardId }) {
 
       {/* === 리스트 헤더 영역 (제목 + 메뉴) === */}
       <div className="relative mb-2 flex items-center justify-between px-2 pt-1">
-        {isEditing && !isDoneList ? (
+        {isEditing && !isDoneList && canEditList ? (
           <input
             autoFocus
             className="w-full rounded border border-blue-500 px-1 py-0.5 text-sm font-semibold text-gray-700 focus:outline-none"
@@ -123,7 +123,7 @@ function BoardList({ column, innerRef, boardId }) {
             </h3>
           </div>
         )}
-        {!isDoneList && (
+        {!isDoneList && canEditList && (
           <div className="relative ml-2" ref={menuRef}>
             <button
               onClick={() => setIsMenuOpen(!isMenuOpen)}

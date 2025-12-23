@@ -4,6 +4,8 @@ import com.nullpointer.domain.activity.dto.request.ActivitySaveRequest;
 import com.nullpointer.domain.activity.service.ActivityService;
 import com.nullpointer.domain.activity.vo.enums.ActivityType;
 import com.nullpointer.domain.board.mapper.BoardMapper;
+import com.nullpointer.domain.board.mapper.BoardSettingMapper;
+import com.nullpointer.domain.board.vo.BoardSettingVo;
 import com.nullpointer.domain.board.vo.BoardVo;
 import com.nullpointer.domain.invitation.event.InvitationEvent;
 import com.nullpointer.domain.member.dto.board.BoardInviteRequest;
@@ -44,7 +46,6 @@ public class BoardMemberServiceImpl implements BoardMemberService {
     private final ActivityService activityService;
     private final SocketSender socketSender;
     private final ApplicationEventPublisher publisher;
-    private final RedisUtil redisUtil;
 
     /**
      * 보드 멤버 관리 권한
@@ -53,8 +54,8 @@ public class BoardMemberServiceImpl implements BoardMemberService {
 
     @Override
     public void inviteBoardMember(Long boardId, BoardInviteRequest req, Long userId) {
-        // 1. 요청자가 초대 권한(OWNER)이 있는지 확인
-        memberVal.validateBoardManager(boardId, userId);
+        // 1. 요청자가 초대 권한이 있는지 확인
+        memberVal.validateBoardSetting(boardId, userId, BoardSettingVo::getInvitationPermission);
 
         // 2. 알림용 보드, 초대자 정보 조회
         BoardVo board = boardMapper.findBoardByBoardId(boardId)

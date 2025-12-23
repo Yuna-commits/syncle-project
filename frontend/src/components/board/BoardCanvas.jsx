@@ -3,7 +3,7 @@ import AddListButton from './AddListButton'
 import BoardList from './BoardList'
 
 function BoardCanvas({ board, columnRefs, listContainerRef }) {
-  const { canEdit } = useBoardPermission(board)
+  const { canEditList } = useBoardPermission(board)
 
   const orderedColumns = board.columnOrder
     ? board.columnOrder.map((id) => board.columns[id])
@@ -34,11 +34,11 @@ function BoardCanvas({ board, columnRefs, listContainerRef }) {
                 key={column.id}
                 column={column}
                 innerRef={(el) => (columnRefs.current[column.id] = el)}
-                canEdit={canEdit} // 리스트 작업 권한
                 boardId={board.id}
+                canEditList={canEditList}
               />
             ))}
-          {canEdit && <AddListButton boardId={board.id} />}
+          {canEditList && <AddListButton boardId={board.id} />}
         </div>
       </div>
     </div>
