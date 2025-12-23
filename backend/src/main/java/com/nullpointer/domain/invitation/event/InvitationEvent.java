@@ -12,11 +12,12 @@ public class InvitationEvent {
     private String senderProfileImg;
 
     private Long receiverId; // 초대받은 사람
+    private String receiverNickname;
 
     private Long targetId; // teamId || boardId
     private String targetName; // teamName || boardTitle
 
-    private NotificationType type; // TEAM_INVITE || BOARD_INVITE || TEAM_DELETE || BOARD_DELETE
+    private NotificationType type; // TEAM_INVITE || BOARD_INVITE
 
     private String token; // 팀 초대 토큰
 }

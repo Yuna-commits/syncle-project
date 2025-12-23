@@ -12,8 +12,10 @@ public enum ActivityType {
     CHECKLIST_COMPLETED("체크리스트를 완료했습니다."),
 
     // 4. 멤버/권한
-    INVITE_MEMBER("멤버 초대"),
-    KICK_MEMBER("멤버 추방"),
+    INVITE_MEMBER("멤버를 초대했습니다."),
+    ACCEPT_INVITE("팀에 초대를 수락했습니다."),
+    REJECT_INVITE("팀 초대를 거절했습니다."),
+    KICK_MEMBER("멤버를 추방했습니다."),
     UPDATE_MEMBER_ROLE("멤버 권한 변경"),
 
     // 5. 구조 변경
@@ -31,9 +33,9 @@ public enum ActivityType {
     CREATE_TEAM("팀을 생성했습니다."),
     UPDATE_TEAM("팀 정보를 수정했습니다."),
     DELETE_TEAM("팀을 삭제했습니다."),
-    
-    JOIN_TEAM("팀 참여"),
-    LEAVE_TEAM("팀 탈퇴"),
+
+
+    LEAVE_TEAM("팀에서 탈퇴했습니다."),
     ;
 
     private final String description;

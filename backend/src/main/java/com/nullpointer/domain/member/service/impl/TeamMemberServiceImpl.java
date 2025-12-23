@@ -1,8 +1,5 @@
 package com.nullpointer.domain.member.service.impl;
 
-import com.nullpointer.domain.activity.dto.request.ActivitySaveRequest;
-import com.nullpointer.domain.activity.service.ActivityService;
-import com.nullpointer.domain.activity.vo.enums.ActivityType;
 import com.nullpointer.domain.invitation.event.InvitationEvent;
 import com.nullpointer.domain.member.dto.team.TeamMemberResponse;
 import com.nullpointer.domain.member.dto.team.TeamRoleUpdateRequest;
@@ -35,7 +32,6 @@ public class TeamMemberServiceImpl implements TeamMemberService {
     private final TeamMemberMapper teamMemberMapper;
     private final UserMapper userMapper;
     private final MemberValidator memberVal;
-    private final ActivityService activityService;
     private final SocketSender socketSender;
     private final ApplicationEventPublisher publisher;
 
@@ -120,8 +116,6 @@ public class TeamMemberServiceImpl implements TeamMemberService {
         }
 
         publishRolChangeEvent(owner, targetId, team, req.getRole());
-        // 멤버 권한 변경 로그 저장
-        // changeRoleLog(teamId, memberId, userId, oldRole, req.getRole());
     }
 
     @Override
@@ -141,13 +135,20 @@ public class TeamMemberServiceImpl implements TeamMemberService {
         // 알림 대상, 타입 결정
         NotificationType notificationType;
         Long receiverId;
+        String receiverNickname;
 
         // 2. 추방/탈퇴 분기
         if (!userId.equals(memberId)) {
             // [추방] OWNER가 멤버 추방
             memberVal.validateTeamOwner(teamId, userId, ErrorCode.MEMBER_DELETE_FORBIDDEN);
+
+            // 추방 대상 정보 조회 (닉네임 필요)
+            UserVo kickedMember = userMapper.findById(memberId)
+                    .orElseThrow(() -> new BusinessException(ErrorCode.USER_NOT_FOUND));
+
             notificationType = NotificationType.TEAM_MEMBER_KICKED;
             receiverId = memberId; // 추방 대상에게 알림
+            receiverNickname = kickedMember.getNickname();
         } else {
             // [탈퇴] 본인 탈퇴
             // 추가) 본인이 OWNER이면 탈퇴 불가
@@ -157,54 +158,14 @@ public class TeamMemberServiceImpl implements TeamMemberService {
             }
             notificationType = NotificationType.TEAM_MEMBER_LEFT;
             receiverId = findTeamOwnerId(teamId); // 관리자에게 알림
+            receiverNickname = actor.getNickname();
         }
 
         // 3. DB 삭제 처리
         teamMemberMapper.deleteTeamMember(teamId, memberId);
 
         // [알림] 관리자/추방 대상에게 알림 발송
-        publishMemberEvent(actor, receiverId, team, notificationType);
-
-        // 탈퇴/강퇴 로그 저장
-        // kickMemberLog(teamId, memberId, ownerId);
-    }
-
-    /**
-     * 팀 멤버 관리 로그
-     */
-
-    // 멤버 권한 변경 로그
-    private void changeRoleLog(Long teamId, Long targetUserId, Long ownerId, Role oldRole, Role newRole) {
-        UserVo targetUser = userMapper.findById(targetUserId)
-                .orElseThrow(() -> new BusinessException(ErrorCode.USER_NOT_FOUND));
-
-        activityService.saveLog(
-                ActivitySaveRequest.builder()
-                        .userId(ownerId) // 변경한 관리자 ID
-                        .teamId(teamId)
-                        .boardId(null)
-                        .type(ActivityType.UPDATE_MEMBER_ROLE)
-                        .targetId(targetUserId)
-                        .targetName(targetUser.getNickname())
-                        .description(String.format("권한을 %s -> %s (으)로 변경했습니다.", oldRole, newRole))
-                        .build());
-    }
-
-    // 멤버 탈퇴/강퇴 로그
-    private void kickMemberLog(Long teamId, Long targetUserId, Long ownerId) {
-        UserVo targetUser = userMapper.findById(targetUserId)
-                .orElseThrow(() -> new BusinessException(ErrorCode.USER_NOT_FOUND));
-
-        activityService.saveLog(
-                ActivitySaveRequest.builder()
-                        .userId(ownerId != null ? ownerId : targetUserId) // 강퇴시킨 관리자 ID 또는 본인 ID
-                        .teamId(teamId)
-                        .boardId(null)
-                        .type(ActivityType.KICK_MEMBER)
-                        .targetId(targetUserId)
-                        .targetName(targetUser.getNickname())
-                        .description(targetUser.getNickname() + "님이 " + (ownerId != null ? "OWNER에 의해 팀에서 강퇴되었습니다." : "팀에서 탈퇴했습니다."))
-                        .build());
+        publishMemberEvent(actor, receiverId, receiverNickname, team, notificationType);
     }
 
     /**
@@ -221,12 +182,13 @@ public class TeamMemberServiceImpl implements TeamMemberService {
     }
 
     // [이벤트] 멤버 추방/탈퇴 이벤트 발행
-    private void publishMemberEvent(UserVo sender, Long receiverId, TeamVo team, NotificationType type) {
+    private void publishMemberEvent(UserVo sender, Long receiverId, String receiverNickname, TeamVo team, NotificationType type) {
         InvitationEvent event = InvitationEvent.builder()
                 .senderId(sender.getId())
                 .senderNickname(sender.getNickname())
                 .senderProfileImg(sender.getProfileImg())
                 .receiverId(receiverId)
+                .receiverNickname(receiverNickname)
                 .targetId(team.getId())
                 .targetName(team.getName())
                 .type(type)

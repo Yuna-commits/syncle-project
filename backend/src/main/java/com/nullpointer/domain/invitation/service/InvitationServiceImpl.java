@@ -1,8 +1,5 @@
 package com.nullpointer.domain.invitation.service;
 
-import com.nullpointer.domain.activity.dto.request.ActivitySaveRequest;
-import com.nullpointer.domain.activity.service.ActivityService;
-import com.nullpointer.domain.activity.vo.enums.ActivityType;
 import com.nullpointer.domain.invitation.dto.MyInvitationResponse;
 import com.nullpointer.domain.invitation.dto.TeamInvitationResponse;
 import com.nullpointer.domain.invitation.dto.TeamInviteRequest;
@@ -23,7 +20,6 @@ import com.nullpointer.domain.user.vo.UserVo;
 import com.nullpointer.global.common.SocketSender;
 import com.nullpointer.global.common.enums.ErrorCode;
 import com.nullpointer.global.common.enums.RedisKeyType;
-import com.nullpointer.global.email.EmailService;
 import com.nullpointer.global.exception.BusinessException;
 import com.nullpointer.global.util.RedisUtil;
 import com.nullpointer.global.validator.MemberValidator;
@@ -42,12 +38,10 @@ public class InvitationServiceImpl implements InvitationService {
 
     private final InvitationMapper invitationMapper;
     private final TeamMemberService teamMemberService;
-    private final EmailService emailService;
     private final TeamMapper teamMapper;
     private final UserMapper userMapper;
     private final RedisUtil redisUtil;
     private final MemberValidator memberValidator;
-    private final ActivityService activityService;
     private final TeamMemberMapper teamMemberMapper;
     private final BoardMemberMapper boardMemberMapper;
     private final ApplicationEventPublisher publisher;
@@ -149,7 +143,7 @@ public class InvitationServiceImpl implements InvitationService {
              */
 
             // [알림] 초대 알림 발송
-            publishInviteEvent(inviter, receiver.getId(), team.getId(), team.getName(), invitation.getToken());
+            publishInviteEvent(inviter, receiver, team.getId(), team.getName(), invitation.getToken());
         }
     }
 
@@ -193,11 +187,12 @@ public class InvitationServiceImpl implements InvitationService {
         // 5. 실제 멤버로 등록 (신규 멤버 추가 or 탈퇴 멤버 복구)
         teamMemberService.addMember(invitation.getTeamId(), loginUserId, Role.MEMBER);
 
-        // [알림] 초대 수락 알림 발송
-        publishResponseEvent(invitation, NotificationType.INVITE_ACCEPTED);
+        // 알림을 받을 초대자(Inviter) 정보 조회
+        UserVo inviter = userMapper.findById(invitation.getInviterId())
+                .orElseThrow(() -> new BusinessException(ErrorCode.USER_NOT_FOUND));
 
-        // 팀 멤버 초대 로그 저장
-        inviteMemberLog(invitation.getTeamId(), loginUserId);
+        // [알림] 초대 수락 알림 발송
+        publishResponseEvent(invitation, inviter, NotificationType.INVITE_ACCEPTED);
 
         // 6. Redis 정리
         redisUtil.deleteData(RedisKeyType.INVITATION.getKey(token));
@@ -221,8 +216,11 @@ public class InvitationServiceImpl implements InvitationService {
             invitationMapper.updateStatus(invitation);
         }
 
+        UserVo inviter = userMapper.findById(invitation.getInviterId())
+                .orElseThrow(() -> new BusinessException(ErrorCode.USER_NOT_FOUND));
+
         // [알림] 초대 거절 알림 발송
-        publishResponseEvent(invitation, NotificationType.INVITE_REJECTED);
+        publishResponseEvent(invitation, inviter, NotificationType.INVITE_REJECTED);
 
         redisUtil.deleteData(RedisKeyType.INVITATION.getKey(token));
     }
@@ -250,27 +248,6 @@ public class InvitationServiceImpl implements InvitationService {
     public List<MyInvitationResponse> getMyInvitations(Long userId) {
         return invitationMapper.findAllByUserId(userId);
     }
-
-    // 팀 멤버 초대 로그
-    private void inviteMemberLog(Long teamId, Long userId) {
-        UserVo user = userMapper.findById(userId)
-                .orElseThrow(() -> new BusinessException(ErrorCode.USER_NOT_FOUND));
-
-        activityService.saveLog(
-                ActivitySaveRequest.builder()
-                        .userId(userId)
-                        .teamId(teamId)
-                        .boardId(null)
-                        .type(ActivityType.INVITE_MEMBER)
-                        .targetId(userId)
-                        .targetName(user.getNickname())
-                        .description(user.getNickname() + "님을 팀에 초대했습니다.")
-                        .build());
-    }
-
-    // ========================================================
-    //  내 초대 리스트 조회
-    // ========================================================
 
     @Override
     public void removeInvitation(Long invitationId, Long userId) {
@@ -326,12 +303,13 @@ public class InvitationServiceImpl implements InvitationService {
      */
 
     // [이벤트] 초대 이벤트 발행
-    private void publishInviteEvent(UserVo sender, Long receiverId, Long targetId, String targetName, String token) {
+    private void publishInviteEvent(UserVo sender, UserVo receiver, Long targetId, String targetName, String token) {
         InvitationEvent event = InvitationEvent.builder()
                 .senderId(sender.getId())
                 .senderNickname(sender.getNickname())
                 .senderProfileImg(sender.getProfileImg())
-                .receiverId(receiverId)
+                .receiverId(receiver.getId())
+                .receiverNickname(receiver.getNickname())
                 .targetId(targetId)
                 .targetName(targetName)
                 .type(NotificationType.TEAM_INVITE)
@@ -342,19 +320,17 @@ public class InvitationServiceImpl implements InvitationService {
     }
 
     // [이벤트] 초대 응답 이벤트 발행
-    private void publishResponseEvent(InvitationVo invitation, NotificationType type) {
+    private void publishResponseEvent(InvitationVo invitation, UserVo inviter, NotificationType type) {
         // 수락/거절한 사람 (현재 로그인한 사람)
         UserVo actor = userMapper.findById(invitation.getInviteeId())
                 .orElseThrow(() -> new BusinessException(ErrorCode.USER_NOT_FOUND));
-
-        // 알림을 받을 사람 (초대를 보낸 사람)
-        Long receiverId = invitation.getInviterId();
 
         InvitationEvent event = InvitationEvent.builder()
                 .senderId(actor.getId())
                 .senderNickname(actor.getNickname())
                 .senderProfileImg(actor.getProfileImg())
-                .receiverId(receiverId)
+                .receiverId(inviter.getId()) // 초대를 보낸 사람이 알림을 받음
+                .receiverNickname(inviter.getNickname())
                 .targetId(invitation.getTeamId())
                 .targetName(invitation.getTeamName())
                 .type(type)

@@ -1,10 +1,7 @@
 package com.nullpointer.domain.member.service.impl;
 
-import com.nullpointer.domain.activity.dto.request.ActivitySaveRequest;
 import com.nullpointer.domain.activity.service.ActivityService;
-import com.nullpointer.domain.activity.vo.enums.ActivityType;
 import com.nullpointer.domain.board.mapper.BoardMapper;
-import com.nullpointer.domain.board.mapper.BoardSettingMapper;
 import com.nullpointer.domain.board.vo.BoardSettingVo;
 import com.nullpointer.domain.board.vo.BoardVo;
 import com.nullpointer.domain.invitation.event.InvitationEvent;
@@ -22,7 +19,6 @@ import com.nullpointer.domain.user.vo.UserVo;
 import com.nullpointer.global.common.SocketSender;
 import com.nullpointer.global.common.enums.ErrorCode;
 import com.nullpointer.global.exception.BusinessException;
-import com.nullpointer.global.util.RedisUtil;
 import com.nullpointer.global.validator.MemberValidator;
 import lombok.RequiredArgsConstructor;
 import org.springframework.context.ApplicationEventPublisher;
@@ -60,8 +56,6 @@ public class BoardMemberServiceImpl implements BoardMemberService {
         // 2. 알림용 보드, 초대자 정보 조회
         BoardVo board = boardMapper.findBoardByBoardId(boardId)
                 .orElseThrow(() -> new BusinessException(ErrorCode.BOARD_NOT_FOUND));
-
-        Long teamId = board.getTeamId();
 
         UserVo inviter = userMapper.findById(userId)
                 .orElseThrow(() -> new BusinessException(ErrorCode.USER_NOT_FOUND));
@@ -108,12 +102,12 @@ public class BoardMemberServiceImpl implements BoardMemberService {
             boardMemberMapper.restoreMembersBulk(boardId, toRestore);
         }
 
+        List<UserVo> receivers = userMapper.findAllByIds(finalTargetIds);
+
         // 알림 발송
-        for (Long receiverId : finalTargetIds) {
+        for (UserVo receiver : receivers) {
             // [알림] 보드 멤버 초대 이벤트 발행
-            publishBoardEvent(inviter, receiverId, board, NotificationType.BOARD_INVITE);
-            // 로그 저장
-            // inviteMemberLog(receiverId, userId, boardId, teamId);
+            publishBoardEvent(inviter, receiver.getId(), receiver.getNickname(), board, NotificationType.BOARD_INVITE);
         }
 
         // 소켓 전송
@@ -173,13 +167,6 @@ public class BoardMemberServiceImpl implements BoardMemberService {
             boardMemberMapper.updateBoardRole(vo);
         }
 
-        // 로그 기록을 위해 보드 정보 조회하여 teamId 획득
-//        BoardVo board = boardMapper.findBoardByBoardId(boardId);
-//        Long teamId = (board != null) ? board.getTeamId() : null;
-
-        // 멤버 권한 변경 로그 저장
-        // changeRoleLog(teamId, boardId, memberId, userId, oldRole, req.getRole());
-
         // [알림] 권한 변경 알림 발송
         publishRolChangeEvent(owner, targetId, board, req.getRole());
 
@@ -203,13 +190,20 @@ public class BoardMemberServiceImpl implements BoardMemberService {
         // 알림 대상, 타입 결정
         NotificationType notificationType;
         Long receiverId;
+        String receiverNickname;
 
         // 2. 권한 확인 (본인 탈퇴 or OWNER의 추방)
         if (!userId.equals(memberId)) {
             // 강퇴시키는 경우 -> OWNER 권한 확인
             memberVal.validateBoardManager(boardId, userId);
+
+            // 추방 대상 정보 조회
+            UserVo kickedMember = userMapper.findById(memberId)
+                    .orElseThrow(() -> new BusinessException(ErrorCode.USER_NOT_FOUND));
+
             notificationType = NotificationType.BOARD_MEMBER_KICKED;
             receiverId = memberId; // 추방 대상에게 알림
+            receiverNickname = kickedMember.getNickname();
         } else {
             // 본인 탈퇴인 경우
             BoardMemberVo me = boardMemberMapper.findMember(boardId, userId);
@@ -219,73 +213,17 @@ public class BoardMemberServiceImpl implements BoardMemberService {
             }
             notificationType = NotificationType.BOARD_MEMBER_LEFT;
             receiverId = findBoardOwnerId(boardId); // 관리자에게 알림
+            receiverNickname = actor.getNickname();
         }
 
         // DB 삭제 처리
         boardMemberMapper.deleteBoardMember(boardId, memberId);
 
-        // 탈퇴/강퇴 로그 저장
-        // kickMemberLog(boardId, memberId, ownerId);
-
         // [알림] 관리자/추방 대상에게 알림 발송
-        publishBoardEvent(actor, receiverId, board, notificationType);
+        publishBoardEvent(actor, receiverId, receiverNickname, board, notificationType);
 
         // 소켓 전송
         socketSender.sendSocketMessage(boardId, "BOARD_MEMBER_DELETED", userId, null);
-    }
-
-    /**
-     * 보드 멤버 관리 로그
-     */
-    // 팀 멤버 보드 초대 로그
-    private void inviteMemberLog(Long targetUserId, Long ownerId, Long boardId, Long teamId) {
-        UserVo targetUser = userMapper.findById(targetUserId)
-                .orElseThrow(() -> new BusinessException(ErrorCode.USER_NOT_FOUND));
-
-        activityService.saveLog(
-                ActivitySaveRequest.builder()
-                        .userId(ownerId)
-                        .teamId(teamId)
-                        .boardId(boardId)
-                        .type(ActivityType.INVITE_MEMBER)
-                        .targetId(targetUserId)
-                        .targetName(targetUser.getNickname())
-                        .description(targetUser.getNickname() + "님을 보드에 초대했습니다.")
-                        .build());
-    }
-
-    // 보드 멤버 권한 변경 로그
-    private void changeRoleLog(Long teamId, Long boardId, Long targetUserId, Long ownerId, Role oldRole, Role newRole) {
-        UserVo targetUser = userMapper.findById(targetUserId)
-                .orElseThrow(() -> new BusinessException(ErrorCode.USER_NOT_FOUND));
-
-        activityService.saveLog(
-                ActivitySaveRequest.builder()
-                        .userId(ownerId) // 변경한 관리자 ID
-                        .teamId(teamId)
-                        .boardId(boardId)
-                        .type(ActivityType.UPDATE_MEMBER_ROLE)
-                        .targetId(targetUserId)
-                        .targetName(targetUser.getNickname())
-                        .description(String.format("권한을 %s -> %s (으)로 변경했습니다.", oldRole, newRole))
-                        .build());
-    }
-
-    // 멤버 탈퇴/강퇴 로그
-    private void kickMemberLog(Long boardId, Long targetUserId, Long ownerId) {
-        UserVo targetUser = userMapper.findById(targetUserId)
-                .orElseThrow(() -> new BusinessException(ErrorCode.USER_NOT_FOUND));
-
-        activityService.saveLog(
-                ActivitySaveRequest.builder()
-                        .userId(ownerId != null ? ownerId : targetUserId) // 강퇴시킨 관리자 ID 또는 본인 ID
-                        .teamId(null)
-                        .boardId(boardId)
-                        .type(ActivityType.KICK_MEMBER)
-                        .targetId(targetUserId)
-                        .targetName(targetUser.getNickname())
-                        .description(targetUser.getNickname() + "님이 " + (ownerId != null ? "OWNER에 의해 팀에서 강퇴되었습니다." : "팀에서 탈퇴했습니다."))
-                        .build());
     }
 
     /**
@@ -302,12 +240,13 @@ public class BoardMemberServiceImpl implements BoardMemberService {
     }
 
     // [이벤트] 멤버 초대/추방/탈퇴 이벤트 발행
-    private void publishBoardEvent(UserVo sender, Long receiverId, BoardVo board, NotificationType type) {
+    private void publishBoardEvent(UserVo sender, Long receiverId, String receiverNickname, BoardVo board, NotificationType type) {
         InvitationEvent event = InvitationEvent.builder()
                 .senderId(sender.getId())
                 .senderNickname(sender.getNickname())
                 .senderProfileImg(sender.getProfileImg())
                 .receiverId(receiverId)
+                .receiverNickname(receiverNickname)
                 .targetId(board.getId())
                 .targetName(board.getTitle())
                 .type(type)

@@ -5,6 +5,8 @@ import com.nullpointer.domain.activity.service.ActivityService;
 import com.nullpointer.domain.activity.vo.enums.ActivityType;
 import com.nullpointer.domain.board.event.BoardEvent;
 import com.nullpointer.domain.card.event.CardEvent;
+import com.nullpointer.domain.invitation.event.InvitationEvent;
+import com.nullpointer.domain.notification.vo.enums.NotificationType;
 import com.nullpointer.domain.team.event.TeamEvent;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -145,6 +147,48 @@ public class ActivityEventListener {
     }
 
     /**
+     * 초대/멤버 관리 이벤트 활동 기록
+     */
+    @Async
+    @EventListener
+    public void handleInvitationEvent(InvitationEvent event) {
+        try {
+            // 1. 활동 타입 매핑
+            ActivityType activityType = mapInvitationToActivityType(event.getType());
+            if (activityType == null) return;
+
+            // 2. 상세 메시지 생성
+            String description = generateInvitationDetail(event);
+
+            // 3. 타겟 ID 구분 (팀 vs 보드)
+            Long teamId = null;
+            Long boardId = null;
+
+            if (isTeamEvent(event.getType())) {
+                teamId = event.getTargetId();
+            } else {
+                boardId = event.getTargetId();
+            }
+
+            // 4. 로그 저장
+            ActivitySaveRequest req = ActivitySaveRequest.builder()
+                    .userId(event.getSenderId()) // 행위자 ID
+                    .teamId(teamId)
+                    .boardId(boardId)
+                    .type(activityType)
+                    .targetId(event.getTargetId())
+                    .targetName(event.getTargetName())
+                    .description(description)
+                    .build();
+
+            activityService.saveLog(req);
+
+        } catch (Exception e) {
+            log.error("초대 활동 로그 저장 실패: type={}, error={}", event.getType(), e.getMessage());
+        }
+    }
+
+    /**
      * 타입 변환
      * CardEvent -> ActivityType
      */
@@ -155,6 +199,25 @@ public class ActivityEventListener {
             case COMMENT, REPLY, MENTION -> ActivityType.ADD_COMMENT;
             case CHECKLIST -> ActivityType.CHECKLIST_COMPLETED;
             default -> ActivityType.UPDATE_CARD;
+        };
+    }
+
+    /**
+     * NotificationType -> ActivityType 변환
+     */
+    private ActivityType mapInvitationToActivityType(NotificationType notiType) {
+        return switch (notiType) {
+            // 멤버 초대
+            case TEAM_INVITE, BOARD_INVITE -> ActivityType.INVITE_MEMBER;
+            // 멤버 추방
+            case TEAM_MEMBER_KICKED, BOARD_MEMBER_KICKED -> ActivityType.KICK_MEMBER;
+            // 팀 초대 수락/거절
+            case INVITE_ACCEPTED -> ActivityType.ACCEPT_INVITE;
+            case INVITE_REJECTED -> ActivityType.REJECT_INVITE;
+            // 자진 탈퇴
+            case TEAM_MEMBER_LEFT -> ActivityType.LEAVE_TEAM;
+            case BOARD_MEMBER_LEFT -> ActivityType.LEAVE_BOARD;
+            default -> null;
         };
     }
 
@@ -211,10 +274,46 @@ public class ActivityEventListener {
         };
     }
 
+    private String generateInvitationDetail(InvitationEvent event) {
+        String target = event.getTargetName(); // 팀명 or 보드명
+        String receiver = event.getReceiverNickname(); // 대상자 닉네임
+
+        return switch (event.getType()) {
+            case TEAM_INVITE -> String.format("'%s' 팀에 '%s'님을 초대했습니다.", target, receiver);
+            case BOARD_INVITE -> String.format("'%s' 보드에 '%s'님을 초대했습니다.", target, receiver);
+
+            case TEAM_MEMBER_KICKED -> String.format("'%s' 팀에서 '%s'님을 내보냈습니다.", target, receiver);
+            case BOARD_MEMBER_KICKED -> String.format("'%s' 보드에서 '%s'님을 내보냈습니다.", target, receiver);
+
+            case INVITE_ACCEPTED -> String.format("'%s' 팀 초대를 수락하고 참여했습니다.", target);
+            case INVITE_REJECTED -> String.format("'%s' 팀 초대를 거절했습니다.", target);
+
+            case TEAM_MEMBER_LEFT -> String.format("'%s' 팀에서 나갔습니다.", target);
+            case BOARD_MEMBER_LEFT -> String.format("'%s' 보드에서 나갔습니다.", target);
+
+            case TEAM_DELETED -> String.format("'%s' 팀을 삭제했습니다.", target);
+            case BOARD_DELETED -> String.format("'%s' 보드를 삭제했습니다.", target);
+
+            default -> event.getType().getLabel();
+        };
+    }
+
     private String truncate(String str, int length) {
         if (str == null) return "";
         return str.length() > length ? str.substring(0, length) + "..." : str;
     }
 
+    /**
+     * 팀 이벤트 여부 확인 (TeamId 매핑용)
+     */
+    private boolean isTeamEvent(NotificationType type) {
+        return switch (type) {
+            case TEAM_INVITE, TEAM_MEMBER_KICKED,
+                 TEAM_MEMBER_LEFT, TEAM_DELETED,
+                 INVITE_ACCEPTED // 팀 초대 수락만 있으므로 true
+                    -> true;
+            default -> false; // 나머지는 보드 이벤트
+        };
+    }
 
 }
