@@ -67,6 +67,9 @@ export const filterAndSortTasks = (tasks, filter) => {
 
   // 2. 정렬 로직
   result.sort((a, b) => {
+    if (a.isComplete && b.isComplete) {
+      return b.id - a.id
+    }
     switch (filter.sortBy) {
       case 'manual': // [추가] 사용자 지정 순서 (기본값)
         return a.order - b.order

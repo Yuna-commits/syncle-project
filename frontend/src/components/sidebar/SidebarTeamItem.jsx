@@ -1,5 +1,6 @@
 import React from 'react'
 import { Link } from 'react-router-dom'
+import { getTeamColorClass } from '../../constants/themeConstants'
 
 function SidebarTeamItem({ team, isSelected, onToggle }) {
   // team 객체에서 안전하게 id와 name 추출
@@ -11,6 +12,9 @@ function SidebarTeamItem({ team, isSelected, onToggle }) {
 
   // 현재 URL이 이 팀의 경로에 속해 있는지 확인
   const isTeamActive = location.pathname.startsWith(`/teams/${tId}`)
+
+  // "NullPointer" 등 팀 이름에 따라 항상 고정된 색상 클래스 획득
+  const bgClass = getTeamColorClass(team.title)
 
   const teamHeaderClass =
     !isSelected && isTeamActive

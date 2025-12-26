@@ -9,35 +9,47 @@ function BoardCanvas({ board, columnRefs, listContainerRef }) {
     ? board.columnOrder.map((id) => board.columns[id])
     : Object.values(board.columns)
 
+  // 렌더링 필터링 로직
+  const visibleColumns =
+    orderedColumns?.filter((column) => {
+      if (column.isArchived) return false
+      if (column.isVirtual) {
+        const hasVisibleCards = column.tasks?.some((task) => !task.isArchived)
+        if (!hasVisibleCards) return false
+      }
+      return true
+    }) || []
+
+  // 리스트가 비어있는지 확인
+  const isEmpty = visibleColumns.length === 0
+
   return (
     <div className="h-full w-full overflow-x-auto overflow-y-hidden bg-gray-100/50 p-6">
       <div className="flex h-full items-start gap-6">
-        <div ref={listContainerRef} className="flex h-full items-start gap-6">
-          {orderedColumns
-            ?.filter((column) => {
-              // 기본적으로 아카이브된 리스트는 제외
-              if (column.isArchived) return false
-
-              // 완료 리스트(isVirtual)인 경우, 아카이브되지 않은 카드가 하나라도 있는지 확인
-              if (column.isVirtual) {
-                const hasVisibleCards = column.tasks?.some(
-                  (task) => !task.isArchived,
-                )
-                // 보여줄 카드가 없으면 리스트 자체를 렌더링하지 않음
-                if (!hasVisibleCards) return false
-              }
-
-              return true
-            })
-            .map((column) => (
+        <div
+          ref={listContainerRef}
+          className="flex h-full w-full items-start gap-6"
+        >
+          {!isEmpty &&
+            visibleColumns.map((column) => (
               <BoardList
                 key={column.id}
                 column={column}
                 innerRef={(el) => (columnRefs.current[column.id] = el)}
                 boardId={board.id}
                 canEdit={canEdit}
+                canEditList={canEditList}
               />
             ))}
+
+          {isEmpty && !canEditList && (
+            <div className="flex h-full w-full items-center justify-center">
+              <p className="text-lg font-medium text-gray-400">
+                표시할 정보가 없습니다.
+              </p>
+            </div>
+          )}
+
           {canEditList && <AddListButton boardId={board.id} />}
         </div>
       </div>

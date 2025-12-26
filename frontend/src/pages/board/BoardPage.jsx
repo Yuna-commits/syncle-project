@@ -12,6 +12,8 @@ import { useListMutations } from '../../hooks/useListMutations'
 import useBoardStore from '../../stores/useBoardStore'
 import { useBoardSocket } from '../../hooks/board/useBoardSocket'
 
+const DONE_LIST_ID = 'virtual-done-list' // 완료 리스트 ID 상수 정의
+
 /**
  * 보드 데이터 로딩,
  * 각 컴포넌트 배치 및 보드 데이터 전달
@@ -112,10 +114,17 @@ function BoardPage() {
       const el = columnRefs.current[colId]
       if (!el) return
 
+      // 현재 컬럼이 완료 리스트인지 확인
+      const isDoneList = colId === DONE_LIST_ID || columns[colId].isVirtual
+
       const sortable = new Sortable(el, {
-        group: 'kanban',
+        group: {
+          name: 'kanban',
+          put: !isDoneList,
+        },
         animation: 150,
         ghostClass: 'opacity-50',
+        sort: !isDoneList,
         disabled: !canEdit, // VIEWER는 카드 이동 권한이 없음
 
         onEnd: (evt) => {
