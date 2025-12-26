@@ -32,7 +32,11 @@ function ProfileMenu({ onClose, anchorEl }) {
     onOpenChange: (isOpen) => {
       if (!isOpen) onClose()
     },
-    middleware: [offset(8), flip(), shift({ padding: 10 })],
+    middleware: [
+      offset({ mainAxis: 8, crossAxis: 50 }),
+      flip(),
+      shift({ padding: 10 }),
+    ],
     placement: 'bottom-end',
     elements: { reference: anchorEl },
   })

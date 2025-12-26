@@ -62,7 +62,10 @@ function BoardPage() {
 
   // 4. 언마운트 시 스토어 초기화
   useEffect(() => {
-    return () => resetBoard()
+    return () => {
+      resetBoard()
+      useBoardStore.setState({ selectedCard: null })
+    }
   }, [resetBoard])
 
   // 리스트 이동 Sortable

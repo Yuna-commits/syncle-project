@@ -40,7 +40,9 @@ const SupportPage = () => {
       showToast('제목과 내용을 모두 입력해주세요.', 'warning')
       return
     }
-    mutate(formData)
+    if (window.confirm('작성하신 내용으로 문의를 보내시겠습니까?')) {
+      mutate(formData)
+    }
   }
 
   const handleChange = (e) => {

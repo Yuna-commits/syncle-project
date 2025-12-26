@@ -22,7 +22,7 @@ function NotificationMenu({ onClose, anchorEl }) {
       if (!isOpen) onClose() // 닫힘 이벤트 감지 시 부모 닫기 함수 호출
     },
     middleware: [
-      offset(8), // 아이콘과 메뉴 사이 간격 12px
+      offset({ mainAxis: 8, crossAxis: 100 }), // 아이콘과 메뉴 사이 간격 12px
       flip(), // 화면 공간 부족 시 위/아래 반전
       shift({ padding: 10 }), // 화면 밖으로 잘리지 않게 이동
     ],

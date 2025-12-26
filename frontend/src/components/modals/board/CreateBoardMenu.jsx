@@ -26,7 +26,7 @@ function CreateBoardMenu({ teamId, onClose, onSuccess }) {
           if (onSuccess) onSuccess(newBoard)
           onClose()
         },
-        onError: (error) => {
+        onError: () => {
           showToast('보드 생성 중 오류가 발생했습니다.', 'error')
         },
       },
