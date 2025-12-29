@@ -172,7 +172,7 @@ export default function ActivityLogItem({ log, variant = 'timeline' }) {
 
   // 스타일 2: 팀/보드 활동 로그용
   return (
-    <div className="flex gap-4 border-b border-gray-200 px-4 py-4 transition-colors last:border-0 hover:bg-gray-50/50">
+    <div className="flex items-start gap-4 border-b border-gray-200 px-4 py-4 transition-colors last:border-0 hover:bg-gray-50/50">
       <div className="relative shrink-0">
         <img
           src={log.actorProfileImg || defaultProfile}
@@ -180,7 +180,7 @@ export default function ActivityLogItem({ log, variant = 'timeline' }) {
           className="h-10 w-10 rounded-full border border-slate-200 object-cover"
         />
         <div
-          className={`absolute -right-2 -bottom-1 flex h-6 w-6 items-center justify-center rounded-full border-2 border-white shadow-sm ${style.bg} ${style.text}`}
+          className={`absolute -right-2 -bottom-2 flex h-6 w-6 items-center justify-center rounded-full border-2 border-white shadow-sm ${style.bg} ${style.text}`}
         >
           {React.cloneElement(style.icon, { className: 'w-3.5 h-3.5' })}
         </div>
