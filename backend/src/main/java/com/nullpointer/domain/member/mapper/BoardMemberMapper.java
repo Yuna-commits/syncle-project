@@ -29,6 +29,12 @@ public interface BoardMemberMapper {
     // 보드 탈퇴
     void deleteBoardMember(@Param("boardId") Long boardId, @Param("userId") Long memberId);
 
+    // 본인이 관리자인 보드 개수 조회
+    int countOwnerByUserId(Long userId);
+
+    // 회원 탈퇴 시 소속한 모든 보드 일괄 탈퇴
+    void deleteAllByUserId(Long userId);
+
     // 팀 탈퇴 시 보드 탈퇴
     void deleteByTeamIdAndUserId(@Param("teamId") Long teamId, @Param("userId") Long userId);
 

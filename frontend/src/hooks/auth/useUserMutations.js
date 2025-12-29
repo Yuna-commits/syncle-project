@@ -68,7 +68,11 @@ export const useUserMutations = () => {
       alert('계정이 비활성화되었습니다.')
       logoutMutation.mutate()
     },
-    onError: () => alert('비활성화 실패'),
+    onError: (err) => {
+      const message =
+        err.response?.data?.message || '계정 비활성화 처리에 실패했습니다.'
+      alert(message)
+    },
   })
 
   // 계정 삭제
@@ -78,7 +82,11 @@ export const useUserMutations = () => {
       alert('계정이 영구 삭제되었습니다.')
       logoutMutation.mutate()
     },
-    onError: () => alert('계정 삭제 실패'),
+    onError: (err) => {
+      const message =
+        err.response?.data?.message || '계정 삭제 처리에 실패했습니다.'
+      alert(message)
+    },
   })
 
   // 구글 계정 연동

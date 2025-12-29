@@ -58,6 +58,22 @@ export default function SecurityPage() {
     })
   }
 
+  const handleDeactivateUser = () => {
+    if (window.confirm('정말로 계정을 비활성화하시겠습니까?')) {
+      deactivateUser()
+    }
+  }
+
+  const handleDeleteUser = () => {
+    if (
+      window.confirm(
+        '정말로 계정을 영구 삭제하시겠습니까?\n이 작업은 되돌릴 수 없으며 모든 데이터가 삭제됩니다.',
+      )
+    ) {
+      deleteUser() // useUserMutations의 deleteUser 호출
+    }
+  }
+
   const isVerified = user.verifyStatus === 'VERIFIED'
   const isLocal = user.provider === 'LOCAL'
 
@@ -197,44 +213,6 @@ export default function SecurityPage() {
           </div>
         </div>
 
-        {/* 추가) 2단계 인증 - 보류*/}
-
-        {/*         4. 로그인 활동 - 보류
-        <div className="rounded-2xl border border-gray-300 bg-white p-6 shadow-sm">
-          <div className="mb-4 flex items-center justify-between">
-            <h3 className="flex items-center gap-2 text-lg font-bold text-gray-900">
-              <Smartphone size={20} className="text-gray-500" />
-              로그인 활동
-            </h3>
-          </div>
-          <div className="space-y-4">
-            {loginActivities.map((activity) => (
-              <div
-                key={activity.id}
-                className="flex items-start justify-between border-b border-gray-100 pb-4 last:border-0 last:pb-0"
-              >
-                <div className="flex items-start gap-3">
-                  <div className="mt-1 text-gray-400">{activity.icon}</div>
-                  <div>
-                    <p className="text-sm font-medium text-gray-800">
-                      {activity.device}
-                    </p>
-                    <p className="text-xs text-gray-500">
-                      {activity.location} • {activity.time}
-                    </p>
-                  </div>
-                </div>
-                {activity.active && (
-                  <span className="flex items-center gap-1.5 rounded-full bg-green-50 px-2 py-0.5 text-[10px] font-bold text-green-600">
-                    <span className="h-1.5 w-1.5 rounded-full bg-green-500"></span>
-                    현재 활동 중
-                  </span>
-                )}
-              </div>
-            ))}
-          </div>
-        </div> */}
-
         {/* 5. 위험 구역 */}
         <div className="rounded-2xl border border-red-200 bg-red-50 p-6 shadow-sm">
           {/* <h3 className="mb-4 flex items-center gap-2 text-lg font-bold text-red-700">
@@ -267,7 +245,7 @@ export default function SecurityPage() {
                 </p>
               </div>
               <button
-                onClick={() => deactivateUser()}
+                onClick={handleDeactivateUser}
                 className="flex items-center gap-1.5 rounded-lg border border-red-200 px-3 py-1.5 text-sm font-medium text-red-600 transition-colors hover:cursor-pointer hover:bg-red-100"
               >
                 <Ban size={16} />
@@ -283,7 +261,7 @@ export default function SecurityPage() {
                 </p>
               </div>
               <button
-                onClick={() => deleteUser()}
+                onClick={handleDeleteUser}
                 className="flex items-center gap-1.5 rounded-lg bg-red-600 px-3 py-1.5 text-sm font-medium text-white shadow-sm transition-colors hover:cursor-pointer hover:bg-red-700"
               >
                 <Trash2 size={16} />

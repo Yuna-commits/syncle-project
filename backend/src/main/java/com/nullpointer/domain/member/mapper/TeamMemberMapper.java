@@ -31,6 +31,12 @@ public interface TeamMemberMapper {
     // 팀 탈퇴
     void deleteTeamMember(@Param("teamId") Long teamId, @Param("userId") Long memberId);
 
+    // 본인이 관리자인 팀 개수 조회
+    int countOwnerByUserId(Long userId);
+
+    // 회원 탈퇴 시 소속한 모든 팀 일괄 탈퇴
+    void deleteAllByUserId(Long userId);
+
     // 팀 삭제 시 팀 멤버 일괄 삭제
     void deleteAllMembersByTeamId(Long teamId);
 

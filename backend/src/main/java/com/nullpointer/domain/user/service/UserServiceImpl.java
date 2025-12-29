@@ -3,6 +3,8 @@ package com.nullpointer.domain.user.service;
 import com.nullpointer.domain.auth.dto.request.AuthRequest;
 import com.nullpointer.domain.auth.dto.request.PasswordRequest;
 import com.nullpointer.domain.file.service.S3FileStorageService;
+import com.nullpointer.domain.member.mapper.BoardMemberMapper;
+import com.nullpointer.domain.member.mapper.TeamMemberMapper;
 import com.nullpointer.domain.user.dto.request.UpdateProfileRequest;
 import com.nullpointer.domain.user.dto.response.UserProfileResponse;
 import com.nullpointer.domain.user.dto.response.UserSummaryResponse;
@@ -28,6 +30,9 @@ import java.util.List;
 public class UserServiceImpl implements UserService {
 
     private final UserMapper userMapper;
+    private final TeamMemberMapper teamMemberMapper;
+    private final BoardMemberMapper boardMemberMapper;
+
     private final S3FileStorageService fileStorageService;
     private final PasswordEncoder passwordEncoder;
     private final RedisUtil redisUtil;
@@ -156,20 +161,31 @@ public class UserServiceImpl implements UserService {
      */
     @Override
     @Transactional
-    public void deactivateUser(Long id, String accessToken) {
+    public void deactivateUser(Long userId, String accessToken) {
         // 1) 사용자 조회
-        userMapper.findById(id)
+        userMapper.findById(userId)
                 .orElseThrow(() -> new BusinessException(ErrorCode.USER_NOT_FOUND));
 
+        // 2. [검증] 관리자(OWNER) 권한 보유 여부 확인
+        // 본인이 OWNER인 팀이나 보드가 하나라도 있으면 탈퇴 불가능
+        if (teamMemberMapper.countOwnerByUserId(userId) > 0 ||
+                boardMemberMapper.countOwnerByUserId(userId) > 0) {
+            throw new BusinessException(ErrorCode.OWNER_MUST_TRANSFER_BEFORE_LEAVE);
+        }
+
+        // a. [멤버십 정리] 모든 팀/보드에서 탈퇴 처리 (Soft Delete)
+        teamMemberMapper.deleteAllByUserId(userId);
+        boardMemberMapper.deleteAllByUserId(userId);
+
         // 2) 상태 변경 (ACTIVATED -> DEACTIVATED)
-        int updated = userMapper.deactivateUser(id);
+        int updated = userMapper.deactivateUser(userId);
 
         if (updated != 1) {
             throw new BusinessException(ErrorCode.INTERNAL_SERVER_ERROR);
         }
 
         // 3) 강제 로그아웃
-        redisUtil.deleteData(RedisKeyType.REFRESH_TOKEN.getKey(id));
+        redisUtil.deleteData(RedisKeyType.REFRESH_TOKEN.getKey(userId));
 
         long remainingTime = jwtTokenProvider.getExpiration(accessToken) - System.currentTimeMillis();
 
@@ -208,16 +224,28 @@ public class UserServiceImpl implements UserService {
      */
     @Override
     @Transactional
-    public void deleteUser(Long id) {
+    public void deleteUser(Long userId) {
         // 1) 사용자 조회
-        userMapper.findById(id)
+        userMapper.findById(userId)
                 .orElseThrow(() -> new BusinessException(ErrorCode.USER_NOT_FOUND));
 
+        // 2. [검증] 관리자(OWNER) 권한 보유 여부 확인
+        // 본인이 OWNER인 팀이나 보드가 하나라도 있으면 탈퇴 불가능
+        if (teamMemberMapper.countOwnerByUserId(userId) > 0 ||
+                boardMemberMapper.countOwnerByUserId(userId) > 0) {
+            throw new BusinessException(ErrorCode.OWNER_MUST_TRANSFER_BEFORE_LEAVE);
+        }
+
         // 2) Soft Delete
-        userMapper.deleteUser(id);
+        // a. [멤버십 정리] 모든 팀/보드에서 탈퇴 처리 (Soft Delete)
+        teamMemberMapper.deleteAllByUserId(userId);
+        boardMemberMapper.deleteAllByUserId(userId);
+
+        // b. 계정 익명화
+        userMapper.deleteUser(userId);
 
         // 3) 강제 로그아웃
-        redisUtil.deleteData(RedisKeyType.REFRESH_TOKEN.getKey(id));
+        redisUtil.deleteData(RedisKeyType.REFRESH_TOKEN.getKey(userId));
     }
 
     /**
