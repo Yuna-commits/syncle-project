@@ -29,6 +29,8 @@ public enum NotificationType {
     BOARD_MEMBER_LEFT("보드 멤버 탈퇴"),
     BOARD_DELETED("보드 삭제"),
 
+    LIST_ARCHIVED("리스트 보관"),
+
     PERMISSION_CHANGED("권한 변경"),
 
     FILE_UPLOAD("파일 업로드");

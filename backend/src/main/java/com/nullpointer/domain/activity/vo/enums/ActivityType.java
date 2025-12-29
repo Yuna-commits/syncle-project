@@ -27,6 +27,7 @@ public enum ActivityType {
     LEAVE_BOARD("보드 탈퇴"),
 
     CREATE_LIST("리스트를 생성했습니다."),
+    UPDATE_LIST("리스트를 수정했습니다."),
     DELETE_LIST("리스트를 삭제했습니다."),
 
     // 6. 팀 관리

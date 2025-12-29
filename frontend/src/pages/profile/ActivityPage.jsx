@@ -37,6 +37,7 @@ const ACTIVITY_TYPE_GROUPS = [
       { value: 'UPDATE_BOARD', label: '보드 설정 변경' },
       { value: 'DELETE_BOARD', label: '보드 삭제' },
       { value: 'CREATE_LIST', label: '리스트 생성' },
+      { value: 'UPDATE_LIST', label: '리스트 수정' },
       { value: 'DELETE_LIST', label: '리스트 삭제' },
     ],
   },

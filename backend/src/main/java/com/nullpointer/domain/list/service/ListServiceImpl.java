@@ -70,7 +70,7 @@ public class ListServiceImpl implements ListService {
         listMapper.insertList(listVo);
 
         // [이벤트] 리스트 생성 이벤트 발행
-        publishListEvent(actor, board, null, BoardEvent.EventType.CREATE_LIST, listVo);
+        publishListEvent(actor, board, null, BoardEvent.EventType.CREATE_LIST, listVo, null);
 
         ListResponse response = ListResponse.builder()
                 .id(listVo.getId())
@@ -133,8 +133,14 @@ public class ListServiceImpl implements ListService {
     @Override
     @Transactional
     public void updateList(Long listId, UpdateListRequest request, Long userId) {
+        // 사용자 조회
+        UserVo actor = userMapper.findById(userId)
+                .orElseThrow(() -> new BusinessException(ErrorCode.USER_NOT_FOUND));
+
         // 리스트 존재 확인 & 보드 id 조회
         ListVo list = listMapper.findById(listId).orElseThrow(() -> new BusinessException(ErrorCode.BOARD_NOT_FOUND));
+
+        BoardVo board = boardVal.getValidBoard(list.getBoardId());
 
         // 권한 확인 (보드 권한 설정에 따라)
         memberVal.validateBoardSetting(list.getBoardId(), userId, BoardSettingVo::getListEditPermission);
@@ -142,10 +148,19 @@ public class ListServiceImpl implements ListService {
         // 업데이트
         listMapper.updateListInfo(ListVo.builder().id(listId).title(request.getTitle()).build());
 
+        List<Long> memberIds = boardMemberMapper.findAllMemberIdsByBoardId(board.getId());
+
+        // 변경된 리스트 조회
+        ListVo updatedList = listMapper.findById(listId)
+                .orElseThrow(() -> new BusinessException(ErrorCode.BOARD_NOT_FOUND));
+
         // 변경된 리스트 정보 저장
         Map<String, Object> data = new HashMap<>();
         data.put("id", listId);
         data.put("title", request.getTitle());
+
+        // [이벤트] 리스트 수정 이벤트 발행
+        publishListEvent(actor, board, memberIds, BoardEvent.EventType.UPDATE_LIST, updatedList, null);
 
         // 소켓 전송
         socketSender.sendSocketMessage(list.getBoardId(), "LIST_UPDATE", userId, data);
@@ -169,13 +184,19 @@ public class ListServiceImpl implements ListService {
         // 업데이트
         listMapper.updateListArchiveStatus(listId, isArchived);
 
-        // [이벤트] 리스트 보관 이벤트 발행
-        // publishListEvent(actor, board, null, BoardEvent.EventType.UPDATE_LIST, list);
+        List<Long> memberIds = boardMemberMapper.findAllMemberIdsByBoardId(board.getId());
+
+        // 변경된 리스트 조회
+        ListVo updatedList = listMapper.findById(listId)
+                .orElseThrow(() -> new BusinessException(ErrorCode.BOARD_NOT_FOUND));
 
         // 변경된 리스트 정보 저장
         Map<String, Object> data = new HashMap<>();
         data.put("id", listId);
         data.put("isArchived", isArchived);
+
+        // [이벤트] 리스트 보관 이벤트 발행
+        publishListEvent(actor, board, memberIds, BoardEvent.EventType.UPDATE_LIST, updatedList, isArchived);
 
         // 소켓 전송
         socketSender.sendSocketMessage(list.getBoardId(), "LIST_UPDATE", userId, data);
@@ -202,7 +223,7 @@ public class ListServiceImpl implements ListService {
         listMapper.softDeleteList(listId);
 
         // [이벤트] 리스트 삭제 이벤트 발행
-        publishListEvent(actor, board, memberIds, BoardEvent.EventType.DELETE_LIST, list);
+        publishListEvent(actor, board, memberIds, BoardEvent.EventType.DELETE_LIST, list, null);
 
         // 삭제된 리스트 정보 저장
         Map<String, Object> data = new HashMap<>();
@@ -216,8 +237,8 @@ public class ListServiceImpl implements ListService {
      * Helper Methods
      */
 
-    // [이벤트] 보드 이벤트 발행
-    private void publishListEvent(UserVo actor, BoardVo board, List<Long> memberIds, BoardEvent.EventType type, ListVo list) {
+    // [이벤트] 리스트 이벤트 발행
+    private void publishListEvent(UserVo actor, BoardVo board, List<Long> memberIds, BoardEvent.EventType type, ListVo list, Boolean isArchived) {
         BoardEvent event = BoardEvent.builder()
                 .eventType(type)
                 .boardId(board.getId())
@@ -229,6 +250,7 @@ public class ListServiceImpl implements ListService {
                 .targetMemberIds(memberIds)
                 .listId(list.getId())
                 .listTitle(list.getTitle())
+                .isArchived(isArchived)
                 .build();
 
         publisher.publishEvent(event);

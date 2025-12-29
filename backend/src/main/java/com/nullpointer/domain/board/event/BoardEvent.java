@@ -11,7 +11,7 @@ public class BoardEvent {
 
     public enum EventType {
         CREATE_BOARD, UPDATE_BOARD, DELETE_BOARD,
-        CREATE_LIST, DELETE_LIST, UPDATE_LIST, UPDATE_LIST_ORDER
+        CREATE_LIST, DELETE_LIST, UPDATE_LIST
     }
 
     private EventType eventType;
@@ -29,5 +29,7 @@ public class BoardEvent {
 
     private Long listId;
     private String listTitle;
+
+    private Boolean isArchived;
 
 }
