@@ -89,6 +89,17 @@ public class ActivityEventListener {
                 type = ActivityType.DELETE_LIST;
                 description = String.format("'%s' 리스트를 삭제했습니다.", event.getListTitle());
             }
+            case UPDATE_LIST -> {
+                type = ActivityType.UPDATE_MEMBER_ROLE;
+                if (event.getIsArchived() == null) {
+                    description = String.format("리스트 이름을 '%s'(으)로 변경했습니다.", event.getListTitle());
+                } else if (event.getIsArchived()) {
+                    description = String.format("'%s' 리스트를 보관함으로 이동했습니다.", event.getListTitle());
+
+                } else {
+                    description = String.format("'%s' 리스트를 보드로 복구했습니다.", event.getListTitle());
+                }
+            }
             default -> {
                 return;
             } // 처리하지 않는 타입

@@ -39,6 +39,7 @@ export default function ActivityLogItem({ log, variant = 'timeline' }) {
       case 'UPDATE_CARD':
       case 'UPDATE_BOARD':
       case 'UPDATE_TEAM':
+      case 'UPDATE_LIST':
         return {
           bg: 'bg-blue-100',
           text: 'text-blue-600',
