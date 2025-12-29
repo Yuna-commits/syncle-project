@@ -1,8 +1,11 @@
 import React from 'react'
 import StatCard from './StatCard'
 import { Bell, CreditCard, Kanban, MessageSquare, Users } from 'lucide-react'
+import { useNotificationQuery } from '../../hooks/notification/useNotificationQuery'
 
 function ProfileStats({ user }) {
+  const { unreadCount } = useNotificationQuery()
+
   return (
     <div className="flex h-full flex-col">
       <div className="h-full rounded-3xl bg-white p-6 shadow-sm ring-1 ring-gray-300">
@@ -31,7 +34,11 @@ function ProfileStats({ user }) {
             value={user.activity?.createdComments || 0}
             icon={<MessageSquare size={20} />}
           />
-          <StatCard label="알림" value={0} icon={<Bell size={20} />} />
+          <StatCard
+            label="알림"
+            value={unreadCount}
+            icon={<Bell size={20} />}
+          />
         </div>
       </div>
     </div>
