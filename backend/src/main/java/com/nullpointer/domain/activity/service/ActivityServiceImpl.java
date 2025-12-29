@@ -60,6 +60,14 @@ public class ActivityServiceImpl implements ActivityService {
         return new PageImpl<>(pageInfo.getList(), pageable, pageInfo.getTotal());
     }
 
+    @Override
+    @Transactional(readOnly = true)
+    public List<ActivityLogResponse> getBoardActivities(Long boardId, Long cursorId, int limit) {
+        // limit 기본값 처리 (필요 시)
+        int size = (limit > 0) ? limit : 20;
+        return activityMapper.findLogsByBoardIdCursor(boardId, cursorId, size);
+    }
+
     /**
      * 로그 저장
      */

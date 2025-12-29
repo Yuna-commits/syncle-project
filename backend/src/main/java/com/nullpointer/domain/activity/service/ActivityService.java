@@ -21,6 +21,9 @@ public interface ActivityService {
     // 타임라인 조회
     Page<ActivityLogResponse> getActivities(ActivityConditionRequest condition, Pageable pageable);
 
+    // 커서 기반 로그 조회
+    List<ActivityLogResponse> getBoardActivities(Long boardId, Long cursorId, int limit);
+
     // 로그 저장 (다른 서비스에서 호출)
     void saveLog(ActivitySaveRequest req);
 

@@ -7,16 +7,11 @@ import {
   Trash2,
   MessageSquare,
   CheckSquare,
-  UserPlus,
-  UserMinus,
   UserCog,
-  LogOut,
-  LogIn,
   Settings,
   Layout,
   Users,
   FileText,
-  XCircle,
 } from 'lucide-react'
 
 // variant: 'timeline' (개인 프로필용) | 'avatar' (팀/보드용)

@@ -12,6 +12,7 @@ import PermissionsView from './view/PermissionsView'
 import VisibilityView from './view/VisibilityView'
 import FilesView from './view/FilesView'
 import { useToast } from '../../hooks/useToast'
+import ActivityLogView from './view/ActivityLogView'
 
 function BoardSettings({ board }) {
   const navigate = useNavigate()
@@ -89,6 +90,8 @@ function BoardSettings({ board }) {
         return '멤버 관리'
       case 'FILES':
         return '파일 관리'
+      case 'ACTIVITY':
+        return '활동 로그'
       case 'ARCHIVE':
         return '보관된 항목'
       default:
@@ -119,6 +122,8 @@ function BoardSettings({ board }) {
         return <MembersView board={board} isOwner={isOwner} />
       case 'FILES':
         return <FilesView board={board} />
+      case 'ACTIVITY':
+        return <ActivityLogView board={board} />
       case 'ARCHIVE':
         return <ArchiveView board={board} />
       default:

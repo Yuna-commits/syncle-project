@@ -1,8 +1,6 @@
 package com.nullpointer.domain.board.controller;
 
-import com.nullpointer.domain.activity.dto.request.ActivityConditionRequest;
 import com.nullpointer.domain.activity.dto.response.ActivityLogResponse;
-import com.nullpointer.domain.activity.dto.response.ActivityStatsResponse;
 import com.nullpointer.domain.activity.service.ActivityService;
 import com.nullpointer.domain.board.dto.request.CreateBoardRequest;
 import com.nullpointer.domain.board.dto.request.UpdateBoardRequest;
@@ -95,34 +93,16 @@ public class BoardController {
         return ApiResponse.success(boardService.getMemberBoards(teamId, memberId, userId));
     }
 
-    // 보드 활동 통계 조회
-    @Operation(summary = "보드 활동 통계 조회", description = "보드 내 활동 통계를 조회합니다.")
-    @GetMapping("/boards/{boardId}/activities/stats")
-    public ApiResponse<ActivityStatsResponse> getMyStats(@PathVariable Long boardId) {
-        ActivityStatsResponse response
-                = activityService.getStats(getCondition(boardId));
-        return ApiResponse.success(response);
-    }
-
-    // 보드 활동 타임라인 조회
+    // 보드 활동 타임라인 조회 (무한 스크롤)
     @Operation(summary = "보드 활동 타임라인 조회", description = "보드 내 활동 로그를 조회합니다.")
     @GetMapping("/boards/{boardId}/activities")
     public ApiResponse<List<ActivityLogResponse>> getMyActivities(
-            @PathVariable Long boardId, @ModelAttribute ActivityConditionRequest condition) {
-        condition.setBoardId(boardId);
-        condition.setUserId(null);
-        condition.setTeamId(null);
+            @PathVariable Long boardId, @RequestParam(required = false) Long cursorId, @RequestParam(defaultValue = "20") int size) {
 
-//        List<ActivityLogResponse> response
-//                = activityService.getActivities(condition);
+        List<ActivityLogResponse> response
+                = activityService.getBoardActivities(boardId, cursorId, size);
 
-        return ApiResponse.success(null);
-    }
-
-    // 조회 조건 설정
-    private ActivityConditionRequest getCondition(Long boardId) {
-        return ActivityConditionRequest.builder()
-                .boardId(boardId).build();
+        return ApiResponse.success(response);
     }
 
     // 즐겨찾기 토글

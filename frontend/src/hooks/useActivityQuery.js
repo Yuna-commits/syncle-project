@@ -57,7 +57,7 @@ export const useActivityStats = () => {
   })
 }
 
-// 활동 로그 무한 스크롤 훅
+// 활동 로그 무한 스크롤 훅(더보기 버튼)
 export const useInfiniteActivityLogs = () => {
   // 조회 필터 상태
   const { filter } = useActivityFilterStore()
@@ -79,7 +79,7 @@ export const useInfiniteActivityLogs = () => {
       }
 
       // 활동 내역 요청
-      const res = await activityApi.getLogs(params)
+      const res = await activityApi.getMyLogs(params)
       console.log('API Response:', res.data.data)
       return res.data.data
     },
@@ -96,5 +96,40 @@ export const useInfiniteActivityLogs = () => {
       return groupLogsByDate(allLogs)
     },
     keepPreviousData: true, // 필터링 중 깜빡임 방지
+  })
+}
+
+// 보드 활동 로그 무한 스크롤 훅 (커서 기반)
+export const useInfiniteBoardLogs = (boardId) => {
+  return useInfiniteQuery({
+    // 1. Query Key: 보드 ID 기준
+    queryKey: ['board', 'logs', boardId],
+
+    // 2. Query Function: pageParam이 곧 cursorId가 됨
+    queryFn: async ({ pageParam = null }) => {
+      const res = await activityApi.getBoardActivities(boardId, pageParam, 20)
+      return res.data.data // 실제 로그 리스트 반환
+    },
+
+    // 3. Next Page Logic (커서 결정)
+    getNextPageParam: (lastPage) => {
+      // 마지막 페이지가 없거나 빈 배열이면 더 이상 없음
+      if (!lastPage || lastPage.length === 0) return undefined
+
+      // 가져온 개수가 요청 개수(20)보다 적으면 끝난 것임
+      if (lastPage.length < 20) return undefined
+
+      // 다음 커서는 '마지막 아이템의 ID'
+      return lastPage[lastPage.length - 1].id
+    },
+
+    // 4. 데이터 가공 (그룹화)
+    select: (data) => {
+      // Page 객체가 아니라 List이므로 page 자체가 내용물임
+      const allLogs = data.pages.flatMap((page) => page)
+      return groupLogsByDate(allLogs)
+    },
+
+    enabled: !!boardId, // boardId가 있을 때만 실행
   })
 }

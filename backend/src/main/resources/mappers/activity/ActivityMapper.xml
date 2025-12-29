@@ -59,7 +59,7 @@
         LIMIT 3
     </select>
 
-    <!-- 로그 조회 -->
+    <!-- 로그 조회 (프로필 페이지) -->
     <select id="searchActivities" resultType="ActivityLogResponse">
         SELECT l.id,
         l.type,
@@ -75,6 +75,29 @@
         LEFT JOIN team t ON l.team_id = t.id
         <include refid="searchCriteria"/>
         ORDER BY l.created_at DESC
+    </select>
+
+    <!-- 로그 조회 (보드 페이지) -->
+    <select id="findLogsByBoardIdCursor" resultType="ActivityLogResponse">
+        SELECT l.id,
+        l.type,
+        l.target_name AS targetName,
+        l.description,
+        l.created_at AS createdAt,
+        u.nickname AS actorName,
+        u.profile_image AS actorProfileImg,
+        b.title AS boardTitle,
+        t.name AS teamName
+        FROM activity_log l
+        JOIN user u ON l.user_id = u.id
+        LEFT JOIN board b ON l.board_id = b.id
+        LEFT JOIN team t ON l.team_id = t.id
+        WHERE l.board_id = #{boardId}
+        <if test="cursorId != null">
+            AND l.id &lt; #{cursorId}
+        </if>
+        ORDER BY l.id DESC
+        LIMIT #{limit}
     </select>
 
     <!-- 로그 저장 -->
