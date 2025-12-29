@@ -81,6 +81,18 @@ export const useUserMutations = () => {
     onError: () => alert('계정 삭제 실패'),
   })
 
+  // 구글 계정 연동
+  const linkGoogleMutation = useMutation({
+    mutationFn: authApi.linkGoogle,
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['user', 'me'] })
+      alert(
+        '구글 계정이 성공적으로 연동되었습니다.\n이제 구글로 로그인할 수 있습니다.',
+      )
+    },
+    onError: (err) => alert(err.response?.data?.message || '계정 연동 실패'),
+  })
+
   return {
     logout: logoutMutation.mutate,
     updateProfile: (data, options) =>
@@ -89,5 +101,7 @@ export const useUserMutations = () => {
       checkIsVerified() && changePasswordMutation.mutate(data),
     deactivateUser: () => checkIsVerified() && deactivateUserMutation.mutate(),
     deleteUser: () => checkIsVerified() && deleteUserMutation.mutate(),
+    linkGoogleMutation: (token) =>
+      checkIsVerified() && linkGoogleMutation.mutate(token),
   }
 }

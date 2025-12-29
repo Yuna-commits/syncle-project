@@ -39,6 +39,9 @@ public interface AuthService {
     // 토큰 재발급
     LoginResponse reissue(String refreshToken);
 
+    // 구글 계정 연동
+    void linkGoogleAccount(String idToken, Long userId);
+
     /**
      * 비밀번호 재설정
      */

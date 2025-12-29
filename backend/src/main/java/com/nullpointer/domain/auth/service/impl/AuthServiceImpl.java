@@ -313,6 +313,32 @@ public class AuthServiceImpl implements AuthService {
         return createLoginResponse(user);
     }
 
+    /**
+     * 구글 계정 연동 (LOCAL -> GOOGLE 전환)
+     */
+    @Override
+    public void linkGoogleAccount(String idToken, Long userId) {
+        // 1) 토큰 검증
+        GoogleTokenVerifier.GoogleUserInfo googleUser = googleTokenVerifier.verify(idToken);
+
+        // 2) 현재 로그인된 사용자 조회
+        UserVo user = userMapper.findById(userId)
+                .orElseThrow(() -> new BusinessException(ErrorCode.USER_NOT_FOUND));
+
+        // 3) 이메일 일치 여부 확인 (본인 계정만 연동 가능)
+        if (!user.getEmail().equals(googleUser.email())) {
+            throw new BusinessException(ErrorCode.INVALID_INPUT_VALUE);
+        }
+
+        // 4) 이미 연동된 경우 체크
+        if (user.getProvider() == Provider.GOOGLE) {
+            throw new BusinessException(ErrorCode.ALREADY_VERIFIED);
+        }
+
+        // 5) Provider 정보 업데이트
+        userMapper.updateProvider(user.getId(), Provider.GOOGLE, googleUser.providerId());
+    }
+
     // ==================================================================
     // 3. 비밀번호 재설정 (Password Reset)
     // ==================================================================

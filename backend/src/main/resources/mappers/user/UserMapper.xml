@@ -120,8 +120,8 @@
                 WHERE cd.assignee_id = u.id) AS "activity.createdCards",
                (SELECT COUNT(*)
                 FROM comment c
-                         JOIN user u ON c.writer_id = u.id
-                WHERE c.deleted_at IS NULL)  AS "activity.createdComments"
+                WHERE c.writer_id = u.id
+                AND c.deleted_at IS NULL)  AS "activity.createdComments"
         -- 안 읽은 알림 개수 쿼리 추가 필요
         FROM user u
         WHERE u.id = #{id}
@@ -234,5 +234,14 @@
           AND updated_at &lt; DATE_SUB(NOW(), INTERVAL 7 DAY)
           AND deleted_at IS NULL
     </select>
+
+    <update id="updateProvider">
+        UPDATE user
+        SET provider = #{provider},
+            provider_id = #{providerId},
+            updated_at = NOW()
+        WHERE id = #{id}
+          AND deleted_at IS NULL
+    </update>
 
 </mapper>

@@ -56,4 +56,7 @@ export const authApi = {
   // 이메일 인증 확인 (링크 클릭 시 호출)
   verifyEmailLink: (token) =>
     api.post('/auth/email/verify', null, { params: { token } }),
+
+  // 구글 계정 연동
+  linkGoogle: (token) => api.post('/auth/link/google', token),
 }
