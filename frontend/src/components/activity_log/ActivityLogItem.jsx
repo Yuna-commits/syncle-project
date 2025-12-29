@@ -1,160 +1,215 @@
 import { formatDistanceToNow } from 'date-fns'
 import { ko } from 'date-fns/locale'
 import React from 'react'
+import {
+  PlusCircle,
+  Edit3,
+  Trash2,
+  MessageSquare,
+  CheckSquare,
+  UserPlus,
+  UserMinus,
+  UserCog,
+  LogOut,
+  LogIn,
+  Settings,
+  Layout,
+  Users,
+  FileText,
+  XCircle,
+} from 'lucide-react'
 
-export default function ActivityLogItem({ log }) {
+// variant: 'timeline' (개인 프로필용) | 'avatar' (팀/보드용)
+export default function ActivityLogItem({ log, variant = 'timeline' }) {
   // 1. 활동 타입별 스타일 및 아이콘 매핑
   const getTypeStyle = (type) => {
-    if (type.includes('CREATE')) {
+    switch (type) {
+      case 'CREATE_CARD':
+      case 'CREATE_LIST':
+      case 'CREATE_BOARD':
+      case 'CREATE_TEAM':
+      case 'JOIN_BOARD':
+      case 'ACCEPT_INVITE':
+        return {
+          bg: 'bg-green-100',
+          text: 'text-green-600',
+          border: 'border-green-200',
+          icon: <PlusCircle />,
+        }
+      case 'UPDATE_CARD':
+      case 'UPDATE_BOARD':
+      case 'UPDATE_TEAM':
+        return {
+          bg: 'bg-blue-100',
+          text: 'text-blue-600',
+          border: 'border-blue-200',
+          icon: <Edit3 />,
+        }
+      case 'INVITE_MEMBER':
+      case 'UPDATE_MEMBER_ROLE':
+        return {
+          bg: 'bg-purple-100',
+          text: 'text-purple-600',
+          border: 'border-purple-200',
+          icon: <UserCog />,
+        }
+      case 'ADD_COMMENT':
+        return {
+          bg: 'bg-yellow-100',
+          text: 'text-yellow-600',
+          border: 'border-yellow-200',
+          icon: <MessageSquare />,
+        }
+      case 'CHECKLIST_COMPLETED':
+        return {
+          bg: 'bg-teal-100',
+          text: 'text-teal-600',
+          border: 'border-teal-200',
+          icon: <CheckSquare />,
+        }
+      case 'DELETE_BOARD':
+      case 'DELETE_LIST':
+      case 'DELETE_TEAM':
+      case 'KICK_MEMBER':
+      case 'REJECT_INVITE':
+      case 'LEAVE_TEAM':
+      case 'LEAVE_BOARD':
+        return {
+          bg: 'bg-red-100',
+          text: 'text-red-600',
+          border: 'border-red-200',
+          icon: <Trash2 />,
+        }
+      default:
+        return {
+          bg: 'bg-gray-100',
+          text: 'text-gray-500',
+          border: 'border-gray-200',
+          icon: <FileText />,
+        }
+    }
+  }
+
+  // 2. 활동 위치(Context) 정보 매핑 (보드 vs 팀 vs 시스템)
+  const getContextInfo = () => {
+    // 보드 ID나 제목이 있으면 '보드' 활동으로 간주
+    if (log.boardTitle) {
       return {
-        bg: 'bg-green-100',
-        text: 'text-green-600',
-        icon: (
-          <svg
-            xmlns="http://www.w3.org/2000/svg"
-            viewBox="0 0 20 20"
-            fill="currentColor"
-            className="h-5 w-5"
-          >
-            <path d="M10.75 4.75a.75.75 0 00-1.5 0v4.5h-4.5a.75.75 0 000 1.5h4.5v4.5a.75.75 0 001.5 0v-4.5h4.5a.75.75 0 000-1.5h-4.5v-4.5z" />
-          </svg>
-        ),
+        type: '보드',
+        name: log.boardTitle,
+        icon: <Layout className="h-3.5 w-3.5" />,
+        className: 'bg-blue-50 text-blue-700 border-blue-100 hover:bg-blue-100',
       }
     }
-    if (type.includes('DELETE') || type.includes('KICK')) {
+    // 보드는 없고 팀 정보만 있으면 '팀' 활동으로 간주
+    if (log.teamName) {
       return {
-        bg: 'bg-red-100',
-        text: 'text-red-600',
-        icon: (
-          <svg
-            xmlns="http://www.w3.org/2000/svg"
-            viewBox="0 0 20 20"
-            fill="currentColor"
-            className="h-5 w-5"
-          >
-            <path
-              fillRule="evenodd"
-              d="M8.75 1A2.75 2.75 0 006 3.75v.443c-.795.077-1.584.176-2.365.298a.75.75 0 10.23 1.482l.149-.022.841 10.518A2.75 2.75 0 007.596 19h4.807a2.75 2.75 0 002.742-2.53l.841-10.52.149.023a.75.75 0 00.23-1.482A41.03 41.03 0 0014 4.193V3.75A2.75 2.75 0 0011.25 1h-2.5zM10 4c.84 0 1.673.025 2.5.075V3.75c0-.69-.56-1.25-1.25-1.25h-2.5c-.69 0-1.25.56-1.25 1.25v.325C8.327 4.025 9.16 4 10 4zM8.58 7.72a.75.75 0 00-1.5.06l.3 7.5a.75.75 0 101.5-.06l-.3-7.5zm4.34.06a.75.75 0 10-1.5-.06l-.3 7.5a.75.75 0 101.5.06l.3-7.5z"
-              clipRule="evenodd"
-            />
-          </svg>
-        ),
+        type: '팀',
+        name: log.teamName,
+        icon: <Users className="h-3.5 w-3.5" />,
+        className:
+          'bg-indigo-50 text-indigo-700 border-indigo-100 hover:bg-indigo-100',
       }
     }
-    if (type.includes('MOVE')) {
-      return {
-        bg: 'bg-blue-100',
-        text: 'text-blue-600',
-        icon: (
-          <svg
-            xmlns="http://www.w3.org/2000/svg"
-            viewBox="0 0 20 20"
-            fill="currentColor"
-            className="h-5 w-5"
-          >
-            <path
-              fillRule="evenodd"
-              d="M2 10a.75.75 0 01.75-.75h12.59l-2.1-1.95a.75.75 0 111.02-1.1l3.5 3.25a.75.75 0 010 1.1l-3.5 3.25a.75.75 0 11-1.02-1.1l2.1-1.95H2.75A.75.75 0 012 10z"
-              clipRule="evenodd"
-            />
-          </svg>
-        ),
-      }
-    }
-    if (type.includes('COMMENT')) {
-      return {
-        bg: 'bg-yellow-100',
-        text: 'text-yellow-600',
-        icon: (
-          <svg
-            xmlns="http://www.w3.org/2000/svg"
-            viewBox="0 0 20 20"
-            fill="currentColor"
-            className="h-5 w-5"
-          >
-            <path
-              fillRule="evenodd"
-              d="M10 2c-2.236 0-4.43.18-6.57.524C1.993 2.755 1 4.014 1 5.426v5.148c0 1.413.993 2.67 2.43 2.902.848.137 1.705.248 2.57.331v3.443a.75.75 0 001.28.53l3.58-3.579a.78.78 0 01.527-.224 41.202 41.202 0 001.812.085c.665 0 1.33-.006 1.992-.018V5.426c0-1.413-.993-2.67-2.43-2.902A41.289 41.289 0 0010 2zm0 7a1 1 0 100-2 1 1 0 000 2zM8 8a1 1 0 11-2 0 1 1 0 012 0zm5 1a1 1 0 100-2 1 1 0 000 2z"
-              clipRule="evenodd"
-            />
-          </svg>
-        ),
-      }
-    }
-    // Default (UPDATE 등)
+    // 그 외
     return {
-      bg: 'bg-gray-100',
-      text: 'text-gray-500',
-      icon: (
-        <svg
-          xmlns="http://www.w3.org/2000/svg"
-          viewBox="0 0 20 20"
-          fill="currentColor"
-          className="h-5 w-5"
-        >
-          <path d="M5.433 13.917l1.262-3.155A4 4 0 017.58 9.42l6.92-6.918a2.121 2.121 0 013 3l-6.92 6.918c-.383.383-.84.685-1.343.886l-3.154 1.262a.5.5 0 01-.65-.65z" />
-          <path d="M3.5 5.75c0-.69.56-1.25 1.25-1.25H10A.75.75 0 0010 3H4.75A2.75 2.75 0 002 5.75v9.5A2.75 2.75 0 004.75 18h9.5A2.75 2.75 0 0017 15.25V10a.75.75 0 00-1.5 0v5.25c0 .69-.56 1.25-1.25 1.25h-9.5c-.69 0-1.25-.56-1.25-1.25v-9.5z" />
-        </svg>
-      ),
+      type: '시스템',
+      name: 'System',
+      icon: <Settings className="h-3.5 w-3.5" />,
+      className: 'bg-slate-50 text-slate-600 border-slate-100',
     }
   }
 
   const style = getTypeStyle(log.type)
+  const context = getContextInfo()
 
-  return (
-    <div className="group relative flex flex-col gap-2 rounded-xl border border-transparent bg-gray-50 p-4 transition-all hover:border-blue-100 hover:bg-blue-50/50 hover:shadow-sm">
-      {/* Header: 아이콘 + 타겟 + 보드 정보 */}
-      <div className="flex items-start justify-between gap-3">
-        <div className="flex items-start gap-3">
-          {/* 1. 아이콘 (타입별 색상) */}
-          <div
-            className={`mt-0.5 flex h-8 w-8 shrink-0 items-center justify-center rounded-lg ${style.bg} ${style.text}`}
-          >
-            {style.icon}
-          </div>
+  // 스타일 1: 개인 프로필용
+  if (variant === 'timeline') {
+    return (
+      <div className="group relative pb-1 pl-14">
+        {/* 타임라인 수직선 */}
+        <div
+          className="absolute top-3 bottom-0 left-[23px] w-0.5 bg-gray-200 group-last:hidden"
+          aria-hidden="true"
+        />
 
-          <div className="flex flex-col">
-            {/* 2. 타겟 이름 (Bold) */}
-            <span className="text-sm font-bold text-gray-900">
-              {log.targetName || '이름 없음'}
-            </span>
-
-            {/* 3. 문맥 정보 (어디서? - 보드/팀) */}
-            <div className="mt-1 flex items-center gap-2 text-xs text-gray-500">
-              {/* 행위자 (팀 로그 조회 시 유용) */}
-              {log.actorName && (
-                <span className="font-medium text-gray-700">
-                  {log.actorName}
-                </span>
-              )}
-
-              {/* 보드 배지 */}
-              {log.boardTitle && (
-                <>
-                  <span>•</span>
-                  <span className="inline-flex items-center rounded-md bg-gray-200 px-1.5 text-[10px] font-medium text-gray-600">
-                    {log.boardTitle}
-                  </span>
-                </>
-              )}
-            </div>
-          </div>
+        {/* 타입 아이콘 (확대됨) */}
+        <div
+          className={`absolute top-0 left-1 flex h-11 w-11 items-center justify-center rounded-full border-4 border-white ${style.bg} ${style.text} z-10 shadow-sm transition-transform group-hover:scale-105`}
+        >
+          {React.cloneElement(style.icon, { className: 'w-5 h-5' })}
         </div>
 
-        {/* 4. 시간 (상대 시간: 5분 전) */}
-        <span className="shrink-0 text-xs font-medium text-gray-400">
-          {formatDistanceToNow(new Date(log.createdAt), {
-            addSuffix: true,
-            locale: ko,
-          })}
-        </span>
+        {/* 콘텐츠 영역 */}
+        <div className="flex flex-col gap-2 border-b border-gray-100 pt-1.5 pb-5 group-last:border-0 group-last:pb-0">
+          {/* 헤더: 위치 배지 + 시간 */}
+          <div className="flex items-center gap-2">
+            {/* 위치 정보 배지 (아이콘 + 이름 + 색상 구분) */}
+            <div
+              className={`inline-flex items-center gap-1.5 rounded-md border px-2 py-1 text-xs font-medium transition-colors ${context.className}`}
+            >
+              {context.icon}
+              <span className="font-bold">{context.name}</span>
+            </div>
+
+            <span className="text-xs text-gray-300">|</span>
+
+            {/* 시간 */}
+            <span className="text-xs font-medium text-gray-400">
+              {formatDistanceToNow(new Date(log.createdDate || log.createdAt), {
+                addSuffix: true,
+                locale: ko,
+              })}
+            </span>
+          </div>
+
+          {/* 본문 메시지 */}
+          <p className="text-[15px] leading-relaxed font-medium text-gray-800">
+            {log.description}
+          </p>
+        </div>
+      </div>
+    )
+  }
+
+  // 스타일 2: 팀/보드 활동 로그용
+  return (
+    <div className="flex gap-4 rounded-lg border-b border-gray-50 px-4 py-4 transition-colors last:border-0 hover:bg-gray-50/50">
+      <div className="relative shrink-0">
+        <div className="flex h-10 w-10 items-center justify-center rounded-full border border-slate-200 bg-slate-100 font-bold text-slate-600">
+          {log.actorName ? log.actorName.charAt(0).toUpperCase() : '?'}
+        </div>
+        <div
+          className={`absolute -right-1 -bottom-1 flex h-5 w-5 items-center justify-center rounded-full border-2 border-white ${style.bg} ${style.text}`}
+        >
+          {React.cloneElement(style.icon, { className: 'w-3 h-3' })}
+        </div>
       </div>
 
-      {/* 5. 상세 설명 (Description) */}
-      <div className="pl-11">
-        <p className="text-sm leading-relaxed font-medium whitespace-pre-wrap text-gray-600">
+      <div className="min-w-0 flex-1">
+        <div className="mb-0.5 flex items-center justify-between">
+          <span className="text-sm font-semibold text-gray-900">
+            {log.actorName}
+          </span>
+          <span className="text-xs text-gray-400">
+            {formatDistanceToNow(new Date(log.createdDate || log.createdAt), {
+              addSuffix: true,
+              locale: ko,
+            })}
+          </span>
+        </div>
+
+        <p className="text-sm leading-relaxed text-gray-600">
           {log.description}
         </p>
+
+        {/* 아바타 뷰에서도 컨텍스트 구분 적용 */}
+        <div
+          className={`mt-1.5 inline-flex items-center gap-1 text-xs font-medium ${context.type === '보드' ? 'text-blue-600' : 'text-indigo-600'}`}
+        >
+          {context.icon}
+          {context.name}
+        </div>
       </div>
     </div>
   )

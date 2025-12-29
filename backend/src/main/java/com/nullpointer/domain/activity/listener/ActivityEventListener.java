@@ -6,6 +6,7 @@ import com.nullpointer.domain.activity.vo.enums.ActivityType;
 import com.nullpointer.domain.board.event.BoardEvent;
 import com.nullpointer.domain.card.event.CardEvent;
 import com.nullpointer.domain.invitation.event.InvitationEvent;
+import com.nullpointer.domain.member.event.MemberEvent;
 import com.nullpointer.domain.notification.vo.enums.NotificationType;
 import com.nullpointer.domain.team.event.TeamEvent;
 import lombok.RequiredArgsConstructor;
@@ -69,7 +70,7 @@ public class ActivityEventListener {
         switch (event.getEventType()) {
             case CREATE_BOARD -> {
                 type = ActivityType.CREATE_BOARD;
-                description = "보드를 생성했습니다.";
+                description = String.format("'%s' 보드를 생성했습니다.", event.getBoardTitle());
             }
             case UPDATE_BOARD -> {
                 type = ActivityType.UPDATE_BOARD;
@@ -77,7 +78,7 @@ public class ActivityEventListener {
             }
             case DELETE_BOARD -> {
                 type = ActivityType.DELETE_BOARD;
-                description = "보드를 삭제했습니다.";
+                description = String.format("'%s' 보드를 삭제했습니다.", event.getBoardTitle());
             }
             // 리스트 관련 처리
             case CREATE_LIST -> {
@@ -118,7 +119,7 @@ public class ActivityEventListener {
         switch (event.getEventType()) {
             case CREATE_TEAM -> {
                 type = ActivityType.CREATE_TEAM;
-                description = "팀을 생성했습니다.";
+                description = String.format("'%s' 팀을 생성했습니다.", event.getTeamName());
             }
             case UPDATE_TEAM -> {
                 type = ActivityType.UPDATE_TEAM;
@@ -126,7 +127,7 @@ public class ActivityEventListener {
             }
             case DELETE_TEAM -> {
                 type = ActivityType.DELETE_TEAM;
-                description = "팀을 삭제했습니다.";
+                description = String.format("'%s' 팀을 삭제했습니다.", event.getTeamName());
             }
             default -> {
                 return;
@@ -185,6 +186,44 @@ public class ActivityEventListener {
 
         } catch (Exception e) {
             log.error("초대 활동 로그 저장 실패: type={}, error={}", event.getType(), e.getMessage());
+        }
+    }
+
+    /**
+     * 멤버 권한 변경 이벤트 활동 기록
+     */
+    @Async
+    @EventListener
+    public void handleMemberEvent(MemberEvent event) {
+        if (event.getType() != NotificationType.PERMISSION_CHANGED) return;
+
+        try {
+            String description = String.format("'%s'님의 권한을 '%s'(으)로 변경했습니다.",
+                    event.getTargetUserNickname(), event.getNewRole());
+
+            Long teamId = null;
+            Long boardId = null;
+
+            if (event.getTargetType() == MemberEvent.TargetType.TEAM) {
+                teamId = event.getTargetId();
+            } else {
+                boardId = event.getTargetId();
+            }
+
+            ActivitySaveRequest req = ActivitySaveRequest.builder()
+                    .userId(event.getSenderId())
+                    .teamId(teamId)
+                    .boardId(boardId)
+                    .type(ActivityType.UPDATE_MEMBER_ROLE)
+                    .targetId(event.getTargetId()) // 권한 변경은 보드/팀 레벨의 활동으로 간주하여 타겟을 보드/팀 ID로 설정
+                    .targetName(event.getTargetName())
+                    .description(description)
+                    .build();
+
+            activityService.saveLog(req);
+
+        } catch (Exception e) {
+            log.error("멤버 권한 변경 로그 저장 실패: error={}", e.getMessage());
         }
     }
 
@@ -290,10 +329,6 @@ public class ActivityEventListener {
 
             case TEAM_MEMBER_LEFT -> String.format("'%s' 팀에서 나갔습니다.", target);
             case BOARD_MEMBER_LEFT -> String.format("'%s' 보드에서 나갔습니다.", target);
-
-            case TEAM_DELETED -> String.format("'%s' 팀을 삭제했습니다.", target);
-            case BOARD_DELETED -> String.format("'%s' 보드를 삭제했습니다.", target);
-
             default -> event.getType().getLabel();
         };
     }
