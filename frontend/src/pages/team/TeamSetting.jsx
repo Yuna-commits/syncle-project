@@ -160,9 +160,6 @@ export default function TeamSetting() {
           <div className="flex items-center justify-between rounded-xl border border-gray-200 bg-gray-50/50 p-5">
             <div>
               <p className="font-medium text-gray-800">보드 생성 권한</p>
-              <p className="mt-1 text-xs text-gray-500">
-                누가 새로운 보드를 만들 수 있나요?
-              </p>
             </div>
             <select
               value={formData.boardCreateRole}

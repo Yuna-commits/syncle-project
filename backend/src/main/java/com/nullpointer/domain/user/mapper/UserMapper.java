@@ -69,4 +69,7 @@ public interface UserMapper {
 
     // 소셜 계정 연동
     void updateProvider(@Param("id") Long id, @Param("provider") Provider provider, @Param("providerId") String providerId);
+
+    // 모든 유저 ID 조회
+    List<Long> findAllIds();
 }

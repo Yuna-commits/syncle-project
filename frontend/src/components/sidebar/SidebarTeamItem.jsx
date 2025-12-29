@@ -14,7 +14,7 @@ function SidebarTeamItem({ team, isSelected, onToggle }) {
   const isTeamActive = location.pathname.startsWith(`/teams/${tId}`)
 
   // "NullPointer" 등 팀 이름에 따라 항상 고정된 색상 클래스 획득
-  const bgClass = getTeamColorClass(team.title)
+  const bgClass = getTeamColorClass(tName)
 
   const teamHeaderClass =
     !isSelected && isTeamActive
@@ -35,7 +35,9 @@ function SidebarTeamItem({ team, isSelected, onToggle }) {
         className={`flex w-full items-center justify-between rounded-md px-3 py-2 text-gray-700 transition-colors ${teamHeaderClass}`}
       >
         <div className="flex items-center gap-2 overflow-hidden">
-          <span className="flex h-5 w-5 shrink-0 items-center justify-center rounded bg-indigo-500 text-[10px] font-bold text-white">
+          <span
+            className={`flex h-5 w-5 shrink-0 items-center justify-center rounded text-[10px] font-bold text-white ${bgClass}`}
+          >
             {tName ? tName.charAt(0).toUpperCase() : 'T'}
           </span>
           <span className="truncate text-sm font-medium">{tName}</span>

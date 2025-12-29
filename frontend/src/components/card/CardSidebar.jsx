@@ -148,9 +148,8 @@ function CardSidebar({
 
   // 파일 업로드 핸들러
   const handleFileChange = (e) => {
-    if (canEdit) {
-      fileInputRef.current?.click()
-    }
+    if (!canEdit) return
+
     const file = e.target.files?.[0]
     if (!file) return
 
@@ -355,7 +354,7 @@ function CardSidebar({
           <input
             type="file"
             ref={fileInputRef}
-            onChange={() => handleFileChange}
+            onChange={handleFileChange}
             className="hidden"
           />
 

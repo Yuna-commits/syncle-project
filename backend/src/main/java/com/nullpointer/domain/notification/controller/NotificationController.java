@@ -34,8 +34,26 @@ public class NotificationController {
     @PatchMapping("/read-all")
     public ApiResponse<String> markAllAsRead(@LoginUser Long userId) {
         String key = RedisKeyType.NOTIFICATION.getKey(String.valueOf(userId));
-        redisUtil.deleteData(key);
 
+        // 1. Redis에서 전체 알림 목록 조회
+        List<NotificationDto> list = redisUtil.getList(key, NotificationDto.class);
+
+        // 2. 안 읽은 알림만 찾아서 상태 업데이트
+        for (int i =0; i < list.size(); i++) {
+            NotificationDto noti = list.get(i);
+
+            // 이미 읽은 알림은 건너뜀
+            if(Boolean.TRUE.equals(noti.getIsRead())){
+                continue;
+            }
+
+            // 3. 읽음 처리 후 해당 인덱스의 데이터 덮어쓰기
+            NotificationDto updateNoti = noti.toBuilder()
+                    .isRead(true)
+                    .build();
+
+            redisUtil.updateListIndex(key, i, updateNoti);
+        }
         return ApiResponse.success("모든 알림을 읽음 처리했습니다.");
     }
 

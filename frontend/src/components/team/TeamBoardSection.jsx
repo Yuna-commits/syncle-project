@@ -2,20 +2,18 @@ import React from 'react'
 import BoardCard from '../common/BoardCard'
 import CreateBoardButton from '../common/CreateBoardButton'
 import useTeamPermission from '../../hooks/team/useTeamPermission'
+import { getTeamColorClass } from '../../constants/themeConstants'
 
 function TeamBoardSection({ team, onBoardCreated }) {
   // 보드 생성 권한 정보 조회
   const { canCreateBoard } = useTeamPermission(team)
-  console.log(team)
+  const logoColorClass = getTeamColorClass(team.teamName)
   return (
     <div className="mb-10">
       {/* 팀 헤더 */}
       <div className="mb-3 flex items-center gap-2">
         <div
-          className={`flex h-6 w-6 items-center justify-center rounded-md text-sm font-bold text-white ${
-            team.teamName === '널포인터' ? 'bg-orange-500' : 'bg-green-500'
-            /* 색상 로직은 나중에 데이터 기반으로 고도화 가능 */
-          }`}
+          className={`flex h-6 w-6 items-center justify-center rounded-md text-sm font-bold text-white ${logoColorClass}`}
         >
           {team.teamName.charAt(0).toUpperCase()}
         </div>
