@@ -136,6 +136,9 @@ public class BoardMemberServiceImpl implements BoardMemberService {
             throw new BusinessException(ErrorCode.MEMBER_NOT_FOUND);
         }
 
+        UserVo targetUser = userMapper.findById(targetId)
+                .orElseThrow(() -> new BusinessException(ErrorCode.USER_NOT_FOUND));
+
         Role newRole = req.getRole();
 
         // 추가) OWNER 권한 위임 로직
@@ -168,7 +171,7 @@ public class BoardMemberServiceImpl implements BoardMemberService {
         }
 
         // [알림] 권한 변경 알림 발송
-        publishRolChangeEvent(owner, targetId, board, req.getRole());
+        publishRolChangeEvent(owner, targetUser, board, req.getRole());
 
         // 소켓 전송
         socketSender.sendSocketMessage(boardId, "BOARD_MEMBER_UPDATED", ownerId, null);
@@ -256,9 +259,10 @@ public class BoardMemberServiceImpl implements BoardMemberService {
     }
 
     // [이벤트] 권한 변경 이벤트 발행
-    private void publishRolChangeEvent(UserVo sender, Long receiverId, BoardVo board, Role newRole) {
+    private void publishRolChangeEvent(UserVo sender, UserVo targetUser, BoardVo board, Role newRole) {
         MemberEvent event = MemberEvent.builder()
-                .targetUserId(receiverId)
+                .targetUserId(targetUser.getId())
+                .targetUserNickname(targetUser.getNickname())
                 .targetId(board.getId())
                 .targetName(board.getTitle())
                 .targetType(MemberEvent.TargetType.BOARD)

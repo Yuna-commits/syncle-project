@@ -20,7 +20,7 @@ import {
   UserX,
 } from 'lucide-react'
 import defaultProfile from '../../assets/images/default.png'
-import systemLogo from '../../assets/images/logo.png'
+import systemLogo from '../../assets/images/logo_v5.png'
 import { useState } from 'react'
 import { useInvitationMutations } from '../../hooks/team/useInvitationMutations'
 import { useNavigate } from 'react-router-dom'
