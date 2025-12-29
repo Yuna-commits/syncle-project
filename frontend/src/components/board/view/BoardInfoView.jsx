@@ -2,7 +2,7 @@ import React, { useState } from 'react'
 import { useBoardMutations } from '../../../hooks/board/useBoardMutations'
 
 function BoardInfoView({ board, isOwner }) {
-  const { updateBoard } = useBoardMutations()
+  const { updateBoard } = useBoardMutations(board.id)
 
   const [formData, setFormData] = useState({
     title: board.title,

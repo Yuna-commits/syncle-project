@@ -7,7 +7,9 @@ import com.nullpointer.domain.auth.dto.response.LoginResponse;
 import com.nullpointer.domain.auth.dto.response.PasswordVerifyResponse;
 import com.nullpointer.domain.auth.service.AuthService;
 import com.nullpointer.global.common.ApiResponse;
+import com.nullpointer.global.common.annotation.LoginUser;
 import com.nullpointer.global.common.enums.VerificationType;
+import com.nullpointer.global.security.jwt.CustomUserDetails;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
@@ -88,6 +90,16 @@ public class AuthController {
     public ApiResponse<LoginResponse> reissue(@Valid @RequestBody VerificationRequest.Token req) {
         LoginResponse response = authService.reissue(req.getToken());
         return ApiResponse.success(response);
+    }
+
+    // 구글 계정 연동
+    @Operation(summary = "구글 계정 연동", description = "현재 로그인된 계정을 구글 계정과 연동합니다.")
+    @PostMapping("/link/google")
+    public ApiResponse<String> linkGoogleAccount(
+            @LoginUser Long userId,
+            @Valid @RequestBody VerificationRequest.Token req) {
+        authService.linkGoogleAccount(req.getToken(), userId);
+        return ApiResponse.success("구글 계정 연동 성공");
     }
 
     /**

@@ -63,7 +63,7 @@ function BoardSettings({ board }) {
     if (
       window.confirm('정말 이 보드를 삭제하시겠습니까? 복구할 수 없습니다.')
     ) {
-      // [변경] 삭제 요청 및 성공 시 이동 처리
+      // 삭제 요청 및 성공 시 이동 처리
       deleteBoard(undefined, {
         onSuccess: () => {
           // 팀 보드 목록 페이지로 이동 (board.teamId 활용)

@@ -21,7 +21,7 @@ export default function CardPriority({ handleMenuClick }) {
 
   // 메뉴 토글
   const toggleMenu = () => {
-    if (canEdit) return
+    if (!canEdit) return
     if (!isOpen && buttonRef.current) {
       const rect = buttonRef.current.getBoundingClientRect()
       setPopupPos({ top: rect.bottom + 8, left: rect.left })

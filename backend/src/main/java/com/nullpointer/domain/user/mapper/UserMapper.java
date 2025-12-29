@@ -5,6 +5,7 @@ import com.nullpointer.domain.user.dto.response.UserSummaryResponse;
 import com.nullpointer.domain.user.vo.UserVo;
 import com.nullpointer.domain.user.vo.enums.VerifyStatus;
 import org.apache.ibatis.annotations.Param;
+import com.nullpointer.domain.user.vo.enums.Provider;
 
 import java.util.List;
 import java.util.Optional;
@@ -66,4 +67,6 @@ public interface UserMapper {
     // 기간 만료된 비활성화 계정 아이디 목록 조회
     List<Long> findIdsByDeactivatedAndExpired();
 
+    // 소셜 계정 연동
+    void updateProvider(@Param("id") Long id, @Param("provider") Provider provider, @Param("providerId") String providerId);
 }

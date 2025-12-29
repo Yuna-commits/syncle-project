@@ -11,14 +11,11 @@ import {
 } from 'lucide-react' // 아이콘 라이브러리 (사용 중인 것으로 대체 가능)
 import ToggleItem from '../../components/profile/ToggleItem'
 import SectionHeader from '../../components/profile/SectionHeader'
-import { useToast } from '../../hooks/useToast'
 import { useNotificationSettings } from '../../hooks/notification/useNotificationSettings'
 
 export default function NotificationSettingPage() {
-  const { showToast } = useToast()
-
   // 초기값 로딩, 업데이트 함수
-  const { settings, updateSettings } = useNotificationSettings()
+  const { settings, updateSettings, isLoading } = useNotificationSettings()
 
   // 토글 핸들러
   const handleToggle = (category, key) => {
@@ -36,10 +33,13 @@ export default function NotificationSettingPage() {
     // API 호출
     updateSettings(newSettings)
   }
-
-  const handleSave = async () => {
-    // 명시적 피드백
-    showToast('설정이 저장되었습니다.', 'success')
+  if (isLoading) {
+    return (
+      <div className="mx-auto flex w-full max-w-4xl justify-center p-6 pt-20">
+        <div className="h-8 w-8 animate-spin rounded-full border-b-2 border-blue-600"></div>
+        {/* 또는 스켈레톤 UI를 보여주어도 좋습니다 */}
+      </div>
+    )
   }
 
   return (
@@ -192,17 +192,6 @@ export default function NotificationSettingPage() {
               onChange={() => handleToggle('push', 'cardMoves')}
             />
           </div>
-        </div>
-
-        {/* 저장 버튼 (카드 하단에 통합) */}
-        <div className="flex justify-end rounded-b-2xl border-t border-gray-200 bg-gray-50 px-6 py-4">
-          <button
-            onClick={handleSave}
-            disabled={settings.dnd}
-            className="rounded-lg bg-blue-600 px-6 py-2.5 text-sm font-bold text-white shadow-sm transition-all hover:cursor-pointer hover:bg-blue-700 active:scale-95 disabled:cursor-not-allowed disabled:opacity-50"
-          >
-            저장하기
-          </button>
         </div>
       </div>
     </div>

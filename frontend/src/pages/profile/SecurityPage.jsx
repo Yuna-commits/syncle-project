@@ -3,48 +3,30 @@ import FormModal from '../../components/modals/FormModal'
 import { useAuthQuery } from '../../hooks/auth/useAuthQuery'
 import { useUserMutations } from '../../hooks/auth/useUserMutations'
 import { useAuthMutations } from '../../hooks/auth/useAuthMutations'
+import { GoogleLogin } from '@react-oauth/google'
 import {
-  AlertTriangle,
   Ban,
   CheckCircle2,
   Globe,
   Key,
-  Laptop,
   LogOut,
   Mail,
-  ShieldCheck,
-  Smartphone,
   Trash2,
   XCircle,
 } from 'lucide-react'
 
 export default function SecurityPage() {
-  // 임시 데이터 (로그인 활동 내역)
-  const loginActivities = [
-    {
-      id: 1,
-      device: 'Chrome — Windows',
-      location: 'Seoul, KR',
-      time: '2025/11/14 10:23',
-      active: true,
-      icon: <Laptop size={20} />,
-    },
-    {
-      id: 2,
-      device: 'Safari — iPhone',
-      location: 'Busan, KR',
-      time: '2025/11/13 22:10',
-      active: false,
-      icon: <Smartphone size={20} />,
-    },
-  ]
-
   // 사용자 정보 조회
   const { data: user, isLoading } = useAuthQuery()
 
   // 기능
-  const { logout, changePassword, deactivateUser, deleteUser } =
-    useUserMutations()
+  const {
+    logout,
+    changePassword,
+    deactivateUser,
+    deleteUser,
+    linkGoogleMutation,
+  } = useUserMutations()
   const { sendEmailVerification } = useAuthMutations()
 
   const [isPwModalOpen, setPwModalOpen] = useState(false)
@@ -139,7 +121,7 @@ export default function SecurityPage() {
             <Key size={20} className="text-gray-500" />
             비밀번호
           </h3>
-          <div className="justify-betwee flex items-center rounded-lg bg-gray-100 p-4">
+          <div className="flex items-center justify-between rounded-lg bg-gray-100 p-4">
             <div>
               <p className="text-sm font-medium text-gray-800">비밀번호 변경</p>
               <p className="mt-1 text-xs text-gray-500">
@@ -165,7 +147,7 @@ export default function SecurityPage() {
             <Globe size={20} className="text-gray-500" />
             소셜 계정
           </h3>
-          <div className="flex items-center justify-between rounded-lg bg-gray-100 p-4 py-2">
+          <div className="flex items-center justify-between rounded-lg bg-gray-100 p-4 py-3">
             <div>
               <p className="text-sm font-medium text-gray-800">
                 소셜 계정 연동
@@ -173,10 +155,12 @@ export default function SecurityPage() {
               <p className="mt-1 text-xs text-gray-500">
                 {user.provider === 'GOOGLE'
                   ? '구글 계정으로 로그인 중입니다.'
-                  : '연동된 소셜 계정이 없습니다.'}
+                  : '구글 계정을 연동하면 더 간편하게 로그인할 수 있습니다.'}
               </p>
             </div>
-            {user.provider === 'GOOGLE' && (
+
+            {/* 조건부 렌더링: 연동됨 vs 연동 버튼 */}
+            {user.provider === 'GOOGLE' ? (
               <span className="flex items-center gap-1 rounded-full bg-blue-100 px-3 py-1 text-xs font-medium text-blue-600">
                 <svg
                   className="h-3 w-3"
@@ -187,13 +171,35 @@ export default function SecurityPage() {
                 </svg>
                 Google 연동됨
               </span>
+            ) : (
+              <div className="origin-right scale-90">
+                <GoogleLogin
+                  onSuccess={(credentialResponse) => {
+                    if (
+                      window.confirm(
+                        '구글 계정과 연동하시겠습니까?\n연동 후에는 구글 계정으로 로그인하게 됩니다.',
+                      )
+                    ) {
+                      linkGoogleMutation({
+                        token: credentialResponse.credential,
+                      })
+                    }
+                  }}
+                  onError={() => {
+                    alert('구글 연동에 실패했습니다.')
+                  }}
+                  text="signin_with"
+                  shape="pill"
+                  size="medium"
+                />
+              </div>
             )}
           </div>
         </div>
 
         {/* 추가) 2단계 인증 - 보류*/}
 
-        {/* 4. 로그인 활동 - 보류 */}
+        {/*         4. 로그인 활동 - 보류
         <div className="rounded-2xl border border-gray-300 bg-white p-6 shadow-sm">
           <div className="mb-4 flex items-center justify-between">
             <h3 className="flex items-center gap-2 text-lg font-bold text-gray-900">
@@ -227,21 +233,21 @@ export default function SecurityPage() {
               </div>
             ))}
           </div>
-        </div>
+        </div> */}
 
         {/* 5. 위험 구역 */}
         <div className="rounded-2xl border border-red-200 bg-red-50 p-6 shadow-sm">
-          <h3 className="mb-4 flex items-center gap-2 text-lg font-bold text-red-700">
+          {/* <h3 className="mb-4 flex items-center gap-2 text-lg font-bold text-red-700">
             <AlertTriangle size={20} />
             위험 구역
-          </h3>
+          </h3> */}
           <div className="space-y-4">
             {/* 로그아웃 버튼 */}
             <div className="flex items-center justify-between rounded-xl border border-red-200 bg-white p-4">
               <div>
-                <p className="font-medium text-gray-800">모두 로그아웃</p>
+                <p className="font-medium text-gray-800">로그아웃</p>
                 <p className="text-xs text-gray-500">
-                  모든 기기에서 로그아웃합니다.
+                  현재 계정에서 로그아웃합니다.
                 </p>
               </div>
               <button
