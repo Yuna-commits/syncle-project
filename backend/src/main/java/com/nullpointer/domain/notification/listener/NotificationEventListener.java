@@ -157,7 +157,7 @@ public class NotificationEventListener {
                 yield ""; // 완료 해제는 알림 안 보냄
             }
 
-            case DEADLINE_NEAR -> String.format("담당 카드 '%s'의 마감이 임박했습니다.", actor, cardTitle);
+            case DEADLINE_NEAR -> String.format("담당 카드 '%s'의 마감이 임박했습니다.", cardTitle);
 
             case ATTACHMENT -> String.format("'%s'님이 담당 카드 '%s'에 파일을 첨부했습니다: %s",
                     actor, cardTitle, event.getContent()); // content에 파일명 저장됨

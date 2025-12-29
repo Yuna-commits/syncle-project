@@ -90,8 +90,11 @@ function NotificationPage() {
         <div className="mb-8 flex items-end justify-between">
           <div>
             <h1 className="text-3xl font-bold text-gray-900">알림</h1>
-            <p className="mt-2 text-sm text-gray-500">
-              최근 업데이트된 소식을 확인하세요.
+            <div className="text-s mt-2 flex items-center gap-2 text-gray-500">
+              <p>최근 업데이트된 소식을 확인하세요.</p>
+            </div>
+            <p className="mt-1 text-sm text-gray-400">
+              *알림은 최대 50개까지 7일간 보관됩니다.
             </p>
           </div>
 

@@ -244,4 +244,10 @@
           AND deleted_at IS NULL
     </update>
 
+    <select id="findAllIds" resultType="long">
+        SELECT id
+        FROM user
+        WHERE deleted_at IS NULL
+    </select>
+
 </mapper>
