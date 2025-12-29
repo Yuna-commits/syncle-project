@@ -10,6 +10,8 @@ import lombok.Getter;
 public class MemberEvent {
 
     private Long targetUserId; // 권한이 바뀐 사람
+    private String targetUserNickname;
+
     private Long targetId; // teamId || boardId
     private String targetName; // teamName || boardTitle
     private TargetType targetType; // 권한 변경이 일어난 대상

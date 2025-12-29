@@ -83,6 +83,9 @@ public class TeamMemberServiceImpl implements TeamMemberService {
             throw new BusinessException(ErrorCode.MEMBER_NOT_FOUND);
         }
 
+        UserVo targetUser = userMapper.findById(targetId)
+                .orElseThrow(() -> new BusinessException(ErrorCode.USER_NOT_FOUND));
+
         Role newRole = req.getRole();
 
         // 추가) OWNER 권한 위임 로직
@@ -115,7 +118,7 @@ public class TeamMemberServiceImpl implements TeamMemberService {
             teamMemberMapper.updateTeamRole(vo);
         }
 
-        publishRolChangeEvent(owner, targetId, team, req.getRole());
+        publishRolChangeEvent(owner, targetUser, team, req.getRole());
     }
 
     @Override
@@ -198,9 +201,10 @@ public class TeamMemberServiceImpl implements TeamMemberService {
     }
 
     // [이벤트] 권한 변경 이벤트 발행
-    private void publishRolChangeEvent(UserVo sender, Long receiverId, TeamVo team, Role newRole) {
+    private void publishRolChangeEvent(UserVo sender, UserVo targetUser, TeamVo team, Role newRole) {
         MemberEvent event = MemberEvent.builder()
-                .targetUserId(receiverId)
+                .targetUserId(targetUser.getId())
+                .targetUserNickname(targetUser.getNickname())
                 .targetId(team.getId())
                 .targetName(team.getName())
                 .targetType(MemberEvent.TargetType.TEAM)

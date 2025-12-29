@@ -20,6 +20,46 @@ import {
   X,
 } from 'lucide-react'
 
+const ACTIVITY_TYPE_GROUPS = [
+  {
+    label: '카드 활동',
+    options: [
+      { value: 'CREATE_CARD', label: '카드 생성' },
+      { value: 'UPDATE_CARD', label: '카드 수정/이동' },
+      { value: 'ADD_COMMENT', label: '댓글 작성' },
+      { value: 'CHECKLIST_COMPLETED', label: '체크리스트 완료' },
+    ],
+  },
+  {
+    label: '보드 관리',
+    options: [
+      { value: 'CREATE_BOARD', label: '보드 생성' },
+      { value: 'UPDATE_BOARD', label: '보드 설정 변경' },
+      { value: 'DELETE_BOARD', label: '보드 삭제' },
+      { value: 'CREATE_LIST', label: '리스트 생성' },
+      { value: 'DELETE_LIST', label: '리스트 삭제' },
+    ],
+  },
+  {
+    label: '팀 관리',
+    options: [
+      { value: 'CREATE_TEAM', label: '팀 생성' },
+      { value: 'UPDATE_TEAM', label: '팀 설정 변경' },
+      { value: 'DELETE_TEAM', label: '팀 삭제' },
+    ],
+  },
+  {
+    label: '멤버 및 권한',
+    options: [
+      { value: 'INVITE_MEMBER', label: '멤버 초대' },
+      { value: 'UPDATE_MEMBER_ROLE', label: '권한 변경' },
+      { value: 'KICK_MEMBER', label: '멤버 내보내기' },
+      { value: 'ACCEPT_INVITE', label: '초대 수락' },
+      { value: 'LEAVE_BOARD', label: '보드/팀 탈퇴' },
+    ],
+  },
+]
+
 export default function ActivityPage() {
   // 필터 상태 관리
   const { filter, setFilter, reset } = useActivityFilterStore()
@@ -219,7 +259,7 @@ export default function ActivityPage() {
             </div>
 
             <div className="flex items-center gap-2">
-              {/* 유형 필터 - 수정 필요!!! */}
+              {/* 유형 필터 */}
               <div className="relative">
                 <select
                   value={filter.type}
@@ -227,11 +267,18 @@ export default function ActivityPage() {
                   className="appearance-none rounded-lg border border-gray-300 bg-gray-50 py-2 pr-8 pl-3 text-sm font-medium text-gray-700 hover:cursor-pointer hover:bg-gray-200 focus:border-blue-500 focus:ring-1 focus:ring-blue-500 focus:outline-none"
                 >
                   <option value="ALL">모든 활동</option>
-                  <option value="CREATE_CARD">카드 생성</option>
-                  <option value="UPDATE_CARD">카드 수정</option>
-                  <option value="ADD_COMMENT">댓글</option>
-                  <option value="CHECKLIST_COMPLETED">체크리스트</option>
+
+                  {ACTIVITY_TYPE_GROUPS.map((group) => (
+                    <optgroup key={group.label} label={group.label}>
+                      {group.options.map((opt) => (
+                        <option key={opt.value} value={opt.value}>
+                          {opt.label}
+                        </option>
+                      ))}
+                    </optgroup>
+                  ))}
                 </select>
+
                 <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center px-2 text-gray-500">
                   <Filter size={14} />
                 </div>
@@ -299,7 +346,11 @@ export default function ActivityPage() {
                     </div>
                     <div className="space-y-3">
                       {group.logs.map((item) => (
-                        <ActivityLogItem key={item.id} log={item} />
+                        <ActivityLogItem
+                          key={item.id}
+                          log={item}
+                          variant="timeline"
+                        />
                       ))}
                     </div>
                   </div>

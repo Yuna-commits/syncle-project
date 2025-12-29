@@ -43,6 +43,10 @@ public class SecurityConfig {
                         .requestMatchers("/ws/**").permitAll()
                         // 파일 업로드 테스트를 위해 임시 허용
                         .requestMatchers("/api/files/**").permitAll()
+                        // 1. 화면(React 페이지) 경로 허용
+                        .requestMatchers("/", "/login", "/join", "/index.html").permitAll()
+                        // 2. 정적 리소스(CSS, JS, 이미지 등) 허용
+                        .requestMatchers("/static/**", "/assets/**", "/css/**", "/js/**", "/images/**", "/favicon.ico").permitAll()
                         .anyRequest().authenticated()
                 )
                 // UsernamePasswordAuthenticationFilter 사용 전에 JWT 필터 등록
