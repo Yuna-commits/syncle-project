@@ -3,7 +3,13 @@ package com.nullpointer.domain.team.service;
 import com.nullpointer.domain.board.dto.response.BoardResponse;
 import com.nullpointer.domain.board.mapper.BoardMapper;
 import com.nullpointer.domain.board.service.BoardService;
+import com.nullpointer.domain.card.mapper.CardMapper;
+import com.nullpointer.domain.checklist.mapper.ChecklistMapper;
+import com.nullpointer.domain.comment.mapper.CommentMapper;
+import com.nullpointer.domain.file.mapper.FileMapper;
+import com.nullpointer.domain.list.mapper.ListMapper;
 import com.nullpointer.domain.member.dto.team.TeamMemberResponse;
+import com.nullpointer.domain.member.mapper.BoardMemberMapper;
 import com.nullpointer.domain.member.mapper.TeamMemberMapper;
 import com.nullpointer.domain.member.vo.TeamMemberVo;
 import com.nullpointer.domain.member.vo.enums.Role;
@@ -32,16 +38,22 @@ import java.util.List;
 @RequiredArgsConstructor
 public class TeamServiceImpl implements TeamService {
 
-    private final TeamMapper teamMapper;
-    private final TeamMemberMapper teamMemberMapper;
-    private final BoardMapper boardMapper;
     private final TeamValidator teamVal;
     private final MemberValidator memberVal;
     private final ApplicationEventPublisher publisher;
     private final SocketSender socketSender;
 
     private final BoardService boardService;
+    private final TeamMapper teamMapper;
+    private final TeamMemberMapper teamMemberMapper;
+    private final BoardMapper boardMapper;
     private final UserMapper userMapper;
+    private final CardMapper cardMapper;
+    private final ChecklistMapper checklistMapper;
+    private final CommentMapper commentMapper;
+    private final FileMapper fileMapper;
+    private final ListMapper listMapper;
+    private final BoardMemberMapper boardMemberMapper;
 
     @Override
     @Transactional
@@ -200,6 +212,23 @@ public class TeamServiceImpl implements TeamService {
         List<Long> memberIds = teamMemberMapper.findAllMemberIdsByTeamId(teamId);
 
         // 3. 삭제 진행 (Soft Delete)
+        // a. 팀 하위의 모든 보드 내용물 삭제 (체크리스트/댓글/파일 -> 카드 -> 리스트 -> 보드 멤버)
+        checklistMapper.deleteAllChecklistsByTeamId(teamId);
+        commentMapper.deleteAllCommentsByTeamId(teamId);
+        fileMapper.deleteAllFilesByTeamId(teamId);
+
+        cardMapper.deleteAllCardsByTeamId(teamId);
+        listMapper.deleteAllListsByTeamId(teamId);
+
+        boardMemberMapper.deleteAllMembersByTeamId(teamId);
+
+        // b. 팀 하위의 보드 자체 삭제
+        boardMapper.deleteAllBoardsByTeamId(teamId);
+
+        // c. 팀 멤버 전체 탈퇴 (강퇴 처리)
+        teamMemberMapper.deleteAllMembersByTeamId(teamId);
+
+        // d. 팀 삭제
         teamMapper.deleteTeam(teamId);
 
         // [이벤트] 팀 삭제 이벤트 발행

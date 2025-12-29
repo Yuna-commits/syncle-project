@@ -33,4 +33,10 @@ public interface ListMapper {
 
     // 리스트 soft delete (deleted_at 업데이트)
     void softDeleteList(@Param("listId") Long listId);
+
+    // 보드 삭제 시 하위 데이터 일괄 삭제
+    void deleteAllListsByBoardId(Long boardId);
+
+    // 팀 삭제 시 하위 데이터 일괄 삭제
+    void deleteAllListsByTeamId(Long teamId);
 }

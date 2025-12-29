@@ -18,6 +18,18 @@ public interface ChecklistMapper {
     // 체크리스트 삭제
     void deleteChecklist(Long checklistId);
 
+    // 카드 삭제 시 하위 데이터 일괄 삭제
+    void deleteAllChecklistsByCardId(Long cardId);
+
+    // 리스트 삭제 시 하위 데이터 일괄 삭제
+    void deleteAllChecklistsByListId(Long listId);
+
+    // 보드 삭제 시 하위 데이터 일괄 삭제
+    void deleteAllChecklistsByBoardId(Long boardId);
+
+    // 팀 삭제 시 하위 데이터 일괄 삭제
+    void deleteAllChecklistsByTeamId(Long teamId);
+
     // 카드ID 조회
     Optional<ChecklistVo> findById(Long checklistId);
 }

@@ -12,6 +12,9 @@ import com.nullpointer.domain.card.helper.CardOrderManager;
 import com.nullpointer.domain.card.mapper.CardMapper;
 import com.nullpointer.domain.card.vo.CardVo;
 import com.nullpointer.domain.card.vo.enums.Priority;
+import com.nullpointer.domain.checklist.mapper.ChecklistMapper;
+import com.nullpointer.domain.comment.mapper.CommentMapper;
+import com.nullpointer.domain.file.mapper.FileMapper;
 import com.nullpointer.domain.list.mapper.ListMapper;
 import com.nullpointer.domain.list.vo.ListVo;
 import com.nullpointer.domain.user.mapper.UserMapper;
@@ -45,6 +48,9 @@ public class CardServiceImpl implements CardService {
     private final CardEventHelper cardEventHelper;
     private final SocketSender socketSender;
     private final BoardMapper boardMapper;
+    private final ChecklistMapper checklistMapper;
+    private final CommentMapper commentMapper;
+    private final FileMapper fileMapper;
 
     @Override
     @Transactional
@@ -175,7 +181,7 @@ public class CardServiceImpl implements CardService {
                     req.getLabel(), card.getLabel(), "라벨",
                     val -> val == null ? "없음" : val, card::setLabel);
         }
-        
+
         // 라벨 색상 (로그 없음)
         if (req.getLabelColor() != null) {
             card.setLabelColor(req.getLabelColor());
@@ -223,7 +229,12 @@ public class CardServiceImpl implements CardService {
         // 권한 확인 (보드 권한 설정에 따라)
         memberVal.validateBoardSetting(boardId, userId, BoardSettingVo::getCardDeletePermission);
 
-        // 카드 삭제
+        // a. 하위 데이터 삭제
+        checklistMapper.deleteAllChecklistsByCardId(cardId);
+        commentMapper.deleteAllCommentsByCardId(cardId);
+        fileMapper.deleteAllFilesByCardId(cardId);
+
+        // b. 카드 삭제
         cardMapper.deleteCard(cardId);
 
         // 삭제된 카드 정보 저장

@@ -31,6 +31,9 @@ public interface TeamMemberMapper {
     // 팀 탈퇴
     void deleteTeamMember(@Param("teamId") Long teamId, @Param("userId") Long memberId);
 
+    // 팀 삭제 시 팀 멤버 일괄 삭제
+    void deleteAllMembersByTeamId(Long teamId);
+
     // 팀 멤버로 이미 등록되어 있는지 확인
     boolean existsByTeamIdAndUserId(@Param("teamId") Long teamId, @Param("userId") Long userId);
 

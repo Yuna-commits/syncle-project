@@ -11,6 +11,10 @@ import com.nullpointer.domain.board.vo.BoardVo;
 import com.nullpointer.domain.board.vo.enums.BoardSettingType;
 import com.nullpointer.domain.board.vo.enums.PermissionLevel;
 import com.nullpointer.domain.board.vo.enums.Visibility;
+import com.nullpointer.domain.card.mapper.CardMapper;
+import com.nullpointer.domain.checklist.mapper.ChecklistMapper;
+import com.nullpointer.domain.comment.mapper.CommentMapper;
+import com.nullpointer.domain.file.mapper.FileMapper;
 import com.nullpointer.domain.file.service.S3FileStorageService;
 import com.nullpointer.domain.list.mapper.ListMapper;
 import com.nullpointer.domain.list.vo.ListVo;
@@ -47,19 +51,24 @@ public class BoardServiceImpl implements BoardService {
 
     private static final int MAX_BOARDS_PER_TEAM = 10;
 
-    private final BoardMapper boardMapper;
-    private final BoardSettingMapper boardSettingMapper;
-    private final BoardMemberMapper boardMemberMapper;
     private final TeamValidator teamVal;
     private final MemberValidator memberVal;
     private final BoardValidator boardVal;
-    private final ListMapper listMapper;
-    private final TeamMemberMapper teamMemberMapper;
     private final ApplicationEventPublisher publisher;
     private final SocketSender socketSender;
     private final S3FileStorageService s3FileStorageService;
-    private final UserMapper userMapper;
     private final RedisUtil redisUtil;
+
+    private final UserMapper userMapper;
+    private final BoardMapper boardMapper;
+    private final BoardSettingMapper boardSettingMapper;
+    private final BoardMemberMapper boardMemberMapper;
+    private final ListMapper listMapper;
+    private final TeamMemberMapper teamMemberMapper;
+    private final CardMapper cardMapper;
+    private final ChecklistMapper checklistMapper;
+    private final CommentMapper commentMapper;
+    private final FileMapper fileMapper;
 
     /**
      * 보드 권한
@@ -331,6 +340,18 @@ public class BoardServiceImpl implements BoardService {
         List<Long> memberIds = boardMemberMapper.findAllMemberIdsByBoardId(boardId);
 
         // 3. 삭제 진행
+        // a. 보드 하위 모든 데이터 삭제 (체크리스트/댓글/파일 -> 카드 -> 리스트)
+        checklistMapper.deleteAllChecklistsByBoardId(boardId);
+        commentMapper.deleteAllCommentsByBoardId(boardId);
+        fileMapper.deleteAllFilesByBoardId(boardId);
+
+        cardMapper.deleteAllCardsByBoardId(boardId);
+        listMapper.deleteAllListsByBoardId(boardId);
+
+        // b. 보드 멤버 전체 탈퇴
+        boardMemberMapper.deleteAllMembersByBoardId(boardId);
+
+        // c. 보드 삭제
         boardMapper.deleteBoard(boardId);
 
         // [이벤트] 보드 삭제 이벤트 발행

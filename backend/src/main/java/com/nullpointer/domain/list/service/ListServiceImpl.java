@@ -3,6 +3,10 @@ package com.nullpointer.domain.list.service;
 import com.nullpointer.domain.board.event.BoardEvent;
 import com.nullpointer.domain.board.vo.BoardSettingVo;
 import com.nullpointer.domain.board.vo.BoardVo;
+import com.nullpointer.domain.card.mapper.CardMapper;
+import com.nullpointer.domain.checklist.mapper.ChecklistMapper;
+import com.nullpointer.domain.comment.mapper.CommentMapper;
+import com.nullpointer.domain.file.mapper.FileMapper;
 import com.nullpointer.domain.list.dto.CreateListRequest;
 import com.nullpointer.domain.list.dto.ListResponse;
 import com.nullpointer.domain.list.dto.UpdateListOrderRequest;
@@ -42,6 +46,10 @@ public class ListServiceImpl implements ListService {
     private final UserMapper userMapper;
     private final BoardValidator boardVal;
     private final BoardMemberMapper boardMemberMapper;
+    private final ChecklistMapper checklistMapper;
+    private final CommentMapper commentMapper;
+    private final FileMapper fileMapper;
+    private final CardMapper cardMapper;
 
     /**
      * 리스트 권한
@@ -219,7 +227,15 @@ public class ListServiceImpl implements ListService {
 
         List<Long> memberIds = boardMemberMapper.findAllMemberIdsByBoardId(board.getId());
 
-        // 삭제
+        // a. 리스트 하위의 카드 내용물 삭제
+        checklistMapper.deleteAllChecklistsByListId(listId);
+        commentMapper.deleteAllCommentsByListId(listId);
+        fileMapper.deleteAllFilesByListId(listId);
+
+        // b. 리스트 하위 카드 삭제
+        cardMapper.deleteAllCardsByListId(listId);
+
+        // c. 리스트 삭제
         listMapper.softDeleteList(listId);
 
         // [이벤트] 리스트 삭제 이벤트 발행

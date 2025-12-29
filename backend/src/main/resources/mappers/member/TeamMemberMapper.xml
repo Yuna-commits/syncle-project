@@ -63,13 +63,20 @@
           AND user_id = #{userId}
     </update>
 
-
     <!-- 팀 탈퇴 -->
     <update id="deleteTeamMember">
         UPDATE team_member
         SET deleted_at = now()
         WHERE team_id = #{teamId}
           AND user_id = #{userId}
+    </update>
+
+    <!-- 팀 삭제 시 팀 멤버 일괄 삭제 -->
+    <update id="deleteAllMembersByTeamId">
+        UPDATE team_member
+        SET deleted_at = NOW()
+        WHERE team_id = #{teamId}
+          AND deleted_at IS NULL
     </update>
 
     <!-- 팀 멤버로 이미 등록되어 있는지 확인 -->

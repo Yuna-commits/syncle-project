@@ -44,6 +44,15 @@ public interface CardMapper {
     // 카드 삭제
     void deleteCard(Long cardId);
 
+    // 리스트 삭제 시 하위 데이터 일괄 삭제
+    void deleteAllCardsByListId(Long listId);
+
+    // 보드 삭제 시 하위 데이터 일괄 삭제
+    void deleteAllCardsByBoardId(Long boardId);
+
+    // 팀 삭제 시 하위 데이터 일괄 삭제
+    void deleteAllCardsByTeamId(Long teamId);
+
     // 담당자 변경
     void updateCardAssignee(@Param("cardId") Long cardId, @Param("assigneeId") Long assineeId);
 

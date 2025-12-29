@@ -286,6 +286,15 @@
         UPDATE board
         SET deleted_at = NOW()
         WHERE id = #{id}
+          AND deleted_at IS NOT NULL
+    </update>
+
+    <!-- 팀 삭제 시 하위 보드 삭제 -->
+    <update id="deleteAllBoardsByTeamId">
+        UPDATE board
+        SET deleted_at = NOW()
+        WHERE team_id = #{teamId}
+          AND deleted_at IS NOT NULL
     </update>
 
     <!-- 보드 개수 체크 -->
@@ -356,8 +365,8 @@
         u.email AS ownerEmail,
         u.profile_img AS ownerProfileImg
         FROM board b
-                LEFT JOIN board_member bm ON b.id = bm.board_id AND bm.role = 'OWNER'
-                LEFT JOIN user u ON bm.user_id = u.id
+        LEFT JOIN board_member bm ON b.id = bm.board_id AND bm.role = 'OWNER'
+        LEFT JOIN user u ON bm.user_id = u.id
         WHERE b.deleted_at IS NULL
         AND b.visibility = 'PUBLIC'
         <if test="keyword != null and keyword != ''">
