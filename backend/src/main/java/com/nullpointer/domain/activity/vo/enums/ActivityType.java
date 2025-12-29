@@ -17,6 +17,7 @@ public enum ActivityType {
     REJECT_INVITE("팀 초대를 거절했습니다."),
     KICK_MEMBER("멤버를 추방했습니다."),
     UPDATE_MEMBER_ROLE("멤버의 권한을 변경했습니다."),
+    UPDATE_BOARD_SETTINGS("보드 설정 권한을 변경했습니다."),
 
     // 5. 구조 변경
     CREATE_BOARD("보드를 생성했습니다."),

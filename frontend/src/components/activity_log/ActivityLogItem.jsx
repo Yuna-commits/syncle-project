@@ -38,6 +38,7 @@ export default function ActivityLogItem({ log, variant = 'timeline' }) {
         }
       case 'UPDATE_CARD':
       case 'UPDATE_BOARD':
+      case 'UPDATE_BOARD_SETTINGS':
       case 'UPDATE_TEAM':
       case 'UPDATE_LIST':
         return {

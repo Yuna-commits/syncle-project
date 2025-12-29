@@ -67,10 +67,12 @@
         l.description,
         l.created_at AS createdAt,
         u.nickname AS actorName,
-        b.title AS boardTitle
+        b.title AS boardTitle,
+        t.name AS teamName
         FROM activity_log l
         JOIN user u ON l.user_id = u.id
         LEFT JOIN board b ON l.board_id = b.id
+        LEFT JOIN team t ON l.team_id = t.id
         <include refid="searchCriteria"/>
         ORDER BY l.created_at DESC
     </select>

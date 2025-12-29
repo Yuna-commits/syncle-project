@@ -17,6 +17,7 @@ public class ActivityLogResponse {
     private String description;
     private String targetName;
     private String boardTitle;
+    private String teamName;
     private String actorName;
     private LocalDateTime createdAt;
 

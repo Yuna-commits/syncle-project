@@ -64,6 +64,33 @@ public class ActivityEventListener {
     @Async
     @EventListener
     public void handleBoardEvent(BoardEvent event) {
+        // 1. 설정 변경은 루프를 돌며 여러 로그를 남겨야 하므로 별도 처리
+        if (event.getEventType() == BoardEvent.EventType.UPDATE_BOARD_SETTINGS) {
+            if (event.getSettingChanges() != null) {
+                event.getSettingChanges().forEach((settingType, values) -> {
+                    String oldVal = values[0];
+                    String newVal = values[1];
+                    String desc = String.format("%s을(를) '%s'에서 '%s'(으)로 변경했습니다.",
+                            settingType.getLabel(), oldVal, newVal);
+
+                    // 설정 변경 로그 저장 (ActivityType.UPDATE_BOARD 혹은 정의한 타입 사용)
+                    ActivitySaveRequest req = ActivitySaveRequest.builder()
+                            .type(ActivityType.UPDATE_BOARD_SETTINGS)
+                            .userId(event.getActorId())
+                            .teamId(event.getTeamId())
+                            .boardId(event.getBoardId())
+                            .targetId(event.getBoardId())
+                            .targetName(event.getBoardTitle())
+                            .description(desc)
+                            .build();
+
+                    activityService.saveLog(req);
+                });
+            }
+            return;
+        }
+
+        // 2. 그 외 단일 로그 처리
         ActivityType type = null;
         String description = "";
 
@@ -74,7 +101,7 @@ public class ActivityEventListener {
             }
             case UPDATE_BOARD -> {
                 type = ActivityType.UPDATE_BOARD;
-                description = "보드 설정을 변경했습니다.";
+                description = "보드 정보를 변경했습니다.";
             }
             case DELETE_BOARD -> {
                 type = ActivityType.DELETE_BOARD;
@@ -134,7 +161,12 @@ public class ActivityEventListener {
             }
             case UPDATE_TEAM -> {
                 type = ActivityType.UPDATE_TEAM;
-                description = "팀 설정을 변경했습니다.";
+                if (event.getNewBoardCreateRole() != null) {
+                    description = String.format("보드 생성 권한을 '%s'에서 '%s'(으)로 변경했습니다.",
+                            event.getOldBoardCreateRole(), event.getNewBoardCreateRole());
+                } else {
+                    description = "팀 정보를 변경했습니다.";
+                }
             }
             case DELETE_TEAM -> {
                 type = ActivityType.DELETE_TEAM;

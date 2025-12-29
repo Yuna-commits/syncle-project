@@ -67,7 +67,7 @@ public class TeamServiceImpl implements TeamService {
         teamMemberMapper.insertTeamMember(teamMemberVo);
 
         // [이벤트] 팀 생성 이벤트 발행
-        publishTeamEvent(actor, teamVo, TeamEvent.EventType.CREATE_TEAM, null);
+        publishTeamEvent(actor, teamVo, TeamEvent.EventType.CREATE_TEAM, null, null, null);
     }
 
     @Override
@@ -101,7 +101,7 @@ public class TeamServiceImpl implements TeamService {
         boardService.createDefaultBoard(teamId, userId);
 
         // [이벤트] 팀 생성 이벤트 발행
-        publishTeamEvent(actor, team, TeamEvent.EventType.CREATE_TEAM, null);
+        publishTeamEvent(actor, team, TeamEvent.EventType.CREATE_TEAM, null, null, null);
     }
 
     @Override
@@ -143,21 +143,40 @@ public class TeamServiceImpl implements TeamService {
         // 2. 수정 권한 검증 (OWNER 여부)
         memberVal.validateTeamOwner(teamId, userId, ErrorCode.TEAM_UPDATE_FORBIDDEN);
 
+        // 변경사항 감지
+        boolean isInfoUpdated = false;
+        String oldRole = null;
+        String newRole = null;
+
         // 3. 업데이트 진행
         if (req.getName() != null) {
             teamVo.setName(req.getName());
+            isInfoUpdated = true;
         }
         if (req.getDescription() != null) {
             teamVo.setDescription(req.getDescription());
+            isInfoUpdated = true;
         }
         if (req.getDescription() != null) {
+            oldRole = String.valueOf(teamVo.getBoardCreateRole());
             teamVo.setBoardCreateRole(req.getBoardCreateRole());
+            newRole = String.valueOf(teamVo.getBoardCreateRole());
         }
 
         teamMapper.updateTeam(teamVo);
 
+        List<Long> memberIds = teamMemberMapper.findAllMemberIdsByTeamId(teamId);
+
         // [이벤트] 팀 수정 이벤트 발행
-        publishTeamEvent(actor, teamVo, TeamEvent.EventType.UPDATE_TEAM, null);
+        // Case A: 기본 정보가 변경된 경우
+        if (isInfoUpdated) {
+            publishTeamEvent(actor, teamVo, TeamEvent.EventType.UPDATE_TEAM, null, null, null);
+        }
+
+        // Case B: 권한이 변경된 경우
+        if (newRole != null) {
+            publishTeamEvent(actor, teamVo, TeamEvent.EventType.UPDATE_TEAM, null, oldRole, newRole);
+        }
 
         // 소켓 전송
         socketSender.sendTeamSocketMessage(teamId, "TEAM_UPDATED", userId, null);
@@ -184,7 +203,7 @@ public class TeamServiceImpl implements TeamService {
         teamMapper.deleteTeam(teamId);
 
         // [이벤트] 팀 삭제 이벤트 발행
-        publishTeamEvent(actor, teamVo, TeamEvent.EventType.DELETE_TEAM, memberIds);
+        publishTeamEvent(actor, teamVo, TeamEvent.EventType.DELETE_TEAM, memberIds, null, null);
 
         // 소켓 전송
         socketSender.sendTeamSocketMessage(teamId, "TEAM_DELETED", userId, null);
@@ -195,7 +214,7 @@ public class TeamServiceImpl implements TeamService {
      */
 
     // [이벤트] 팀 이벤트 발행
-    private void publishTeamEvent(UserVo actor, TeamVo team, TeamEvent.EventType type, List<Long> memberIds) {
+    private void publishTeamEvent(UserVo actor, TeamVo team, TeamEvent.EventType type, List<Long> memberIds, String oldRole, String newRole) {
         TeamEvent event = TeamEvent.builder()
                 .eventType(type)
                 .teamId(team.getId())
@@ -204,6 +223,8 @@ public class TeamServiceImpl implements TeamService {
                 .actorNickname(actor.getNickname())
                 .actorProfileImg(actor.getProfileImg())
                 .targetMemberIds(memberIds)
+                .oldBoardCreateRole(oldRole)
+                .newBoardCreateRole(newRole)
                 .build();
 
         publisher.publishEvent(event);

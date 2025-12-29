@@ -24,4 +24,8 @@ public class TeamEvent {
 
     private String teamName;
 
+    // 보드 생성 권한 변경 정보
+    private String oldBoardCreateRole;
+    private String newBoardCreateRole;
+
 }

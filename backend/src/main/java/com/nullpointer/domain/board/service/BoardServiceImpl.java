@@ -8,6 +8,7 @@ import com.nullpointer.domain.board.mapper.BoardMapper;
 import com.nullpointer.domain.board.mapper.BoardSettingMapper;
 import com.nullpointer.domain.board.vo.BoardSettingVo;
 import com.nullpointer.domain.board.vo.BoardVo;
+import com.nullpointer.domain.board.vo.enums.BoardSettingType;
 import com.nullpointer.domain.board.vo.enums.PermissionLevel;
 import com.nullpointer.domain.board.vo.enums.Visibility;
 import com.nullpointer.domain.file.service.S3FileStorageService;
@@ -35,7 +36,9 @@ import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.UUID;
 
 @Service
@@ -116,7 +119,7 @@ public class BoardServiceImpl implements BoardService {
         boardMemberMapper.insertBoardMember(boardMemberVo);
 
         // [이벤트] 보드 생성 이벤트 발행
-        publishBoardEvent(actor, boardVo, null, BoardEvent.EventType.CREATE_BOARD);
+        publishBoardEvent(actor, boardVo, null, BoardEvent.EventType.CREATE_BOARD, null);
     }
 
     @Override
@@ -155,7 +158,7 @@ public class BoardServiceImpl implements BoardService {
         listMapper.insertList(createDefaultList(boardId, "Done", 3));
 
         // [이벤트] 보드 생성 이벤트 발행
-        publishBoardEvent(actor, board, null, BoardEvent.EventType.CREATE_BOARD);
+        publishBoardEvent(actor, board, null, BoardEvent.EventType.CREATE_BOARD, null);
     }
 
     // 내 보드 조회
@@ -183,7 +186,21 @@ public class BoardServiceImpl implements BoardService {
 
         // 보드 유효성 검증
         BoardVo boardVo = boardVal.getValidBoard(boardId);
+
+        // 1. 설정 조회
         BoardSettingVo settingVo = boardSettingMapper.findBoardSettingsByBoardId(boardId);
+
+        // 2. 설정이 없으면 기본값 객체 생성
+        if (settingVo == null) {
+            settingVo = BoardSettingVo.builder()
+                    .boardId(boardId)
+                    .invitationPermission(PermissionLevel.OWNER)
+                    .boardSharingPermission(PermissionLevel.OWNER)
+                    .listEditPermission(PermissionLevel.OWNER)
+                    .cardDeletePermission(PermissionLevel.OWNER)
+                    .build();
+        }
+
         return BoardDetailResponse.from(boardVo, settingVo);
     }
 
@@ -216,7 +233,7 @@ public class BoardServiceImpl implements BoardService {
         boardMapper.updateBoard(boardVo);
 
         // [이벤트] 보드 수정 이벤트 발행
-        publishBoardEvent(actor, boardVo, null, BoardEvent.EventType.UPDATE_BOARD);
+        publishBoardEvent(actor, boardVo, null, BoardEvent.EventType.UPDATE_BOARD, null);
 
         // 소켓 전송
         socketSender.sendSocketMessage(boardId, "BOARD_UPDATED", userId, null);
@@ -229,9 +246,40 @@ public class BoardServiceImpl implements BoardService {
         // 관리자만 설정 변경 가능
         memberVal.validateBoardManager(boardId, userId);
 
-        // 공통 검증 메서드로 보드 조회
-        boardVal.getValidBoard(boardId);
+        UserVo actor = userMapper.findById(userId)
+                .orElseThrow(() -> new BusinessException(ErrorCode.USER_NOT_FOUND));
 
+        // 공통 검증 메서드로 보드 조회
+        BoardVo board = boardVal.getValidBoard(boardId);
+
+        // 1. 변경 전 설정 조회
+        BoardSettingVo currentSetting = boardSettingMapper.findBoardSettingsByBoardId(boardId);
+
+        // DB에 기본 설정값이 없는 경우 처리
+        boolean isNewSetting = false;
+        if (currentSetting == null) {
+            isNewSetting = true; // 데이터가 없으므로 나중에 INSERT 해야 함
+            currentSetting = BoardSettingVo.builder()
+                    .invitationPermission(PermissionLevel.OWNER)
+                    .boardSharingPermission(PermissionLevel.OWNER)
+                    .listEditPermission(PermissionLevel.OWNER)
+                    .cardDeletePermission(PermissionLevel.OWNER)
+                    .build();
+        }
+
+        // 2. 변경 사항 감지 (Map 생성)
+        Map<BoardSettingType, String[]> changes = new HashMap<>();
+
+        checkChange(changes, BoardSettingType.MEMBER_INVITE,
+                currentSetting.getInvitationPermission(), req.getInvitation());
+        checkChange(changes, BoardSettingType.BOARD_SHARE,
+                currentSetting.getBoardSharingPermission(), req.getBoardSharing());
+        checkChange(changes, BoardSettingType.LIST_EDIT,
+                currentSetting.getListEditPermission(), req.getListEdit());
+        checkChange(changes, BoardSettingType.CARD_DELETE,
+                currentSetting.getCardDeletePermission(), req.getCardDelete());
+
+        // DB 업데이트
         BoardSettingVo settingVo = BoardSettingVo.builder()
                 .boardId(boardId)
                 .invitationPermission(req.getInvitation())
@@ -240,10 +288,31 @@ public class BoardServiceImpl implements BoardService {
                 .cardDeletePermission(req.getCardDelete())
                 .build();
 
-        boardSettingMapper.updateBoardSettings(settingVo);
+        // 데이터 존재 여부에 따라 INSERT 또는 UPDATE 실행
+        if (isNewSetting) {
+            boardSettingMapper.insertBoardSettings(settingVo);
+        } else {
+            boardSettingMapper.updateBoardSettings(settingVo);
+        }
+
+        // [이벤트] 보드 권한 설정 변경 이벤트 발행
+        if (!changes.isEmpty()) {
+            publishBoardEvent(actor, board, null, BoardEvent.EventType.UPDATE_BOARD_SETTINGS, changes);
+        }
 
         // 소켓 전송
         socketSender.sendSocketMessage(boardId, "BOARD_SETTINGS_UPDATED", userId, null);
+    }
+
+    // 변경 감지 헬퍼 메서드
+    private void checkChange(Map<BoardSettingType, String[]> changes,
+                             BoardSettingType type,
+                             PermissionLevel oldVal,
+                             PermissionLevel newVal) {
+        // 새 값이 존재하고, 이전 값과 다를 경우에만 맵에 추가
+        if (newVal != null && !oldVal.equals(newVal)) {
+            changes.put(type, new String[]{oldVal.toString(), newVal.toString()});
+        }
     }
 
     @Override
@@ -265,7 +334,7 @@ public class BoardServiceImpl implements BoardService {
         boardMapper.deleteBoard(boardId);
 
         // [이벤트] 보드 삭제 이벤트 발행
-        publishBoardEvent(actor, boardVo, memberIds, BoardEvent.EventType.DELETE_BOARD);
+        publishBoardEvent(actor, boardVo, memberIds, BoardEvent.EventType.DELETE_BOARD, null);
 
         // 소켓 전송
         socketSender.sendSocketMessage(boardId, "BOARD_DELETED", userId, null);
@@ -422,7 +491,8 @@ public class BoardServiceImpl implements BoardService {
      */
 
     // [이벤트] 보드 이벤트 발행
-    private void publishBoardEvent(UserVo actor, BoardVo board, List<Long> memberIds, BoardEvent.EventType type) {
+    private void publishBoardEvent(UserVo actor, BoardVo board, List<Long> memberIds,
+                                   BoardEvent.EventType type, Map<BoardSettingType, String[]> settingChanges) {
         BoardEvent event = BoardEvent.builder()
                 .eventType(type)
                 .boardId(board.getId())
@@ -432,6 +502,7 @@ public class BoardServiceImpl implements BoardService {
                 .actorNickname(actor.getNickname())
                 .actorProfileImg(actor.getProfileImg())
                 .targetMemberIds(memberIds)
+                .settingChanges(settingChanges)
                 .build();
 
         publisher.publishEvent(event);

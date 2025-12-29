@@ -34,7 +34,8 @@ const ACTIVITY_TYPE_GROUPS = [
     label: '보드 관리',
     options: [
       { value: 'CREATE_BOARD', label: '보드 생성' },
-      { value: 'UPDATE_BOARD', label: '보드 설정 변경' },
+      { value: 'UPDATE_BOARD', label: '보드 정보 변경' },
+      { value: 'UPDATE_BOARD_SETTINGS', label: '보드 설정 변경' },
       { value: 'DELETE_BOARD', label: '보드 삭제' },
       { value: 'CREATE_LIST', label: '리스트 생성' },
       { value: 'UPDATE_LIST', label: '리스트 수정' },
@@ -45,7 +46,7 @@ const ACTIVITY_TYPE_GROUPS = [
     label: '팀 관리',
     options: [
       { value: 'CREATE_TEAM', label: '팀 생성' },
-      { value: 'UPDATE_TEAM', label: '팀 설정 변경' },
+      { value: 'UPDATE_TEAM', label: '팀 정보 변경' },
       { value: 'DELETE_TEAM', label: '팀 삭제' },
     ],
   },
