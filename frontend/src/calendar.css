@@ -107,4 +107,10 @@
     margin-left: 0.5rem !important;
     margin-right: 0.5rem !important;
   }
+  .fc-header-toolbar .fc-today-button {
+    margin-right: 20px !important;
+
+    padding-left: 30px !important;
+    padding-right: 30px !important;
+  }
 }

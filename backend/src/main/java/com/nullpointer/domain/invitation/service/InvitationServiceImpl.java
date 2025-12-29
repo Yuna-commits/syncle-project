@@ -48,7 +48,6 @@ public class InvitationServiceImpl implements InvitationService {
     private final BoardMemberMapper boardMemberMapper;
     private final ApplicationEventPublisher publisher;
     private final SocketSender socketSender;
-    private final RedisTemplate<String, Object> redisTemplate;
 
     @Value("${app.domain.frontend.url}")
     private String frontendUrl;
@@ -349,32 +348,31 @@ public class InvitationServiceImpl implements InvitationService {
      * 초대 수락 시 해당 알림을 읽음 처리
      */
     private void markNotificationAsRead(Long userId, String token) {
-        try {
-            String key = RedisKeyType.NOTIFICATION.getKey(String.valueOf(userId));
-            List<Object> notifications = redisTemplate.opsForList().range(key, 0, -1);
+        String key = RedisKeyType.NOTIFICATION.getKey(String.valueOf(userId));
 
-            if (notifications == null || notifications.isEmpty()) return;
+        // 1. RedisUtil을 통해 List<NotificationDto> 조회
+        List<NotificationDto> notifications = redisUtil.getList(key, NotificationDto.class);
 
-            for (int i = 0; i < notifications.size(); i++) {
-                Object obj = notifications.get(i);
-                if (obj instanceof NotificationDto) {
-                    NotificationDto noti = (NotificationDto) obj;
-                    // 팀 초대 알림이고, 토큰이 일치하는 경우 읽음 처리
-                    if (noti != null && NotificationType.TEAM_INVITE.equals(noti.getType()) &&
-                            token != null && token.equals(noti.getToken())) {
+        if (notifications == null || notifications.isEmpty()) return;
 
-                        NotificationDto updatedNoti = noti.toBuilder()
-                                .isRead(true)
-                                .build();
+        // 2. 리스트를 순회하며 조건에 맞는 알림 찾기
+        for (int i = 0; i < notifications.size(); i++) {
+            NotificationDto noti = notifications.get(i);
 
-                        redisTemplate.opsForList().set(key, i, updatedNoti);
-                        break; // 하나만 찾아서 수정하면 되므로 종료
-                    }
-                }
+            // 타입이 팀 초대이고, 토큰이 일치하며, 아직 읽지 않은 경우
+            if (NotificationType.TEAM_INVITE.equals(noti.getType()) &&
+                    token.equals(noti.getToken()) &&
+                    !Boolean.TRUE.equals(noti.getIsRead())) {
+
+                // 읽음 상태로 변경한 객체 생성 (Builder 사용)
+                NotificationDto updatedNoti = noti.toBuilder()
+                        .isRead(true)
+                        .build();
+
+                // 3. RedisUtil을 사용하여 해당 인덱스의 데이터 업데이트
+                redisUtil.updateListIndex(key, i, updatedNoti);
+                break; // 처리 완료 후 루프 종료
             }
-        } catch (Exception e) {
-            // 알림 업데이트 실패가 초대 수락 로직 전체를 롤백시키지 않도록 예외 로깅만 처리
-            System.err.println("알림 읽음 처리 중 오류 발생: " + e.getMessage());
         }
     }
 }
