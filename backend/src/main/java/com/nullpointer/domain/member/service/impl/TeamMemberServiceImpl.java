@@ -4,6 +4,7 @@ import com.nullpointer.domain.invitation.event.InvitationEvent;
 import com.nullpointer.domain.member.dto.team.TeamMemberResponse;
 import com.nullpointer.domain.member.dto.team.TeamRoleUpdateRequest;
 import com.nullpointer.domain.member.event.MemberEvent;
+import com.nullpointer.domain.member.mapper.BoardMemberMapper;
 import com.nullpointer.domain.member.mapper.TeamMemberMapper;
 import com.nullpointer.domain.member.service.TeamMemberService;
 import com.nullpointer.domain.member.vo.TeamMemberVo;
@@ -34,6 +35,7 @@ public class TeamMemberServiceImpl implements TeamMemberService {
     private final MemberValidator memberVal;
     private final SocketSender socketSender;
     private final ApplicationEventPublisher publisher;
+    private final BoardMemberMapper boardMemberMapper;
 
     // 멤버 추가 (초대 수락 시 호출됨)
     @Override
@@ -134,6 +136,9 @@ public class TeamMemberServiceImpl implements TeamMemberService {
         if (!teamMemberMapper.existsByTeamIdAndUserId(teamId, memberId)) {
             throw new BusinessException(ErrorCode.MEMBER_NOT_FOUND);
         }
+
+        // 팀 탈퇴 시 팀에 속한 보드에서도 탈퇴
+        boardMemberMapper.deleteByTeamIdAndUserId(teamId, memberId);
 
         // 알림 대상, 타입 결정
         NotificationType notificationType;

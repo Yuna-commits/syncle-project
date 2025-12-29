@@ -82,6 +82,16 @@
           AND user_id = #{userId}
     </update>
 
+    <!-- 팀 탈퇴 시 보드 탈퇴 -->
+    <delete id="deleteByTeamIdAndUserId">
+        UPDATE board_member
+        SET deleted_at = now()
+        WHERE user_id = #{userId}
+          AND board_id IN (SELECT id
+                           FROM board
+                           WHERE team_id = #{teamId})
+    </delete>
+
     <!-- 보드 멤버로 이미 등록되어 있는지 확인 -->
     <select id="existsByBoardIdAndUserId" resultType="boolean">
         SELECT EXISTS (SELECT 1

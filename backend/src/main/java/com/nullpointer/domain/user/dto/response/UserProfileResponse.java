@@ -40,11 +40,7 @@ public class UserProfileResponse {
         private Long participatedBoards; // 참여 보드 개수
         private Long createdCards; // 작성한 카드 개수
         private Long createdComments; // 작성한 댓글 개수
-
-        /**
-         * 알림 기능 구현 후 추가
-         */
-        // private Long unreadNotifications; // 안 읽은 알림 개수
+        private Long activityLogs; // 활동 로그 개수
 
     }
 

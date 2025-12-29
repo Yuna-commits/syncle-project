@@ -29,6 +29,9 @@ public interface BoardMemberMapper {
     // 보드 탈퇴
     void deleteBoardMember(@Param("boardId") Long boardId, @Param("userId") Long memberId);
 
+    // 팀 탈퇴 시 보드 탈퇴
+    void deleteByTeamIdAndUserId(@Param("teamId") Long teamId, @Param("userId") Long userId);
+
     // 중복 검사 및 존재 확인
     boolean existsByBoardIdAndUserId(@Param("boardId") Long boardId, @Param("userId") Long userId);
 

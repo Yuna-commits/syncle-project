@@ -1,4 +1,4 @@
-import { ChevronDown, Search, X } from 'lucide-react'
+import { ChevronDown, LogOut, Search, X } from 'lucide-react'
 import { useMemberMutations } from '../../../hooks/useMemberMutations'
 import { useAuthQuery } from '../../../hooks/auth/useAuthQuery'
 import { useState } from 'react'
@@ -47,6 +47,18 @@ function MembersView({ board, isOwner }) {
     }
   }
 
+  // 본인 탈퇴 핸들러
+  const handleLeave = async (userId) => {
+    const message =
+      board.visibility === 'PUBLIC'
+        ? '정말 보드에서 나가시겠습니까?\n(공개 보드인 경우 팀에서도 탈퇴 처리됩니다.)'
+        : '정말 보드에서 나가시겠습니까?'
+
+    if (window.confirm(message)) {
+      removeMember(userId)
+    }
+  }
+
   return (
     <div className="space-y-4 py-2">
       <div className="relative mx-1">
@@ -75,6 +87,7 @@ function MembersView({ board, isOwner }) {
             // 작업 권한 판단
             // 내가 Owner이고 나를 제외한 상대가 Owner가 아니어야 하며 PRIVATE 보드여야 함
             const canKick = isOwner && !isMe && isPrivate
+            const canLeave = !isOwner && isMe
 
             return (
               <div
@@ -116,6 +129,8 @@ function MembersView({ board, isOwner }) {
                     isPrivate={isPrivate}
                     onChange={handleRoleChange}
                   />
+
+                  {/* 강퇴 버튼 */}
                   {canKick && (
                     <button
                       onClick={() => handleKick(member.id, member.name)}
@@ -123,6 +138,17 @@ function MembersView({ board, isOwner }) {
                       title="내보내기"
                     >
                       <X size={14} />
+                    </button>
+                  )}
+
+                  {/* 본인 탈퇴 버튼 */}
+                  {canLeave && (
+                    <button
+                      onClick={() => handleLeave(member.id)}
+                      className="rounded p-1.5 text-gray-400 transition-colors hover:cursor-pointer hover:bg-red-50 hover:text-red-600"
+                      title="보드 나가기"
+                    >
+                      <LogOut size={14} />
                     </button>
                   )}
                 </div>

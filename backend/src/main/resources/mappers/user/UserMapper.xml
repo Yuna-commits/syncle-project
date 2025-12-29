@@ -109,19 +109,26 @@
                u.updated_at,
                (SELECT COUNT(*)
                 FROM team_member tm
+                         JOIN team t ON t.id = tm.team_id
                 WHERE tm.user_id = u.id
-                  AND tm.deleted_at IS NULL) AS "activity.participatedTeams",
+                  AND tm.deleted_at IS NULL
+                  AND t.deleted_at IS NULL)  AS "activity.participatedTeams",
                (SELECT COUNT(*)
                 FROM board_member bm
+                         JOIN board b ON b.id = bm.board_id
                 WHERE bm.user_id = u.id
-                  AND bm.deleted_at IS NULL) AS "activity.participatedBoards",
+                  AND bm.deleted_at IS NULL
+                  AND b.deleted_at IS NULL)  AS "activity.participatedBoards",
                (SELECT COUNT(*)
                 FROM card cd
                 WHERE cd.assignee_id = u.id) AS "activity.createdCards",
                (SELECT COUNT(*)
                 FROM comment c
                 WHERE c.writer_id = u.id
-                AND c.deleted_at IS NULL)  AS "activity.createdComments"
+                  AND c.deleted_at IS NULL)  AS "activity.createdComments",
+               (SELECT COUNT(*)
+                FROM activity_log al
+                WHERE al.user_id = u.id)     AS "activity.activityLogs"
         -- 안 읽은 알림 개수 쿼리 추가 필요
         FROM user u
         WHERE u.id = #{id}
@@ -237,9 +244,9 @@
 
     <update id="updateProvider">
         UPDATE user
-        SET provider = #{provider},
+        SET provider    = #{provider},
             provider_id = #{providerId},
-            updated_at = NOW()
+            updated_at  = NOW()
         WHERE id = #{id}
           AND deleted_at IS NULL
     </update>

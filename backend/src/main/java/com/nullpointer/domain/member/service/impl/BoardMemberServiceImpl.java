@@ -4,6 +4,7 @@ import com.nullpointer.domain.activity.service.ActivityService;
 import com.nullpointer.domain.board.mapper.BoardMapper;
 import com.nullpointer.domain.board.vo.BoardSettingVo;
 import com.nullpointer.domain.board.vo.BoardVo;
+import com.nullpointer.domain.board.vo.enums.Visibility;
 import com.nullpointer.domain.invitation.event.InvitationEvent;
 import com.nullpointer.domain.member.dto.board.BoardInviteRequest;
 import com.nullpointer.domain.member.dto.board.BoardMemberResponse;
@@ -11,6 +12,7 @@ import com.nullpointer.domain.member.dto.board.BoardRoleUpdateRequest;
 import com.nullpointer.domain.member.event.MemberEvent;
 import com.nullpointer.domain.member.mapper.BoardMemberMapper;
 import com.nullpointer.domain.member.service.BoardMemberService;
+import com.nullpointer.domain.member.service.TeamMemberService;
 import com.nullpointer.domain.member.vo.BoardMemberVo;
 import com.nullpointer.domain.member.vo.enums.Role;
 import com.nullpointer.domain.notification.vo.enums.NotificationType;
@@ -42,6 +44,7 @@ public class BoardMemberServiceImpl implements BoardMemberService {
     private final ActivityService activityService;
     private final SocketSender socketSender;
     private final ApplicationEventPublisher publisher;
+    private final TeamMemberService teamMemberService;
 
     /**
      * 보드 멤버 관리 권한
@@ -178,6 +181,7 @@ public class BoardMemberServiceImpl implements BoardMemberService {
     }
 
     @Override
+    @Transactional
     public void deleteBoardMember(Long boardId, Long memberId, Long userId) {
         BoardVo board = boardMapper.findBoardByBoardId(boardId)
                 .orElseThrow(() -> new BusinessException(ErrorCode.BOARD_NOT_FOUND));
@@ -220,7 +224,13 @@ public class BoardMemberServiceImpl implements BoardMemberService {
         }
 
         // DB 삭제 처리
-        boardMemberMapper.deleteBoardMember(boardId, memberId);
+        if (board.getVisibility() == Visibility.PUBLIC) {
+            // PUBLIC 보드 탈퇴인 경우 -> 팀 자체 탈퇴
+            teamMemberService.deleteTeamMember(board.getTeamId(), memberId, userId);
+        } else {
+            // PRIVATE 보드 탈퇴인 경우 -> 해당 보드에서만 탈퇴
+            boardMemberMapper.deleteBoardMember(boardId, memberId);
+        }
 
         // [알림] 관리자/추방 대상에게 알림 발송
         publishBoardEvent(actor, receiverId, receiverNickname, board, notificationType);
