@@ -82,6 +82,23 @@
           AND user_id = #{userId}
     </update>
 
+    <!-- 본인이 관리자인 보드 개수 조회 -->
+    <select id="countOwnerByUserId" resultType="int">
+        SELECT COUNT(*)
+        FROM board_member
+        WHERE user_id = #{userId}
+          AND role = 'OWNER'
+          AND deleted_at IS NULL
+    </select>
+
+    <!-- 회원 탈퇴 시 소속한 모든 보드 일괄 탈퇴 -->
+    <update id="deleteAllByUserId">
+        UPDATE board_member
+        SET deleted_at = NOW()
+        WHERE user_id = #{userId}
+          AND deleted_at IS NULL
+    </update>
+
     <!-- 팀 탈퇴 시 보드 탈퇴 -->
     <delete id="deleteByTeamIdAndUserId">
         UPDATE board_member

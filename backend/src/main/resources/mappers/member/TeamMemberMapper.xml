@@ -71,6 +71,23 @@
           AND user_id = #{userId}
     </update>
 
+    <!-- 본인이 관리자인 팀 개수 조회 -->
+    <select id="countOwnerByUserId" resultType="int">
+        SELECT COUNT(*)
+        FROM team_member
+        WHERE user_id = #{userId}
+          AND role = 'OWNER'
+          AND deleted_at IS NULL
+    </select>
+
+    <!-- 회원 탈퇴 시 소속한 모든 팀 일괄 탈퇴 -->
+    <update id="deleteAllByUserId">
+        UPDATE team_member
+        SET deleted_at = NOW()
+        WHERE user_id = #{userId}
+          AND deleted_at IS NULL
+    </update>
+
     <!-- 팀 삭제 시 팀 멤버 일괄 삭제 -->
     <update id="deleteAllMembersByTeamId">
         UPDATE team_member
