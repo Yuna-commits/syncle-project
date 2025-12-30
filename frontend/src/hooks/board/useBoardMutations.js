@@ -79,7 +79,7 @@ export const useBoardMutations = (boardId) => {
 
     onSuccess: () => {
       // 1. 대시보드의 '내 보드' 목록 갱신 (Public/Private 변경 즉시 반영)
-      queryClient.invalidateQueries({ queryKey: ['myBoards'] })
+      queryClient.invalidateQueries({ queryKey: ['dashboard'] })
 
       // 2. 팀 페이지의 보드 목록 갱신
       queryClient.invalidateQueries({ queryKey: ['team'] })

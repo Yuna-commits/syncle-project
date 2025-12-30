@@ -11,6 +11,7 @@ import { useCardMutations } from '../../hooks/card/useCardMutations'
 import { useListMutations } from '../../hooks/useListMutations'
 import useBoardStore from '../../stores/useBoardStore'
 import { useBoardSocket } from '../../hooks/board/useBoardSocket'
+import { useQueryClient } from '@tanstack/react-query'
 
 const DONE_LIST_ID = 'virtual-done-list' // 완료 리스트 ID 상수 정의
 
@@ -23,6 +24,7 @@ function BoardPage() {
   const { boardId: boardIdParam } = useParams()
   const boardId = Number(boardIdParam)
   const navigate = useNavigate()
+  const queryClient = useQueryClient()
 
   const [searchParams, setSearchParams] = useSearchParams()
   const cardIdFromUrl = searchParams.get('cardId')
@@ -52,6 +54,9 @@ function BoardPage() {
   useEffect(() => {
     if (error) {
       const status = error.response?.status
+      queryClient.invalidateQueries({ queryKey: ['myBoards'] }) // 내 보드 목록
+      queryClient.invalidateQueries({ queryKey: ['dashboard'] }) // 대시보드 전체
+      queryClient.invalidateQueries({ queryKey: ['teams'] }) // 팀 목록
       if (status === 403) {
         alert('이 보드에 접근할 권한이 없습니다.')
       } else if (status === 404) {
