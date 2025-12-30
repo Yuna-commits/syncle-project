@@ -230,6 +230,9 @@ public class InvitationServiceImpl implements InvitationService {
         // [알림] 초대 거절 알림 발송
         publishResponseEvent(invitation, inviter, NotificationType.INVITE_REJECTED);
 
+        // 소켓 전송
+        socketSender.sendTeamSocketMessage(invitation.getTeamId(), "TEAM_MEMBER_UPDATE", loginUserId, null);
+
         redisUtil.deleteData(RedisKeyType.INVITATION.getKey(token));
     }
 

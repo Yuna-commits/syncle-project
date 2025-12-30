@@ -5,6 +5,7 @@ import CreateBoardButton from '../../components/common/CreateBoardButton'
 import InviteMemberModal from '../../components/modals/team/InviteMemberModal'
 import { useTeamDetailQuery } from '../../hooks/team/useTeamQuery'
 import { Plus } from 'lucide-react'
+import { getTeamColorClass } from '../../constants/themeConstants'
 import useTeamPermission from '../../hooks/team/useTeamPermission'
 
 function TeamBoardPage() {
@@ -16,6 +17,8 @@ function TeamBoardPage() {
   const { data: team, isLoading, refetch } = useTeamDetailQuery(teamId)
   // 보드 생성 권한 정보 조회
   const { canCreateBoard, canManageTeam } = useTeamPermission(team)
+
+  const bgClass = getTeamColorClass(team.name)
 
   if (isLoading) return <div>Loading...</div>
   if (!team) return <div>팀 정보를 불러올 수 없습니다.</div>
@@ -29,7 +32,9 @@ function TeamBoardPage() {
         <section className="flex items-center gap-6">
           <div className="flex items-start justify-between">
             <div className="flex items-center gap-3">
-              <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-blue-500 text-xl font-bold text-white">
+              <div
+                className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-lg text-xl font-bold text-white ${bgClass}`}
+              >
                 {/* 팀 이름 첫 글자 or 아이콘 */}
                 {team.name.charAt(0).toUpperCase()}
               </div>

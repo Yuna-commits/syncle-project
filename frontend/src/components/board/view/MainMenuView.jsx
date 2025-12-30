@@ -103,7 +103,7 @@ function MainMenuView({
           className="flex w-full items-center gap-3 rounded-md px-2 py-2 text-sm font-medium text-gray-700 transition-colors hover:cursor-pointer hover:bg-gray-200"
         >
           <Trash2 size={18} className="text-gray-500" />
-          아카이브 (휴지통)
+          아카이브
         </button>
       </div>
 
