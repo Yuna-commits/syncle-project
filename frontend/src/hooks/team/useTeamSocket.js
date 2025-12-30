@@ -45,12 +45,12 @@ export const useTeamSocket = (teamId) => {
             queryClient.invalidateQueries({
               queryKey: ['invitations', 'team', Number(teamId)],
             }),
-            // ▼ 사이드바의 '내 팀 목록' 갱신
+            // 사이드바의 '내 팀 목록' 갱신
             queryClient.invalidateQueries({
               queryKey: ['teams'],
             }),
 
-            // ▼ 대시보드 메인 화면 갱신
+            // 대시보드 메인 화면 갱신
             queryClient.invalidateQueries({
               queryKey: ['dashboard'],
             }),

@@ -246,6 +246,7 @@ public class BoardServiceImpl implements BoardService {
 
         // 소켓 전송
         socketSender.sendSocketMessage(boardId, "BOARD_UPDATED", userId, null);
+        socketSender.sendTeamSocketMessage(boardVo.getTeamId(), "TEAM_BOARD_UPDATED", userId, null);
     }
 
     // 보드 설정 변경
