@@ -70,6 +70,7 @@ const normalizeBoardData = (dto) => {
         writerProfileImg: comment.writerProfileImg,
         createdAt: comment.createdAt,
         parentId: comment.parentId,
+        isWriterLeft: comment.isWriterLeft,
       }))
 
       // 트리 구조로 변환
@@ -120,6 +121,7 @@ const normalizeBoardData = (dto) => {
               id: card.assigneeId,
               name: card.assigneeName,
               profileImg: card.assigneeProfileImg,
+              isAssigneeLeft: card.isAssigneeLeft,
             }
           : null,
 

@@ -143,6 +143,7 @@
                 <result property="assigneeId" column="assignee_id"/>
                 <result property="assigneeName" column="assignee_name"/>
                 <result property="assigneeProfileImg" column="assignee_img"/>
+                <result property="isAssigneeLeft" column="is_assignee_left"/>
 
                 <collection property="checklists" ofType="ChecklistVo">
                     <id property="id" column="check_id"/>
@@ -168,6 +169,7 @@
                     <result property="content" column="comment_content"/>
                     <result property="writerName" column="comment_writer_name"/>
                     <result property="writerProfileImg" column="comment_writer_img"/>
+                    <result property="isWriterLeft" column="is_writer_left"/>
                     <result property="createdAt" column="comment_created_at"/>
                 </collection>
             </collection>
@@ -203,6 +205,11 @@
                u.id           AS assignee_id,
                u.nickname     AS assignee_name,
                u.profile_img  AS assignee_img,
+               (CASE
+                    WHEN c.assignee_id IS NULL THEN false
+                    WHEN b.visibility = 'PRIVATE' THEN (bm_chk.user_id IS NULL OR bm_chk.deleted_at IS NOT NULL)
+                    ELSE (tm_chk.user_id IS NULL OR tm_chk.deleted_at IS NOT NULL)
+                   END)       AS is_assignee_left,
 
                -- 체크리스트 (checklist 테이블 조인)
                ck.id          AS check_id,
@@ -225,6 +232,12 @@
                cmt.created_at AS comment_created_at,
                w.nickname     AS comment_writer_name,
                w.profile_img  AS comment_writer_img,
+               (CASE
+                    WHEN cmt.id IS NULL THEN NULL -- ★ 댓글 자체가 없으면 NULL 반환 (MyBatis 객체 생성 방지)
+                    WHEN cmt.writer_id IS NULL THEN false -- 댓글은 있는데 작성자 정보가 없는 경우 (예외처리)
+                    WHEN b.visibility = 'PRIVATE' THEN (bm_writer.user_id IS NULL OR bm_writer.deleted_at IS NOT NULL)
+                    ELSE (tm_writer.user_id IS NULL OR tm_writer.deleted_at IS NOT NULL)
+                   END)       AS is_writer_left,
 
                -- 댓글 수 (서브쿼리)
                (CASE
@@ -249,6 +262,11 @@
             -- 담당자가 없어도 카드는 나와야 하므로 LEFT JOIN
                  LEFT JOIN user u
                            ON c.assignee_id = u.id
+            -- (1) 담당자 탈퇴 여부 확인용 조인
+                 LEFT JOIN board_member bm_chk
+                           ON b.id = bm_chk.board_id AND c.assignee_id = bm_chk.user_id
+                 LEFT JOIN team_member tm_chk
+                           ON t.id = tm_chk.team_id AND c.assignee_id = tm_chk.user_id
             -- 체크리스트 LEFT JOIN
                  LEFT JOIN check_list ck
                            ON c.id = ck.card_id
@@ -263,6 +281,13 @@
                                AND cmt.deleted_at IS NULL
                  LEFT JOIN user w
                            ON cmt.writer_id = w.id
+            -- (2) 댓글 작성자 탈퇴 여부 확인용 조인
+            -- 댓글 작성자(cmt.writer_id)가 보드 멤버인지 확인
+                 LEFT JOIN board_member bm_writer
+                           ON b.id = bm_writer.board_id AND cmt.writer_id = bm_writer.user_id
+            -- 댓글 작성자(cmt.writer_id)가 팀 멤버인지 확인
+                 LEFT JOIN team_member tm_writer
+                           ON t.id = tm_writer.team_id AND cmt.writer_id = tm_writer.user_id
 
         WHERE b.id = #{boardId}
           AND b.deleted_at IS NULL

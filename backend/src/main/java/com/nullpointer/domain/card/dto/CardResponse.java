@@ -36,10 +36,12 @@ public class CardResponse {
     private String label;
     private String labelColor;
     private Boolean isArchived;
+
     // 담당자 정보
     private Long assigneeId;
     private String assigneeName;
     private String assigneeProfileImg;
+    private Boolean isAssigneeLeft;
 
     // 체크리스트 필드
     private List<ChecklistVo> checklists;

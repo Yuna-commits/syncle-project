@@ -15,9 +15,21 @@
                c.writer_id,
                u.nickname    AS writerName,
                u.profile_img AS writerProfileImg,
-               u.email       AS writerEmail
+               u.email       AS writerEmail,
+               CASE
+                   WHEN c.writer_id IS NULL THEN false
+                   WHEN b.visibility = 'PRIVATE' THEN (bm.user_id IS NULL OR bm.deleted_at IS NOT NULL)
+                   ELSE (tm.user_id IS NULL OR tm.deleted_at IS NOT NULL)
+                   END       AS is_writer_left
         FROM comment c
+                 -- 보드 공개 범위(Visibility) 확인을 위한 조인
+                 JOIN card cd ON c.card_id = cd.id
+                 JOIN list l ON cd.list_id = l.id
+                 JOIN board b ON l.board_id = b.id
                  LEFT JOIN user u ON c.writer_id = u.id
+            -- 멤버십 확인을 위한 조인
+                 LEFT JOIN board_member bm ON b.id = bm.board_id AND c.writer_id = bm.user_id
+                 LEFT JOIN team_member tm ON b.team_id = tm.team_id AND c.writer_id = tm.user_id
         WHERE c.card_id = #{cardId}
           AND c.deleted_at IS NULL
         ORDER BY c.created_at ASC
@@ -34,9 +46,19 @@
                c.updated_at,
                u.nickname    AS writerName,
                u.profile_img AS writerProfileImg,
-               u.email       AS writerEmail
+               u.email       AS writerEmail,
+               CASE
+                   WHEN c.writer_id IS NULL THEN false
+                   WHEN b.visibility = 'PRIVATE' THEN (bm.user_id IS NULL OR bm.deleted_at IS NOT NULL)
+                   ELSE (tm.user_id IS NULL OR tm.deleted_at IS NOT NULL)
+                   END       AS is_writer_left
         FROM comment c
+                 JOIN card cd ON c.card_id = cd.id
+                 JOIN list l ON cd.list_id = l.id
+                 JOIN board b ON l.board_id = b.id
                  LEFT JOIN user u ON c.writer_id = u.id
+                 LEFT JOIN board_member bm ON b.id = bm.board_id AND c.writer_id = bm.user_id
+                 LEFT JOIN team_member tm ON b.team_id = tm.team_id AND c.writer_id = tm.user_id
         WHERE c.id = #{id}
     </select>
 

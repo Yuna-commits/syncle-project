@@ -53,9 +53,18 @@
                (SELECT COUNT(*)
                 FROM comment cm
                 WHERE cm.card_id = c.id
-                  AND cm.deleted_at IS NULL) AS commentCount
+                  AND cm.deleted_at IS NULL) AS commentCount,
+               CASE
+                   WHEN c.assignee_id IS NULL THEN false
+                   WHEN b.visibility = 'PRIVATE' THEN (bm.user_id IS NULL OR bm.deleted_at IS NOT NULL)
+                   ELSE (tm.user_id IS NULL OR tm.deleted_at IS NOT NULL)
+                   END                       AS is_assignee_left
         FROM card c
+                 JOIN list l ON c.list_id = l.id
+                 JOIN board b ON l.board_id = b.id
                  LEFT JOIN user u ON c.assignee_id = u.id
+                 LEFT JOIN board_member bm ON b.id = bm.board_id AND c.assignee_id = bm.user_id
+                 LEFT JOIN team_member tm ON b.team_id = tm.team_id AND c.assignee_id = tm.user_id
         WHERE c.list_id = #{listId}
           AND c.deleted_at IS NULL
         ORDER BY c.order_index ASC
@@ -151,10 +160,18 @@
                (SELECT COUNT(*)
                 FROM comment cm
                 WHERE cm.card_id = c.id
-                  AND cm.deleted_at IS NULL) AS commentCount
+                  AND cm.deleted_at IS NULL) AS commentCount,
+               CASE
+                   WHEN c.assignee_id IS NULL THEN false
+                   WHEN b.visibility = 'PRIVATE' THEN (bm.user_id IS NULL OR bm.deleted_at IS NOT NULL)
+                   ELSE (tm.user_id IS NULL OR tm.deleted_at IS NOT NULL)
+                   END                       AS is_assignee_left
         FROM card c
-                 LEFT JOIN user u
-                           ON c.assignee_id = u.id
+                 JOIN list l ON c.list_id = l.id
+                 JOIN board b ON l.board_id = b.id
+                 LEFT JOIN user u ON c.assignee_id = u.id
+                 LEFT JOIN board_member bm ON b.id = bm.board_id AND c.assignee_id = bm.user_id
+                 LEFT JOIN team_member tm ON b.team_id = tm.team_id AND c.assignee_id = tm.user_id
         WHERE c.id = #{id}
           AND c.deleted_at IS NULL
     </select>

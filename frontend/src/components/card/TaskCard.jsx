@@ -15,6 +15,8 @@ import { PRIORITY_STYLES, PRIORITY_LABELS } from '../../constants/priority'
  * 1개의 카드 렌더링
  */
 function TaskCard({ task }) {
+  console.log('카드 정보: ', task)
+
   const { openCardModal } = useBoardStore()
 
   // 스타일 계산
@@ -35,6 +37,8 @@ function TaskCard({ task }) {
 
   // 우선순위 스타일 가져오기
   const priorityStyle = task.priority ? PRIORITY_STYLES[task.priority] : null
+
+  const isAssigneeLeft = task.assignee.isAssigneeLeft
 
   return (
     <div
@@ -80,9 +84,19 @@ function TaskCard({ task }) {
         {task.assignee && (
           <div
             className="shrink-0 pt-0.5"
-            title={task.assignee.name || '담당자'}
+            title={
+              isAssigneeLeft
+                ? '탈퇴한 멤버입니다.'
+                : task.assignee.name || '담당자'
+            }
           >
-            <div className="flex h-6 w-6 items-center justify-center overflow-hidden rounded-full ring-1 ring-blue-100">
+            <div
+              className={`flex h-6 w-6 items-center justify-center overflow-hidden rounded-full ring-1 ${
+                isAssigneeLeft
+                  ? 'bg-gray-200 opacity-70 ring-gray-300 grayscale'
+                  : 'ring-blue-100'
+              }`}
+            >
               {task.assignee.profileImg ? (
                 <img
                   src={task.assignee.profileImg}
@@ -90,7 +104,13 @@ function TaskCard({ task }) {
                   className="h-full w-full object-cover"
                 />
               ) : (
-                <span className="flex h-full w-full items-center justify-center bg-blue-50 text-xs font-bold text-blue-600">
+                <span
+                  className={`flex h-full w-full items-center justify-center text-xs font-bold ${
+                    isAssigneeLeft
+                      ? 'bg-gray-200 text-gray-500' // 탈퇴 시 텍스트 색상
+                      : 'bg-blue-50 text-blue-600'
+                  }`}
+                >
                   {task.assignee.name?.slice(0, 1) || <User size={12} />}
                 </span>
               )}

@@ -74,13 +74,18 @@ export default function CommentItem({
     return `${date.getMonth() + 1}월 ${date.getDate()}일`
   }
 
+  const isWriterLeft = comment.isWriterLeft
+
   return (
     <div className="flex gap-3">
       {/* 프로필 이미지 */}
       <img
         src={comment.writerProfileImg || defaultProfile}
         alt={comment.writerName}
-        className="mt-1 h-8 w-8 rounded-full bg-gray-100 object-cover"
+        className={`mt-1 h-8 w-8 rounded-full object-cover ${
+          // 탈퇴 시 흑백/투명도 처리
+          isWriterLeft ? 'bg-gray-200 opacity-70 grayscale' : 'bg-gray-100'
+        }`}
       />
 
       <div className="min-w-0 flex-1">
@@ -88,9 +93,19 @@ export default function CommentItem({
           {/* 헤더 */}
           <div className="mb-1 flex items-center justify-between">
             <div className="flex items-center gap-2">
-              <span className="text-sm font-bold text-gray-900">
+              <span
+                className={`text-sm font-bold ${
+                  isWriterLeft ? 'text-gray-400' : 'text-gray-900'
+                }`}
+              >
                 {comment.writerName}
               </span>
+
+              {/* 탈퇴 표시 텍스트 추가 */}
+              {isWriterLeft && (
+                <span className="text-xs text-red-400">(탈퇴)</span>
+              )}
+
               <span className="text-xs text-gray-400">
                 {formatTime(comment.createdAt)}
               </span>

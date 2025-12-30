@@ -24,7 +24,8 @@ public class CommentResponse {
     private String writerName;       // nickname
     private String writerProfileImg; // profile_img
     private String writerEmail;      // email
-
+    private Boolean isWriterLeft;
+    
     // 부모 ID 및 자식 댓글 리스트
     private Long parentId;
     @Builder.Default

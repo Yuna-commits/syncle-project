@@ -289,7 +289,13 @@ function CardSidebar({
 
             {/* 현재 담당자 뱃지 */}
             {selectedCard.assignee && (
-              <span className="ml-auto flex items-center gap-1.5 rounded bg-blue-50 px-2 py-0.5 text-xs font-semibold text-blue-600">
+              <span
+                className={`ml-auto flex items-center gap-1.5 rounded px-2 py-0.5 text-xs font-semibold ${
+                  selectedCard.assignee.isAssigneeLeft
+                    ? 'bg-gray-200 text-gray-500 opacity-70' // 탈퇴 시 스타일
+                    : 'bg-blue-50 text-blue-600' // 일반 스타일
+                }`}
+              >
                 {selectedCard.assignee.name}
               </span>
             )}
