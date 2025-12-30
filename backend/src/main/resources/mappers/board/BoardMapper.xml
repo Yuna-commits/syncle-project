@@ -312,7 +312,7 @@
         UPDATE board
         SET deleted_at = NOW()
         WHERE id = #{id}
-          AND deleted_at IS NOT NULL
+          AND deleted_at IS NULL
     </update>
 
     <!-- 팀 삭제 시 하위 보드 삭제 -->
@@ -320,7 +320,7 @@
         UPDATE board
         SET deleted_at = NOW()
         WHERE team_id = #{teamId}
-          AND deleted_at IS NOT NULL
+          AND deleted_at IS NULL
     </update>
 
     <!-- 보드 개수 체크 -->

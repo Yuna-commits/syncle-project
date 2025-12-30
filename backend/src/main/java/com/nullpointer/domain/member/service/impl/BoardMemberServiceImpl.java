@@ -1,6 +1,5 @@
 package com.nullpointer.domain.member.service.impl;
 
-import com.nullpointer.domain.activity.service.ActivityService;
 import com.nullpointer.domain.board.mapper.BoardMapper;
 import com.nullpointer.domain.board.vo.BoardSettingVo;
 import com.nullpointer.domain.board.vo.BoardVo;
@@ -11,6 +10,7 @@ import com.nullpointer.domain.member.dto.board.BoardMemberResponse;
 import com.nullpointer.domain.member.dto.board.BoardRoleUpdateRequest;
 import com.nullpointer.domain.member.event.MemberEvent;
 import com.nullpointer.domain.member.mapper.BoardMemberMapper;
+import com.nullpointer.domain.member.mapper.TeamMemberMapper;
 import com.nullpointer.domain.member.service.BoardMemberService;
 import com.nullpointer.domain.member.service.TeamMemberService;
 import com.nullpointer.domain.member.vo.BoardMemberVo;
@@ -40,8 +40,8 @@ public class BoardMemberServiceImpl implements BoardMemberService {
     private final BoardMemberMapper boardMemberMapper;
     private final BoardMapper boardMapper;
     private final UserMapper userMapper;
+    private final TeamMemberMapper teamMemberMapper;
     private final MemberValidator memberVal;
-    private final ActivityService activityService;
     private final SocketSender socketSender;
     private final ApplicationEventPublisher publisher;
     private final TeamMemberService teamMemberService;
@@ -223,12 +223,16 @@ public class BoardMemberServiceImpl implements BoardMemberService {
             receiverNickname = actor.getNickname();
         }
 
+        // 팀 멤버인지 먼저 확인 (공유 링크로 들어온 Viewer는 팀 멤버가 아님)
+        boolean isTeamMember = teamMemberMapper.existsByTeamIdAndUserId(board.getTeamId(), memberId);
+
         // DB 삭제 처리
-        if (board.getVisibility() == Visibility.PUBLIC) {
-            // PUBLIC 보드 탈퇴인 경우 -> 팀 자체 탈퇴
+        if (board.getVisibility() == Visibility.PUBLIC && isTeamMember) {
+            // PUBLIC 보드이고 + 실제 팀 멤버라면 -> 팀에서 탈퇴 (보드 탈퇴도 연쇄 처리됨)
             teamMemberService.deleteTeamMember(board.getTeamId(), memberId, userId);
         } else {
-            // PRIVATE 보드 탈퇴인 경우 -> 해당 보드에서만 탈퇴
+            // PRIVATE 보드이거나 OR (PUBLIC 보드지만 팀 멤버가 아닌 경우 = 외부 Viewer)
+            // -> 해당 보드에서만 탈퇴
             boardMemberMapper.deleteBoardMember(boardId, memberId);
         }
 
