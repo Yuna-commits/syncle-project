@@ -77,6 +77,14 @@ export const useBoardMutations = (boardId) => {
       return { previousBoard }
     },
 
+    onSuccess: () => {
+      // 1. 대시보드의 '내 보드' 목록 갱신 (Public/Private 변경 즉시 반영)
+      queryClient.invalidateQueries({ queryKey: ['myBoards'] })
+
+      // 2. 팀 페이지의 보드 목록 갱신
+      queryClient.invalidateQueries({ queryKey: ['team'] })
+    },
+
     onError: (err, newBoard, context) => {
       // 에러 발생 시 이전 상태로 롤백
       queryClient.setQueryData(queryKey, context.previousBoard)
