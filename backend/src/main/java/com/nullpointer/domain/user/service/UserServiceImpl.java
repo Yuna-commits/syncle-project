@@ -3,10 +3,14 @@ package com.nullpointer.domain.user.service;
 import com.nullpointer.domain.auth.dto.request.AuthRequest;
 import com.nullpointer.domain.auth.dto.request.PasswordRequest;
 import com.nullpointer.domain.board.mapper.BoardMapper;
+import com.nullpointer.domain.board.vo.BoardVo;
 import com.nullpointer.domain.file.service.S3FileStorageService;
+import com.nullpointer.domain.invitation.event.InvitationEvent;
 import com.nullpointer.domain.member.mapper.BoardMemberMapper;
 import com.nullpointer.domain.member.mapper.TeamMemberMapper;
+import com.nullpointer.domain.notification.vo.enums.NotificationType;
 import com.nullpointer.domain.team.mapper.TeamMapper;
+import com.nullpointer.domain.team.vo.TeamVo;
 import com.nullpointer.domain.user.dto.request.UpdateProfileRequest;
 import com.nullpointer.domain.user.dto.response.UserProfileResponse;
 import com.nullpointer.domain.user.dto.response.UserSummaryResponse;
@@ -20,6 +24,8 @@ import com.nullpointer.global.exception.BusinessException;
 import com.nullpointer.global.security.jwt.JwtTokenProvider;
 import com.nullpointer.global.util.RedisUtil;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -27,6 +33,7 @@ import org.springframework.util.StringUtils;
 
 import java.util.List;
 
+@Slf4j
 @Service
 @RequiredArgsConstructor
 public class UserServiceImpl implements UserService {
@@ -40,6 +47,7 @@ public class UserServiceImpl implements UserService {
     private final PasswordEncoder passwordEncoder;
     private final RedisUtil redisUtil;
     private final JwtTokenProvider jwtTokenProvider;
+    private final ApplicationEventPublisher publisher;
 
     /**
      * 이메일 중복 확인
@@ -168,27 +176,15 @@ public class UserServiceImpl implements UserService {
     @Transactional
     public void deactivateUser(Long userId, String accessToken) {
         // 1) 사용자 조회
-        userMapper.findById(userId)
+        UserVo user = userMapper.findById(userId)
                 .orElseThrow(() -> new BusinessException(ErrorCode.USER_NOT_FOUND));
 
-        // 2. [팀 검증] 내가 오너인 팀들 중, '나 외에 다른 멤버'가 있는 팀이 있는지 확인
-        List<Long> ownedTeamIds = teamMemberMapper.findTeamIdsByOwnerId(userId);
-        for (Long teamId : ownedTeamIds) {
-            int memberCount = teamMemberMapper.countMembersByTeamId(teamId);
-            if (memberCount > 1) {
-                // 나 말고 다른 사람이 있으면 권한 이임 필수
-                throw new BusinessException(ErrorCode.OWNER_MUST_TRANSFER_BEFORE_LEAVE);
-            }
-        }
+        // 2) [팀/보드 검증] 소유권 확인
+        checkOwnershipBeforeLeave(userId);
 
-        // 2-2 [보드 검증] 내가 오너인 보드들 중, '나 외에 다른 멤버'가 있는 보드가 있는지 확인
-        List<Long> ownedBoardIds = boardMemberMapper.findBoardIdsByOwnerId(userId);
-        for (Long boardId : ownedBoardIds) {
-            int memberCount = boardMemberMapper.countMembersByBoardId(boardId);
-            if (memberCount > 1) {
-                throw new BusinessException(ErrorCode.OWNER_MUST_TRANSFER_BEFORE_LEAVE);
-            }
-        }
+        // 삭제 전에 소속된 팀/보드 ID 목록을 미리 조회
+        List<Long> joinedBoardIds = boardMemberMapper.findBoardIdsByUserId(userId);
+        List<Long> joinedTeamIds = teamMemberMapper.findTeamIdsByUserId(userId);
 
         // a. [멤버십 정리] 모든 팀/보드에서 탈퇴 처리 (Soft Delete)
         teamMemberMapper.deleteAllByUserId(userId);
@@ -200,6 +196,9 @@ public class UserServiceImpl implements UserService {
         if (updated != 1) {
             throw new BusinessException(ErrorCode.INTERNAL_SERVER_ERROR);
         }
+
+        // 3) [알림 발송] 내가 관리자가 아니라면,DB 처리가 끝난 후, 미리 조회해둔 목록으로 알림 전송
+        sendLeaveAlertsToOwner(user, joinedTeamIds, joinedBoardIds);
 
         // 3) 강제 로그아웃
         redisUtil.deleteData(RedisKeyType.REFRESH_TOKEN.getKey(userId));
@@ -243,35 +242,26 @@ public class UserServiceImpl implements UserService {
     @Transactional
     public void deleteUser(Long userId) {
         // 1) 사용자 조회
-        userMapper.findById(userId)
+        UserVo user = userMapper.findById(userId)
                 .orElseThrow(() -> new BusinessException(ErrorCode.USER_NOT_FOUND));
 
-        // 2. [팀 검증] 내가 오너인 팀들 중, '나 외에 다른 멤버'가 있는 팀이 있는지 확인
-        List<Long> ownedTeamIds = teamMemberMapper.findTeamIdsByOwnerId(userId);
-        for (Long teamId : ownedTeamIds) {
-            int memberCount = teamMemberMapper.countMembersByTeamId(teamId);
-            if (memberCount > 1) {
-                // 나 말고 다른 사람이 있으면 권한 이임 필수
-                throw new BusinessException(ErrorCode.OWNER_MUST_TRANSFER_BEFORE_LEAVE);
-            }
-        }
+        // 2) [팀/보드 검증] 소유권 확인
+        checkOwnershipBeforeLeave(userId);
 
-        // 2-2 [보드 검증] 내가 오너인 보드들 중, '나 외에 다른 멤버'가 있는 보드가 있는지 확인
-        List<Long> ownedBoardIds = boardMemberMapper.findBoardIdsByOwnerId(userId);
-        for (Long boardId : ownedBoardIds) {
-            int memberCount = boardMemberMapper.countMembersByBoardId(boardId);
-            if (memberCount > 1) {
-                throw new BusinessException(ErrorCode.OWNER_MUST_TRANSFER_BEFORE_LEAVE);
-            }
-        }
+        // 삭제 전에 소속된 팀/보드 ID 목록을 미리 조회
+        List<Long> joinedBoardIds = boardMemberMapper.findBoardIdsByUserId(userId);
+        List<Long> joinedTeamIds = teamMemberMapper.findTeamIdsByUserId(userId);
 
-        // 2) Soft Delete
+        // 4) Soft Delete
         // a. [멤버십 정리] 모든 팀/보드에서 탈퇴 처리 (Soft Delete)
         teamMemberMapper.deleteAllByUserId(userId);
         boardMemberMapper.deleteAllByUserId(userId);
 
         // b. 계정 익명화
         userMapper.deleteUser(userId);
+
+        // 3) [알림 발송] 내가 관리자가 아니라면,DB 처리가 끝난 후, 미리 조회해둔 목록으로 알림 전송
+        sendLeaveAlertsToOwner(user, joinedTeamIds, joinedBoardIds);
 
         // 3) 강제 로그아웃
         redisUtil.deleteData(RedisKeyType.REFRESH_TOKEN.getKey(userId));
@@ -294,5 +284,89 @@ public class UserServiceImpl implements UserService {
 
         return user;
     }
+
+    /**
+     * 탈퇴/비활성화 전 소유권 검증
+     */
+    private void checkOwnershipBeforeLeave(Long userId) {
+        // 2. [팀 검증] 내가 오너인 팀들 중, '나 외에 다른 멤버'가 있는 팀이 있는지 확인
+        List<Long> ownedTeamIds = teamMemberMapper.findTeamIdsByOwnerId(userId);
+        for (Long teamId : ownedTeamIds) {
+            int memberCount = teamMemberMapper.countMembersByTeamId(teamId);
+            if (memberCount > 1) {
+                // 나 말고 다른 사람이 있으면 권한 이임 필수
+                throw new BusinessException(ErrorCode.OWNER_MUST_TRANSFER_BEFORE_LEAVE);
+            }
+        }
+
+        // 2-2 [보드 검증] 내가 오너인 보드들 중, '나 외에 다른 멤버'가 있는 보드가 있는지 확인
+        List<Long> ownedBoardIds = boardMemberMapper.findBoardIdsByOwnerId(userId);
+        for (Long boardId : ownedBoardIds) {
+            int memberCount = boardMemberMapper.countMembersByBoardId(boardId);
+            if (memberCount > 1) {
+                throw new BusinessException(ErrorCode.OWNER_MUST_TRANSFER_BEFORE_LEAVE);
+            }
+        }
+    }
+
+    /**
+     * 탈퇴/비활성화 시 소속된 팀/보드의 관리자에게 알림 발송
+     */
+    private void sendLeaveAlertsToOwner(UserVo user, List<Long> teamIds, List<Long> boardIds) {
+        Long userId = user.getId();
+
+        // 1. [보드] 탈퇴 알림
+        for (Long boardId : boardIds) {
+            // 보드 정보 조회
+            BoardVo board = boardMapper.findBoardByBoardId(boardId).orElse(null);
+            if (board == null) continue;
+
+            // ★ 단건 조회: 해당 보드의 유일한 관리자 ID 조회
+            Long ownerId = boardMemberMapper.findOwnerIdByBoardId(boardId);
+
+            // 관리자가 존재하고, 탈퇴하는 사람이 관리자가 아닐 때만 알림 전송
+            if (ownerId != null && !ownerId.equals(userId)) {
+                try {
+                    publisher.publishEvent(InvitationEvent.builder()
+                            .type(NotificationType.BOARD_MEMBER_LEFT)
+                            .senderId(userId)
+                            .senderNickname(user.getNickname())
+                            .senderProfileImg(user.getProfileImg())
+                            .receiverId(ownerId) // 유일한 관리자에게 전송
+                            .targetId(boardId)
+                            .targetName(board.getTitle())
+                            .build());
+                } catch (Exception e) {
+                    log.warn("보드 탈퇴 알림 발송 실패 (boardId: {}): {}", boardId, e.getMessage());
+                }
+            }
+        }
+
+        // 2. [팀] 탈퇴 알림
+        for (Long teamId : teamIds) {
+            TeamVo team = teamMapper.findTeamByTeamId(teamId).orElse(null);
+            if (team == null) continue;
+
+            // ★ 단건 조회: 해당 팀의 유일한 관리자 ID 조회
+            Long ownerId = teamMemberMapper.findOwenrIdByTeamId(teamId);
+
+            if (ownerId != null && !ownerId.equals(userId)) {
+                try {
+                    publisher.publishEvent(InvitationEvent.builder()
+                            .type(NotificationType.TEAM_MEMBER_LEFT)
+                            .senderId(userId)
+                            .senderNickname(user.getNickname())
+                            .senderProfileImg(user.getProfileImg())
+                            .receiverId(ownerId) // 유일한 관리자에게 전송
+                            .targetId(teamId)
+                            .targetName(team.getName())
+                            .build());
+                } catch (Exception e) {
+                    log.warn("팀 탈퇴 알림 발송 실패 (teamId: {}): {}", teamId, e.getMessage());
+                }
+            }
+        }
+    }
+
 
 }

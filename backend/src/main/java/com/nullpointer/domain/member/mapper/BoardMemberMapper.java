@@ -35,6 +35,12 @@ public interface BoardMemberMapper {
     // 특정 보드의 멤버 수
     int countMembersByBoardId(Long boardId);
 
+    // 특정 보드의 오너 id 조회
+    Long findOwnerIdByBoardId(Long boardId);
+
+    // 참여한 모든 보드 id 목록 조회
+    List<Long> findBoardIdsByUserId(Long userId);
+
     // 회원 탈퇴 시 소속한 모든 보드 일괄 탈퇴
     void deleteAllByUserId(Long userId);
 

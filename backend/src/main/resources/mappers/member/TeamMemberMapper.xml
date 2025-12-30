@@ -75,7 +75,8 @@
     <select id="findTeamIdsByOwnerId" resultType="long">
         SELECT team_id
         FROM team_member
-        WHERE user_id = #{userId} AND role = 'OWNER'
+        WHERE user_id = #{userId}
+          AND role = 'OWNER'
           AND deleted_at IS NULL
     </select>
 
@@ -84,6 +85,23 @@
         SELECT count(*)
         FROM team_member
         WHERE team_id = #{teamId}
+          AND deleted_at IS NULL
+    </select>
+
+    <!-- 특정 팀의 오너 id 조회 -->
+    <select id="findOwenrIdByTeamId" resultType="long">
+        SELECT user_id
+        FROM team_member
+        WHERE team_id = #{teamId}
+          AND role = 'OWNER'
+          AND deleted_at IS NULL
+    </select>
+
+    <!-- 참여한 모든 팀의 id 목록 조회 -->
+    <select id="findTeamIdsByUserId" resultType="long">
+        SELECT team_id
+        FROM team_member
+        WHERE user_id = #{userId}
           AND deleted_at IS NULL
     </select>
 

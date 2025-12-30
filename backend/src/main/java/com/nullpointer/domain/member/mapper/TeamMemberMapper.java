@@ -34,6 +34,12 @@ public interface TeamMemberMapper {
     // 본인이 오너인 팀 ID 목록
     List<Long> findTeamIdsByOwnerId(Long userId);
 
+    // 특정 팀의 오너 id 조회
+    Long findOwenrIdByTeamId(Long teamId);
+
+    // 참여한 모든 팀 id 목록 조회
+    List<Long> findTeamIdsByUserId(Long userId);
+
     // 특정 팀의 멤버 수
     int countMembersByTeamId(Long teamId);
 
