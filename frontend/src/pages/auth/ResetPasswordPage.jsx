@@ -43,7 +43,10 @@ export default function ResetPasswordPage() {
       {/* 로그인으로 돌아가지 */}
       <p className="mt-5 text-left text-sm text-gray-700">
         비밀번호가 기억나셨나요?{' '}
-        <Link to="/auth/signin" className="text-blue-500 hover:text-blue-600">
+        <Link
+          to="/auth/signin"
+          className="font-semibold text-blue-500 hover:text-blue-600"
+        >
           로그인하러 가기
         </Link>
       </p>

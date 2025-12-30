@@ -21,7 +21,7 @@ export default function SignUpPage() {
         </h1>
         <p className="text-sm text-gray-500">
           {step === 1
-            ? 'NullPointer와 함께 협업을 시작해보세요.'
+            ? 'Syncle과 함께 협업을 시작해보세요.'
             : '이메일로 전송된 번호를 입력해주세요.'}
         </p>
       </div>

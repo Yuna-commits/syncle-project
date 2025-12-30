@@ -21,11 +21,11 @@
     </sql>
 
     <!-- 통계 조회 -->
-    <select id="getStats" resultType="ActivityStatsResponse">
+    <select id="getStats" resultType="ActivityStatsResponse" useCache="false">
         SELECT
         COUNT(CASE WHEN type = 'CREATE_CARD' THEN 1 END) AS createdCards7,
         COUNT(CASE WHEN type = 'COMPLETE_CARD' THEN 1 END) AS completedTasks7,
-        COUNT(CASE WHEN type = 'CREATE_COMMENT' THEN 1 END) AS comments7
+        COUNT(CASE WHEN type = 'ADD_COMMENT' THEN 1 END) AS comments7
         FROM activity_log l
         <where>
             <if test="userId != null">AND l.user_id = #{userId}</if>

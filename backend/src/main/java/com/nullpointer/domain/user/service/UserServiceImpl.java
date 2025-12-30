@@ -75,9 +75,11 @@ public class UserServiceImpl implements UserService {
         // 2) 닉네임 변경 시 중복 검사 (기존 닉네임과 다를 때만)
         // hasText : null, 문자열 길이, 공백 체크
         if (StringUtils.hasText(req.getNickname()) && !user.getNickname().equals(req.getNickname())) {
-            if (userMapper.existsByNickname(req.getNickname())) {
+            userMapper.findByNickname(req.getNickname()).ifPresent(owner -> {
+                // VERIFIED든 PENDING이든 남이 쓰고 있으면 무조건 중복 처리
+                // (프로필 수정은 이미 가입된 사람이 하는 것이므로 PENDING 닉네임도 뺏으면 안됨)
                 throw new BusinessException(ErrorCode.USER_NICKNAME_DUPLICATE);
-            }
+            });
             user.setNickname(req.getNickname());
         }
 

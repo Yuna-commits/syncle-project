@@ -17,6 +17,20 @@ import defaultProfile from '../../assets/images/default.png'
 
 // variant: 'timeline' (개인 프로필용) | 'avatar' (팀/보드용)
 export default function ActivityLogItem({ log, variant = 'timeline' }) {
+  // 로그 메시지 파싱
+  const separator = ' : "'
+  let mainMessage = log.description
+  let detailContent = null
+
+  if (log.description && log.description.includes(separator)) {
+    const parts = log.description.split(separator)
+    mainMessage = parts[0]
+    // 뒷부분에 붙은 마지막 따옴표(") 하나 제거
+    if (parts[1]) {
+      detailContent = parts[1].endsWith('"') ? parts[1].slice(0, -1) : parts[1]
+    }
+  }
+
   // 1. 활동 타입별 스타일 및 아이콘 매핑
   const getTypeStyle = (type) => {
     switch (type) {
@@ -32,6 +46,7 @@ export default function ActivityLogItem({ log, variant = 'timeline' }) {
           border: 'border-green-200',
           icon: <PlusCircle />,
         }
+      case 'COMPLETE_CARD':
       case 'UPDATE_CARD':
       case 'UPDATE_BOARD':
       case 'UPDATE_BOARD_SETTINGS':
@@ -163,8 +178,15 @@ export default function ActivityLogItem({ log, variant = 'timeline' }) {
 
           {/* 본문 메시지 */}
           <p className="text-[15px] leading-relaxed font-medium text-gray-800">
-            {log.description}
+            {mainMessage}
           </p>
+
+          {/* 상세 내용 (댓글) */}
+          {detailContent && (
+            <div className="mt-1 rounded-md border border-slate-200 bg-slate-200/80 px-3 py-2 text-sm text-gray-600">
+              "{detailContent}"
+            </div>
+          )}
         </div>
       </div>
     )
@@ -198,9 +220,16 @@ export default function ActivityLogItem({ log, variant = 'timeline' }) {
             })}
           </span>
         </div>
-        <p className="text-sm leading-relaxed text-gray-600">
-          {log.description}
-        </p>
+
+        {/* 본문 메시지 */}
+        <p className="text-sm leading-relaxed text-gray-600">{mainMessage}</p>
+
+        {/* 상세 내용 (댓글) */}
+        {detailContent && (
+          <div className="mt-2 rounded-md border border-slate-200 bg-slate-200/80 px-3 py-2 text-sm text-slate-600">
+            "{detailContent}"
+          </div>
+        )}
       </div>
     </div>
   )

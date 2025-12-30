@@ -123,7 +123,7 @@ export default function SignInPage() {
           </label>
           <Link
             to="/auth/reset-password"
-            className="text-sm text-blue-500 hover:text-blue-600"
+            className="text-sm font-semibold text-blue-500 hover:text-blue-600"
           >
             비밀번호를 잊으셨나요?
           </Link>

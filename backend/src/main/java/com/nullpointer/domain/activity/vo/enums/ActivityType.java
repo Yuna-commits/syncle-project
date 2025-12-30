@@ -8,6 +8,7 @@ public enum ActivityType {
     // 1. 카드 작업
     CREATE_CARD("카드를 생성했습니다."),
     UPDATE_CARD("카드 상세를 수정했습니다."), // 중요도, 보관, 완료, 라벨, 이동 등 모든 변경사항 매핑
+    COMPLETE_CARD("작업을 완료했습니다."),
     ADD_COMMENT("댓글을 남겼습니다."),
     CHECKLIST_COMPLETED("체크리스트를 완료했습니다."),
 

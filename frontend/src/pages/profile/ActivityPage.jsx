@@ -76,11 +76,7 @@ export default function ActivityPage() {
   }
 
   // 통계 데이터
-  const {
-    data: dashboardData,
-    isLoading: isStatsLoading,
-    refetch: refetchStats,
-  } = useActivityStats()
+  const { data: dashboardData, isLoading: isStatsLoading } = useActivityStats()
 
   const stats = dashboardData?.stats || {
     createdCards7: 0,
@@ -97,19 +93,12 @@ export default function ActivityPage() {
     isFetchingNextPage, // 추가 데이터 로딩 중인지 여부
     isLoading: isLogsLoading,
     isError,
-    refetch: refetchLogs,
   } = useInfiniteActivityLogs()
 
   // 언마운트 시 필터 초기화
   useEffect(() => {
     return () => reset()
   }, [reset])
-
-  // 새로고침
-  const handleRefresh = () => {
-    refetchStats()
-    refetchLogs()
-  }
 
   // 날짜 범위 (전체 기간 → null)
   const [range, setLocalRange] = useState(null)
@@ -190,16 +179,9 @@ export default function ActivityPage() {
         <div>
           <h1 className="text-3xl font-bold text-gray-900">활동 내역</h1>
           <p className="mt-2 text-gray-500">
-            최근 활동과 통계를 한눈에 확인하세요.
+            최근 7일의 활동과 통계를 한눈에 확인하세요.
           </p>
         </div>
-        <button
-          onClick={() => handleRefresh}
-          className="flex items-center gap-2 rounded-lg border-b border-gray-100 bg-white px-4 py-2 text-sm font-medium text-gray-600 shadow-sm transition-colors hover:cursor-pointer hover:bg-gray-200"
-        >
-          <RefreshCcw size={16} />
-          새로고침
-        </button>
       </div>
 
       {/* 1. 요약 통계 (최근 7일) */}

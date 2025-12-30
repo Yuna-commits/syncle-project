@@ -12,7 +12,6 @@ import com.nullpointer.domain.team.event.TeamEvent;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.context.event.EventListener;
-import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.event.TransactionPhase;
 import org.springframework.transaction.event.TransactionalEventListener;
@@ -29,7 +28,6 @@ public class ActivityEventListener {
      * 카드 이벤트 활동 기록
      * - @TransactionalEventListener 커밋 성공 시에만 실행
      */
-    @Async
     @TransactionalEventListener(phase = TransactionPhase.AFTER_COMMIT)
     public void handleCardEvent(CardEvent event) {
         // 단순 알림용 이벤트는 로깅 제외
@@ -61,7 +59,6 @@ public class ActivityEventListener {
     /**
      * 보드 이벤트 활동 기록
      */
-    @Async
     @EventListener
     public void handleBoardEvent(BoardEvent event) {
         // 1. 설정 변경은 루프를 돌며 여러 로그를 남겨야 하므로 별도 처리
@@ -148,7 +145,6 @@ public class ActivityEventListener {
     /**
      * 팀 이벤트 활동 기록
      */
-    @Async
     @EventListener
     public void handleTeamEvent(TeamEvent event) {
         ActivityType type = null;
@@ -193,7 +189,6 @@ public class ActivityEventListener {
     /**
      * 초대/멤버 관리 이벤트 활동 기록
      */
-    @Async
     @EventListener
     public void handleInvitationEvent(InvitationEvent event) {
         try {
@@ -235,7 +230,6 @@ public class ActivityEventListener {
     /**
      * 멤버 권한 변경 이벤트 활동 기록
      */
-    @Async
     @EventListener
     public void handleMemberEvent(MemberEvent event) {
         if (event.getType() != NotificationType.PERMISSION_CHANGED) return;
@@ -277,7 +271,13 @@ public class ActivityEventListener {
     private ActivityType mapToActivityType(CardEvent event) {
         return switch (event.getEventType()) {
             case CREATED -> ActivityType.CREATE_CARD;
-            case UPDATED, ASSIGNED, MOVED, LABEL, ATTACHMENT -> ActivityType.UPDATE_CARD;
+            case UPDATED -> {
+                if ("진행 상태".equals(event.getFieldName()) && "완료".equals(event.getNewValue())) {
+                    yield ActivityType.COMPLETE_CARD;
+                }
+                yield ActivityType.UPDATE_CARD;
+            }
+            case ASSIGNED, MOVED, LABEL, ATTACHMENT -> ActivityType.UPDATE_CARD;
             case COMMENT, REPLY, MENTION -> ActivityType.ADD_COMMENT;
             case CHECKLIST -> ActivityType.CHECKLIST_COMPLETED;
             default -> ActivityType.UPDATE_CARD;
@@ -307,50 +307,55 @@ public class ActivityEventListener {
      * 로그에 보여줄 상세 메시지 작성
      */
     private String generateDetail(CardEvent event) {
+        String cardTitle = event.getCardTitle();
         return switch (event.getEventType()) {
             case UPDATED -> {
-                if (event.getFieldName() == null) yield "카드를 수정했습니다.";
+                if (event.getFieldName() == null) yield String.format("'%s' 카드를 수정했습니다.", cardTitle);
 
                 String oldVal = event.getOldValue() == null ? "없음" : event.getOldValue();
                 String newVal = event.getNewValue() == null ? "없음" : event.getNewValue();
 
-                yield String.format("'%s'를 '%s'에서 '%s'(으)로 변경했습니다.",
-                        event.getFieldName(), oldVal, newVal);
+                yield String.format("'%s' 카드의 '%s'을(를) '%s'에서 '%s'(으)로 변경했습니다.",
+                        cardTitle, event.getFieldName(), oldVal, newVal);
             }
 
-            case MOVED -> String.format("카드를 '%s'에서 '%s'(으)로 이동했습니다.",
-                    event.getPrevListTitle(), event.getListTitle());
+            case MOVED -> String.format("'%s' 카드를 '%s'에서 '%s'(으)로 이동했습니다.",
+                    cardTitle, event.getPrevListTitle(), event.getListTitle());
 
             case ASSIGNED -> {
                 // 본인이 본인을 지정한 경우
                 if (event.getActorId().equals(event.getAssigneeId())) {
-                    yield "본인을 담당자로 지정했습니다.";
+                    yield String.format("'%s' 카드의 담당자로 본인을 지정했습니다.", cardTitle);
                 }
                 // 타인을 지정한 경우
-                yield String.format("'%s'님을 담당자로 지정했습니다.", event.getAssigneeNickname());
+                yield String.format("'%s' 카드의 담당자로 '%s'님을 지정했습니다.",
+                        cardTitle, event.getAssigneeNickname());
             }
 
             case CHECKLIST -> {
                 boolean isCompleted = Boolean.TRUE.equals(event.getIsChecked());
-                yield String.format("체크리스트 '%s'을(를) %s했습니다.",
-                        truncate(event.getContent(), 15), isCompleted ? "완료" : "완료 해제");
+                yield String.format("'%s' 카드의 체크리스트 '%s'을(를) %s했습니다.",
+                        cardTitle, truncate(event.getContent(), 15), isCompleted ? "완료" : "완료 해제");
             }
 
             case LABEL -> {
                 boolean isAdded = Boolean.TRUE.equals(event.getIsLabelAdded());
-                yield String.format("라벨 '%s'을(를) %s했습니다.",
-                        event.getLabelName(), isAdded ? "추가" : "삭제");
+                yield String.format("'%s' 카드에 라벨 '%s'을(를) %s했습니다.",
+                        cardTitle, event.getLabelName(), isAdded ? "추가" : "삭제");
             }
 
-            case COMMENT -> "카드에 댓글을 남겼습니다." + truncate(event.getContent(), 20);
+            case COMMENT -> String.format("'%s' 카드에 댓글을 남겼습니다. : \"%s\"",
+                    cardTitle, truncate(event.getContent(), 20));
 
-            case REPLY -> "댓글에 답글을 작성했습니다." + truncate(event.getContent(), 20);
+            case REPLY -> String.format("'%s' 카드의 댓글에 답글을 남겼습니다. : \"%s\"",
+                    cardTitle, truncate(event.getContent(), 20));
 
-            case ATTACHMENT -> String.format("파일 '%s'을(를) 첨부했습니다.", event.getContent());
+            case ATTACHMENT -> String.format("'%s' 카드에 파일 '%s'을(를) 첨부했습니다.",
+                    cardTitle, event.getContent());
 
-            case CREATED -> "새로운 카드를 생성했습니다.";
+            case CREATED -> String.format("새로운 카드 '%s'을(를) 생성했습니다.", cardTitle);
 
-            case DELETED -> "카드를 삭제했습니다.";
+            case DELETED -> String.format("'%s' 카드를 삭제했습니다.", cardTitle);
 
             default -> "";
         };

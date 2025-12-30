@@ -49,9 +49,7 @@ public class RegistrationServiceImpl implements RegistrationService {
 
     private UserVo createNewUser(AuthRequest.Signup req, String encodedPassword) {
         // 닉네임 중복 확인
-        if (userMapper.existsByNickname(req.getNickname())) {
-            throw new BusinessException(ErrorCode.USER_NICKNAME_DUPLICATE);
-        }
+        validateNicknameForSignup(req.getNickname(), null);
 
         UserVo newUser = UserVo.builder()
                 .email(req.getEmail())
@@ -68,9 +66,8 @@ public class RegistrationServiceImpl implements RegistrationService {
     private UserVo updatePendingUser(UserVo user, AuthRequest.Signup req, String encodedPassword) {
         // 닉네임이 변경되었으면 중복 확인
         if (!user.getNickname().equals(req.getNickname())) {
-            if (userMapper.existsByNickname(req.getNickname())) {
-                throw new BusinessException(ErrorCode.USER_NICKNAME_DUPLICATE);
-            }
+            // 중복된 닉네임이어도 사용자가 '나'이면 예외
+            validateNicknameForSignup(req.getNickname(), user.getEmail());
             user.setNickname(req.getNickname());
         }
 
@@ -81,5 +78,20 @@ public class RegistrationServiceImpl implements RegistrationService {
         userMapper.updateUser(user);
 
         return user;
+    }
+
+    // 닉네임 정밀 검사
+    private void validateNicknameForSignup(String nickname, String myEmail) {
+        userMapper.findByNickname(nickname).ifPresent(user -> {
+            // 이미 인증된 사용자가 쓰고 있는 경우 -> 중복
+            if (user.getVerifyStatus() == VerifyStatus.VERIFIED) {
+                throw new BusinessException(ErrorCode.USER_NICKNAME_DUPLICATE);
+            }
+            // 미인증 사용자가 쓰고 있는데 나의 계정이 아닌 경우 -> 중복(선점됨)
+            if (!user.getEmail().equals(myEmail)) {
+                throw new BusinessException(ErrorCode.USER_NICKNAME_DUPLICATE);
+            }
+            // 통과
+        });
     }
 }
