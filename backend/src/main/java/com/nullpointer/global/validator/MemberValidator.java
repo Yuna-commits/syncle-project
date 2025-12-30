@@ -163,6 +163,11 @@ public class MemberValidator {
             return boardMember.getRole(); // DB에 저장된 role 반환
         }
 
+        // PRIVATE 보드 차단
+        if (board.getVisibility() == Visibility.PRIVATE) {
+            return null;
+        }
+
         // 3. 같은 팀 멤버 확인
         TeamMemberVo teamMember = teamMemberMapper.findMember(board.getTeamId(), userId);
         if (teamMember != null) {
