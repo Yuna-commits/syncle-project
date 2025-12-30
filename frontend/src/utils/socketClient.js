@@ -16,8 +16,11 @@ export const socketClient = {
       client.deactivate() // 다르면 재연결
     }
 
+    const baseURL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:8080'
+    const socketURL = baseURL.replace(/^http/, 'ws') + '/ws'
+
     client = new Client({
-      brokerURL: 'ws://localhost:8080/ws', // 백엔드 WebSocket 주소
+      brokerURL: socketURL, // 백엔드 WebSocket 주소
       reconnectDelay: 5000, // 연결 끊기면 5초 뒤 재연결 시도
       connectHeaders: config?.headers || {},
       onConnect: config.onConnect,

@@ -10,6 +10,7 @@ export default defineConfig(({ mode }) => {
   return {
     plugins: [react(), tailwindcss()],
     server: {
+      host: '0.0.0.0', // 외부 네트워크에서 IP로 접속 허용
       proxy: {
         // '/api'로 시작하는 요청이 오면 target으로 보냄
         '/api': {

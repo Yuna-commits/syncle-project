@@ -5,6 +5,7 @@ import { useUserMutations } from '../../hooks/auth/useUserMutations'
 import { useAuthMutations } from '../../hooks/auth/useAuthMutations'
 import { GoogleLogin } from '@react-oauth/google'
 import {
+  AlertTriangle,
   Ban,
   CheckCircle2,
   Globe,
@@ -20,13 +21,8 @@ export default function SecurityPage() {
   const { data: user, isLoading } = useAuthQuery()
 
   // 기능
-  const {
-    logout,
-    changePassword,
-    deactivateUser,
-    deleteUser,
-    linkGoogleMutation,
-  } = useUserMutations()
+  const { changePassword, deactivateUser, deleteUser, linkGoogleMutation } =
+    useUserMutations()
   const { sendEmailVerification } = useAuthMutations()
 
   const [isPwModalOpen, setPwModalOpen] = useState(false)
@@ -215,28 +211,7 @@ export default function SecurityPage() {
 
         {/* 5. 위험 구역 */}
         <div className="rounded-2xl border border-red-200 bg-red-50 p-6 shadow-sm">
-          {/* <h3 className="mb-4 flex items-center gap-2 text-lg font-bold text-red-700">
-            <AlertTriangle size={20} />
-            위험 구역
-          </h3> */}
           <div className="space-y-4">
-            {/* 로그아웃 버튼 */}
-            <div className="flex items-center justify-between rounded-xl border border-red-200 bg-white p-4">
-              <div>
-                <p className="font-medium text-gray-800">로그아웃</p>
-                <p className="text-xs text-gray-500">
-                  현재 계정에서 로그아웃합니다.
-                </p>
-              </div>
-              <button
-                onClick={() => logout()}
-                className="flex items-center gap-1.5 rounded-lg border border-red-200 px-3 py-1.5 text-sm font-medium text-red-600 transition-colors hover:cursor-pointer hover:bg-red-100"
-              >
-                <LogOut size={16} />
-                로그아웃
-              </button>
-            </div>
-
             <div className="flex items-center justify-between rounded-xl border border-red-200 bg-white p-4">
               <div>
                 <p className="font-medium text-gray-800">계정 비활성화</p>
