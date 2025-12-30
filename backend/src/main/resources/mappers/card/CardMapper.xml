@@ -55,6 +55,7 @@
                 WHERE cm.card_id = c.id
                   AND cm.deleted_at IS NULL) AS commentCount,
                CASE
+                   WHEN c.id IS NULL THEN NULL
                    WHEN c.assignee_id IS NULL THEN false
                    WHEN b.visibility = 'PRIVATE' THEN (bm.user_id IS NULL OR bm.deleted_at IS NOT NULL)
                    ELSE (tm.user_id IS NULL OR tm.deleted_at IS NOT NULL)
@@ -162,6 +163,7 @@
                 WHERE cm.card_id = c.id
                   AND cm.deleted_at IS NULL) AS commentCount,
                CASE
+                   WHEN c.id IS NULL THEN NULL
                    WHEN c.assignee_id IS NULL THEN false
                    WHEN b.visibility = 'PRIVATE' THEN (bm.user_id IS NULL OR bm.deleted_at IS NOT NULL)
                    ELSE (tm.user_id IS NULL OR tm.deleted_at IS NOT NULL)

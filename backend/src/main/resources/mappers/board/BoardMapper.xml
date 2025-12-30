@@ -206,6 +206,7 @@
                u.nickname     AS assignee_name,
                u.profile_img  AS assignee_img,
                (CASE
+                    WHEN c.id IS NULL THEN NULL
                     WHEN c.assignee_id IS NULL THEN false
                     WHEN b.visibility = 'PRIVATE' THEN (bm_chk.user_id IS NULL OR bm_chk.deleted_at IS NOT NULL)
                     ELSE (tm_chk.user_id IS NULL OR tm_chk.deleted_at IS NOT NULL)
