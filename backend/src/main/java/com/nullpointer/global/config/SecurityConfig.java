@@ -28,6 +28,7 @@ public class SecurityConfig {
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http, JwtAuthenticationFilter jwtAuthenticationFilter) throws Exception {
         http
+                .cors(cors -> cors.configurationSource(corsConfigurationSource()))
                 .csrf(AbstractHttpConfigurer::disable) // CSRF 비활성화
                 // 세션 방식 사용 x
                 .sessionManagement(sess -> sess
@@ -60,14 +61,8 @@ public class SecurityConfig {
     public CorsConfigurationSource corsConfigurationSource() {
         CorsConfiguration config = new CorsConfiguration();
 
-        // 허용할 프론트엔드 도메인 (개발 + 배포)
-        config.setAllowedOrigins(List.of(
-                "http://localhost:3000", // React 기본 포트
-                "http://localhost:5173" // Vite 기본 포트
-                /**
-                 * TODO) 배포 주소 추가
-                 */
-        ));
+        // 모든 패턴 허용
+        config.addAllowedOriginPattern("*");
 
         // 허용할 HTTP 메서드
         config.setAllowedMethods(List.of("GET", "POST", "PUT", "DELETE", "PATCH", "OPTIONS"));
