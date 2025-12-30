@@ -101,10 +101,12 @@ function BoardSettings({ board }) {
 
   // 하위 뷰 렌더링
   const renderContent = () => {
+    const resetKey = JSON.stringify(board)
     switch (settingsView) {
       case 'MENU':
         return (
           <MainMenuView
+            key={resetKey}
             board={board}
             onChangeView={setSettingsView}
             onDeleteBoard={handleDeleteBoard}
@@ -113,22 +115,25 @@ function BoardSettings({ board }) {
           />
         )
       case 'INFO':
-        return <BoardInfoView board={board} isOwner={isOwner} />
+        return <BoardInfoView key={resetKey} board={board} isOwner={isOwner} />
       case 'VISIBILITY':
-        return <VisibilityView board={board} isOwner={isOwner} />
+        return <VisibilityView key={resetKey} board={board} isOwner={isOwner} />
       case 'PERMISSIONS':
-        return <PermissionsView board={board} isOwner={isOwner} />
+        return (
+          <PermissionsView key={resetKey} board={board} isOwner={isOwner} />
+        )
       case 'MEMBERS':
-        return <MembersView board={board} isOwner={isOwner} />
+        return <MembersView key={resetKey} board={board} isOwner={isOwner} />
       case 'FILES':
-        return <FilesView board={board} />
+        return <FilesView key={resetKey} board={board} />
       case 'ACTIVITY':
-        return <ActivityLogView boardId={board.id} />
+        return <ActivityLogView key={resetKey} boardId={board.id} />
       case 'ARCHIVE':
-        return <ArchiveView board={board} />
+        return <ArchiveView key={resetKey} board={board} />
       default:
         return (
           <MainMenuView
+            key={resetKey}
             board={board}
             onChangeView={setSettingsView}
             onDeleteBoard={handleDeleteBoard}

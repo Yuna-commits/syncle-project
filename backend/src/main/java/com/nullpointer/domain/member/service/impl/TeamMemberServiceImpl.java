@@ -121,6 +121,9 @@ public class TeamMemberServiceImpl implements TeamMemberService {
         }
 
         publishRolChangeEvent(owner, targetUser, team, req.getRole());
+
+        // 소켓 전송
+        socketSender.sendTeamSocketMessage(teamId, "TEAM_MEMBER_UPDATE", ownerId, null);
     }
 
     @Override

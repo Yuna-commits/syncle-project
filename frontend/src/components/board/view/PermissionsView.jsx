@@ -1,23 +1,28 @@
 import React, { useEffect, useState } from 'react'
 import { useBoardSettings } from '../../../hooks/board/useBoardSettings'
+import { useQueryClient } from '@tanstack/react-query'
 
 function PermissionsView({ board, isOwner }) {
-  const { settings, updateSettings, isLoading } = useBoardSettings(board.id)
-
-  // 로컬 상태 관리 (사용자 입력 중에는 즉시 반영되어야 하므로)
-  const [perms, setPerms] = useState({
-    invitation: 'OWNER',
-    boardSharing: 'OWNER',
-    listEdit: 'OWNER',
-    cardDelete: 'OWNER',
-  })
+  const queryClient = useQueryClient()
+  const { updateSettings, isLoading } = useBoardSettings(board.id)
 
   // 서버에서 불러온 설정값이 있으면 로컬 상태 동기화
+  const [perms, setPerms] = useState({
+    invitation: board.invitationPermission || 'OWNER',
+    boardSharing: board.boardSharingPermission || 'OWNER',
+    listEdit: board.listEditPermission || 'OWNER',
+    cardDelete: board.cardDeletePermission || 'OWNER',
+  })
+
   useEffect(() => {
-    if (settings) {
-      setPerms(settings)
-    }
-  }, [settings])
+    setPerms((prev) => ({
+      ...prev,
+      invitation: board.invitationPermission ?? prev.invitation,
+      boardSharing: board.boardSharingPermission ?? prev.boardSharing,
+      listEdit: board.listEditPermission ?? prev.listEdit,
+      cardDelete: board.cardDeletePermission ?? prev.cardDelete,
+    }))
+  }, [board])
 
   const handleChange = (key, value) => {
     setPerms((prev) => ({ ...prev, [key]: value }))
@@ -25,9 +30,13 @@ function PermissionsView({ board, isOwner }) {
 
   const handleSubmit = (e) => {
     e.preventDefault()
-    // Hook의 mutate 함수 호출 (낙관적 업데이트 자동 적용)
-    updateSettings(perms)
-    alert('권한 설정이 저장되었습니다.') // 필요 시 Toast로 변경 권장
+
+    updateSettings(perms, {
+      onSuccess: () => {
+        queryClient.invalidateQueries(['board', board.id])
+        alert('권한 설정이 저장되었습니다.')
+      },
+    })
   }
 
   if (isLoading)
@@ -43,7 +52,7 @@ function PermissionsView({ board, isOwner }) {
         {/* 1. 멤버 초대 권한 */}
         <div>
           <label className="mb-1 block text-xs font-bold text-gray-500 uppercase">
-            멤버 초대
+            보드 멤버 초대
           </label>
           <select
             className="w-full rounded-md border border-gray-300 px-3 py-2 text-sm focus:border-blue-500 focus:outline-none disabled:bg-gray-100 disabled:text-gray-500"

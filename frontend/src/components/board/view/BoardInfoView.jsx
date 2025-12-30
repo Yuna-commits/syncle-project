@@ -7,6 +7,7 @@ function BoardInfoView({ board, isOwner }) {
   const [formData, setFormData] = useState({
     title: board.title,
     description: board.description || '',
+    visibility: board.visibility,
   })
 
   // 보드 소유자 찾기
