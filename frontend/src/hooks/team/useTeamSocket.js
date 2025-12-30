@@ -8,18 +8,26 @@ export const useTeamSocket = (teamId) => {
   const subscriptionRef = useRef(null)
 
   useEffect(() => {
-    if (!teamId || !socketClient.isConnected()) return
+    if (!teamId) return
 
     const topic = `/topic/team/${teamId}`
-    console.log(`🔌 [TeamSocket] 구독 시도: ${topic}`)
+    let retryTimer = null
 
     const subscribe = () => {
       if (subscriptionRef.current) return
+
+      if (!socketClient.isConnected()) {
+        retryTimer = setTimeout(subscribe, 500) // 0.5초 뒤 재시도
+        return
+      }
+      console.log(`🔌 [TeamSocket] 구독 시작: ${topic}`)
 
       subscriptionRef.current = socketClient.subscribe(topic, (message) => {
         const response = JSON.parse(message.body)
 
         if (
+          response.type === 'TEAM_UPDATED' ||
+          response.type === 'TEAM_DELETED' ||
           response.type === 'TEAM_MEMBER_ACCEPT' ||
           response.type === 'TEAM_MEMBER_UPDATE' ||
           response.type === 'TEAM_MEMBER_LEAVE'
@@ -54,6 +62,7 @@ export const useTeamSocket = (teamId) => {
     subscribe()
 
     return () => {
+      if (retryTimer) clearTimeout(retryTimer)
       if (subscriptionRef.current) {
         subscriptionRef.current.unsubscribe()
         subscriptionRef.current = null
