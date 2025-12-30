@@ -100,6 +100,7 @@ function TeamBoardPage() {
                   imageUrl={board.imageUrl || 'https://picsum.photos/400/200'}
                   title={board.title}
                   isFavorite={board.isFavorite}
+                  visibility={board.visibility}
                   onToggleFavorite={handleBoardUpdate}
                 />
               ))}

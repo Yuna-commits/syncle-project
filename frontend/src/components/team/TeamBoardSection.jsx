@@ -30,6 +30,7 @@ function TeamBoardSection({ team, onBoardCreated }) {
             title={board.title}
             isFavorite={board.isFavorite}
             isGuest={board.isGuest}
+            visibility={board.visibility}
             onToggleFavorite={onBoardCreated}
           />
         ))}

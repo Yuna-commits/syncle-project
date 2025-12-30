@@ -1,5 +1,5 @@
 import { useNavigate } from 'react-router-dom'
-import { Star, Share2 } from 'lucide-react'
+import { Star, Share2, Globe, Lock } from 'lucide-react'
 import { useBoardMutations } from '../../hooks/board/useBoardMutations'
 
 function BoardCard({
@@ -8,6 +8,7 @@ function BoardCard({
   title,
   isFavorite,
   isGuest,
+  visibility,
   onToggleFavorite,
 }) {
   const navigate = useNavigate()
@@ -33,7 +34,7 @@ function BoardCard({
       onClick={handleClick}
     >
       {/* 이미지 */}
-      <div className="relative h-32 w-full">
+      <div className="relative h-30 w-full">
         <img src={imageUrl} alt={title} />
         {/* Guest 뱃지 */}
         {isGuest && (
@@ -59,7 +60,31 @@ function BoardCard({
           />
         </button>
       </div>
-      <p className="p-3 text-sm font-medium text-gray-800">{title}</p>
+      {/* 하단 정보 영역 수정 */}
+      <div className="p-3">
+        <div className="flex items-center justify-between gap-2">
+          <h3
+            className="truncate text-sm font-medium text-gray-800"
+            title={title}
+          >
+            {title}
+          </h3>
+
+          {/* ★ 공개 범위 뱃지 렌더링 */}
+          {visibility === 'PRIVATE' && (
+            <span className="flex shrink-0 items-center gap-0.5 rounded border border-gray-200 bg-gray-100 px-1.5 py-0.5 text-[10px] font-bold text-gray-600">
+              <Lock size={10} />
+              <span>PRIVATE</span>
+            </span>
+          )}
+          {visibility === 'PUBLIC' && (
+            <span className="flex shrink-0 items-center gap-0.5 rounded border border-blue-100 bg-blue-50 px-1.5 py-0.5 text-[10px] font-bold text-blue-600">
+              <Globe size={10} />
+              <span>PUBLIC</span>
+            </span>
+          )}
+        </div>
+      </div>
     </div>
   )
 }

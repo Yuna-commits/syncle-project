@@ -22,6 +22,7 @@ function DashboardPage() {
       imageUrl: board.imageUrl,
       isFavorite: board.isFavorite,
       isGuest: board.isGuest,
+      visibility: board.visibility,
     }))
 
   // 팀별 그룹화
@@ -51,6 +52,7 @@ function DashboardPage() {
         imageUrl: cur.imageUrl,
         isFavorite: cur.isFavorite,
         isGuest: cur.isGuest,
+        visibility: cur.visibility,
       })
     }
     return acc
@@ -102,6 +104,7 @@ function DashboardPage() {
                       title={board.title}
                       isFavorite={board.isFavorite}
                       isGuest={board.isGuest}
+                      visibility={board.visibility}
                       onToggleFavorite={handleBoardUpdate}
                     />
                   </motion.div>
