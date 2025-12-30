@@ -43,7 +43,11 @@ const BoardFilter = ({ board, onClose }) => {
   }, [activeBoard])
 
   // 2. 멤버 리스트 (Assignee 필터용)
-  const members = activeBoard?.members || []
+  const members =
+    activeBoard.visibility === 'PUBLIC'
+      ? activeBoard.teamMembers
+      : activeBoard.members
+
   const filteredMembers = members.filter((m) =>
     m.name.toLowerCase().includes(memberSearch.toLowerCase()),
   )

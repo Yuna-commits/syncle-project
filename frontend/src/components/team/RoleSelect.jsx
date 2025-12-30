@@ -3,7 +3,7 @@ import { useMemberMutations } from '../../hooks/useMemberMutations'
 
 function RoleSelect({ member, isOwner, isMe, teamId }) {
   // 멤버 역할 변경, 추방/탈퇴
-  const { changeMemberRole } = useMemberMutations(teamId, 'TEAM')
+  const { changeMemberRole } = useMemberMutations(teamId, 'PUBLIC')
 
   // 멤버 권한 변경 핸들러
   const handleRoleChange = (e) => {

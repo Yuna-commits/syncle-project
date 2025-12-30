@@ -37,15 +37,12 @@ function useBoardPermission(board) {
     if (boardMember) {
       effectiveRole = boardMember.role // OWNER, MEMBER, VIEWER
       isExplicitMember = true
-    } else if (board.visibility === 'TEAM') {
-      // 3. 팀 공개 보드이면 팀 멤버십 확인 (팀원은 기본 MEMBER, 팀 뷰어는 VIEWER)
+    } else if (board.visibility === 'PUBLIC') {
+      // 3. 전체 공개 보드이면 팀 멤버십 확인 (팀원은 기본 MEMBER, 팀 뷰어는 VIEWER)
       const teamMember = board.teamMembers?.find((m) => m.id === user.id)
       if (teamMember) {
         effectiveRole = teamMember.role !== 'VIEWER' ? 'MEMBER' : 'VIEWER'
       }
-    } else if (board.visibility === 'PUBLIC') {
-      // 4. 전체 공개 보드 (누구나 조회 가능)
-      effectiveRole = 'VIEWER'
     }
 
     // --- 권한 체크 헬퍼 함수 ---

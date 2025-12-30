@@ -129,7 +129,7 @@
         )
 
         AND (
-        b.visibility = 'TEAM'
+        b.visibility = 'PUBLIC'
         OR
         EXISTS (
         SELECT 1

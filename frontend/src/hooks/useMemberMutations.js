@@ -8,7 +8,7 @@ export const useMemberMutations = (entityId, type = 'BOARD') => {
   const queryClient = useQueryClient()
   const navigate = useNavigate()
   const queryKey =
-    type === 'TEAM' ? ['team', Number(entityId)] : ['board', Number(entityId)]
+    type === 'PUBLIC' ? ['team', Number(entityId)] : ['board', Number(entityId)]
 
   const { data: user } = useAuthQuery()
 
@@ -24,7 +24,7 @@ export const useMemberMutations = (entityId, type = 'BOARD') => {
   // 멤버 권한 변경
   const changeMemberRoleMutation = useMutation({
     mutationFn: ({ userId, newRole }) => {
-      if (type === 'TEAM') {
+      if (type === 'PUBLIC') {
         return teamApi.changeMemberRole(entityId, userId, newRole)
       } else {
         return boardApi.changeMemberRole(entityId, userId, newRole)
@@ -64,7 +64,7 @@ export const useMemberMutations = (entityId, type = 'BOARD') => {
       queryClient.invalidateQueries({ queryKey })
 
       // 사이드바의 팀 목록 데이터 갱신
-      if (type === 'TEAM') {
+      if (type === 'PUBLIC') {
         queryClient.invalidateQueries({ queryKey: ['teams'] })
       }
     },
@@ -73,7 +73,7 @@ export const useMemberMutations = (entityId, type = 'BOARD') => {
   // 멤버 내보내기 (추방/탈퇴)
   const removeMemberMutation = useMutation({
     mutationFn: (userId) => {
-      if (type === 'TEAM') {
+      if (type === 'PUBLIC') {
         return teamApi.removeMember(entityId, userId)
       } else {
         return boardApi.removeMember(entityId, userId)
@@ -103,10 +103,10 @@ export const useMemberMutations = (entityId, type = 'BOARD') => {
       // 삭제된 멤버 ID가 현재 로그인한 유저 ID와 같다면 (본인 탈퇴)
       if (Number(targetUserId) === Number(user?.id)) {
         alert(
-          type === 'TEAM' ? '팀에서 탈퇴했습니다.' : '보드에서 탈퇴했습니다.',
+          type === 'PUBLIC' ? '팀에서 탈퇴했습니다.' : '보드에서 탈퇴했습니다.',
         )
         navigate('/dashboard')
-        if (type === 'TEAM') {
+        if (type === 'PUBLIC') {
           // 사이드바의 팀 목록 데이터 갱신
           queryClient.invalidateQueries({ queryKey: ['teams'] })
         }
@@ -117,7 +117,7 @@ export const useMemberMutations = (entityId, type = 'BOARD') => {
 
     onError: (err, vars, context) => {
       queryClient.setQueryData(queryKey, context.previousData)
-      const actionName = type === 'TEAM' ? '팀 탈퇴/추방' : '보드 탈퇴/추방'
+      const actionName = type === 'PUBLIC' ? '팀 탈퇴/추방' : '보드 탈퇴/추방'
       alert(`${actionName}에 실패했습니다.`)
     },
 

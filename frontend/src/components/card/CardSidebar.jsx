@@ -208,7 +208,7 @@ function CardSidebar({
 
   // 멤버 관련
   const assignableMembers =
-    activeBoard.visibility === 'TEAM'
+    activeBoard.visibility === 'PUBLIC'
       ? activeBoard.teamMembers
       : activeBoard.members
 

@@ -6,7 +6,7 @@ import RoleSelect from './RoleSelect'
 
 function MemberRow({ member, currentUser, isOwner, teamId, teamName }) {
   const isMe = member.userId === currentUser?.id
-  const { removeMember } = useMemberMutations(teamId, 'TEAM')
+  const { removeMember } = useMemberMutations(teamId, 'PUBLIC')
 
   // 멤버 내보내기 핸들러
   const handleRemoveMember = () => {
