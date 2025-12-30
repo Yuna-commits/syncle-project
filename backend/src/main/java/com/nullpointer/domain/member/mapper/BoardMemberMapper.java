@@ -2,6 +2,7 @@ package com.nullpointer.domain.member.mapper;
 
 import com.nullpointer.domain.member.dto.board.BoardMemberResponse;
 import com.nullpointer.domain.member.vo.BoardMemberVo;
+import com.nullpointer.domain.member.vo.enums.Role;
 import org.apache.ibatis.annotations.Param;
 
 import java.util.List;
@@ -61,6 +62,9 @@ public interface BoardMemberMapper {
 
     // 탈퇴 멤버 일괄 복구
     void restoreMembersBulk(@Param("boardId") Long boardId, @Param("userIds") List<Long> userIds);
+
+    // 탈퇴 멤버 1명 복구
+    int restoreMember(@Param("boardId") Long boardId, @Param("userId") Long userId, @Param("role") Role role);
 
     // 보드 권한 체크
     boolean hasAccessToBoard(Long boardId, Long userId);

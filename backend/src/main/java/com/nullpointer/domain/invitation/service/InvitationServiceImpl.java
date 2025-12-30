@@ -27,7 +27,6 @@ import com.nullpointer.global.validator.MemberValidator;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.ApplicationEventPublisher;
-import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -299,12 +298,22 @@ public class InvitationServiceImpl implements InvitationService {
 
         Long boardId = Long.parseLong(data.toString());
 
-        // 이미 멤버인지 확인
+        // 1. 복구 시도 (탈퇴했던 유저라면 VIEWER로 복구)
+        int updated = boardMemberMapper.restoreMember(boardId, userId, Role.VIEWER);
+
+        if (updated > 0) {
+            // 복구 성공 시 소켓 알림만 보내고 종료
+            BoardMemberVo restoredMember = boardMemberMapper.findMember(boardId, userId);
+            socketSender.sendSocketMessage(boardId, "MEMBER_JOIN", userId, restoredMember);
+            return boardId;
+        }
+
+        // 2. 복구할 대상이 없으면 -> 이미 멤버인지 확인
         if (boardMemberMapper.existsByBoardIdAndUserId(boardId, userId)) {
             throw new BusinessException(ErrorCode.MEMBER_ALREADY_EXISTS);
         }
 
-        // VIEWER 권한으로 보드 멤버 등록
+        // 3. VIEWER 권한으로 신규 멤버 등록
         BoardMemberVo member = BoardMemberVo.builder()
                 .boardId(boardId)
                 .userId(userId)
