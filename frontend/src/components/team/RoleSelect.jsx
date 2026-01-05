@@ -1,5 +1,6 @@
 import React from 'react'
 import { useMemberMutations } from '../../hooks/useMemberMutations'
+import { getRoleLabel } from '../../utils/roleUtils'
 
 function RoleSelect({ member, isOwner, isMe, teamId }) {
   // 멤버 역할 변경, 추방/탈퇴
@@ -42,7 +43,7 @@ function RoleSelect({ member, isOwner, isMe, teamId }) {
       <span
         className={`inline-flex items-center rounded border px-2.5 py-1 text-xs font-medium ${badgeStyle}`}
       >
-        {member.role}
+        {getRoleLabel(member.role)}
       </span>
     )
   }
@@ -55,10 +56,10 @@ function RoleSelect({ member, isOwner, isMe, teamId }) {
         onChange={handleRoleChange}
         className="block w-auto cursor-pointer rounded border border-gray-200 bg-white py-1 pl-2 text-xs font-medium text-gray-700 hover:border-blue-400 focus:border-blue-500 focus:ring-1 focus:ring-blue-500 focus:outline-none"
       >
-        <option value="MEMBER">MEMBER</option>
-        <option value="VIEWER">VIEWER</option>
+        <option value="MEMBER">팀원</option>
+        <option value="VIEWER">뷰어</option>
         <option value="OWNER" className="font-bold text-red-600">
-          OWNER 위임
+          관리자 위임
         </option>
       </select>
     </div>

@@ -16,6 +16,7 @@ import BoardFilter from '../sidebar/BoardFilter'
 import { useBoardDisplayMembers } from '../../utils/useBoardDisplayMembers'
 import useBoardPermission from '../../hooks/board/useBoardPermission'
 import logo from '../../assets/images/logo_v5.png'
+import { getVisibilityLabel } from '../../utils/visibilityUtils'
 
 function BoardHeader({ board }) {
   // UI 상태 제어 함수 (Store)
@@ -101,7 +102,7 @@ function BoardHeader({ board }) {
           {/* 공개 범위 */}
           <div className="flex items-center gap-1.5 rounded-full border border-gray-200 bg-gray-100 px-2.5 py-0.5 text-xs font-medium text-gray-600">
             {isPrivate ? <Lock size={12} /> : <Globe size={12} />}
-            <span>{board.visibility}</span>
+            <span>{getVisibilityLabel(board.visibility)}</span>
           </div>
         </div>
 

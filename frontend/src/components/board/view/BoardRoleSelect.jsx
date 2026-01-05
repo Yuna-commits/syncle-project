@@ -1,5 +1,6 @@
 import { ChevronDown } from 'lucide-react'
 import React from 'react'
+import { getRoleLabel } from '../../../utils/roleUtils'
 
 function BoardRoleSelect({ member, isOwner, isMe, isPrivate, onChange }) {
   // 읽기 전용 상태 (TEAM 보드이거나 내가 OWNER가 아니거나, 내 자신의 권한인 경우)
@@ -16,7 +17,7 @@ function BoardRoleSelect({ member, isOwner, isMe, isPrivate, onChange }) {
       <span
         className={`inline-flex items-center rounded border px-2.5 py-1 text-xs font-medium ${badgeStyle}`}
       >
-        {member.role}
+        {getRoleLabel(member.role)}
       </span>
     )
   }
@@ -29,10 +30,10 @@ function BoardRoleSelect({ member, isOwner, isMe, isPrivate, onChange }) {
         onChange={(e) => onChange(member, e.target.value)}
         className="block w-auto cursor-pointer rounded border border-gray-200 bg-white py-1 pl-2 text-xs font-medium text-gray-700 hover:border-blue-400 focus:border-blue-500 focus:ring-1 focus:ring-blue-500 focus:outline-none"
       >
-        <option value="MEMBER">MEMBER</option>
-        <option value="VIEWER">VIEWER</option>
+        <option value="MEMBER">팀원</option>
+        <option value="VIEWER">뷰어</option>
         <option value="OWNER" className="font-bold text-red-600">
-          OWNER 위임
+          괸라자 위임
         </option>
       </select>
       {/* 커스텀 화살표 */}

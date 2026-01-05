@@ -43,11 +43,10 @@ public class CardOrderManager {
 
     // 다른 리스트로 이동
     private void moveToDifferentList(Long oldListId, Long newListId, Integer oldOrder, Integer newOrder) {
-        // 1) 기존 리스트 정리: 빠진 카드 뒤의 카드들을 당김(-1)
-        // Integer.MAX_VALUE를 사용하여 끝까지 업데이트
+        // 기존 리스트 정리: 빠진 카드 뒤의 카드들을 당김(-1)
         cardMapper.updateOrderIndex(oldListId, oldOrder + 1, Integer.MAX_VALUE, -1);
 
-        // 2) 새 리스트 공간 확보: 들어갈 자리 뒤의 카드들을 밈(+1)
+        // 새 리스트 공간 확보: 들어갈 자리 뒤의 카드들을 밈(+1)
         cardMapper.updateOrderIndex(newListId, newOrder, Integer.MAX_VALUE, 1);
     }
 

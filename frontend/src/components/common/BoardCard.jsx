@@ -74,13 +74,13 @@ function BoardCard({
           {visibility === 'PRIVATE' && (
             <span className="flex shrink-0 items-center gap-0.5 rounded border border-gray-200 bg-gray-100 px-1.5 py-0.5 text-[10px] font-bold text-gray-600">
               <Lock size={10} />
-              <span>PRIVATE</span>
+              <span>비공개</span>
             </span>
           )}
           {visibility === 'PUBLIC' && (
             <span className="flex shrink-0 items-center gap-0.5 rounded border border-blue-100 bg-blue-50 px-1.5 py-0.5 text-[10px] font-bold text-blue-600">
               <Globe size={10} />
-              <span>PUBLIC</span>
+              <span>전체 공개</span>
             </span>
           )}
         </div>

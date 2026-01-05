@@ -4,7 +4,7 @@ import useBoardStore from '../../stores/useBoardStore'
 
 const DONE_LIST_ID = 'virtual-done-list'
 
-// -- 카드 이동 시 낙관적 업데이트 로직 (간소화됨) --
+// -- 카드 이동 시 낙관적 업데이트 로직 --
 const moveCardOptimisticUpdate = (
   oldBoard,
   { cardId, fromListId, toListId, newIndex },
@@ -13,7 +13,7 @@ const moveCardOptimisticUpdate = (
   const newColumns = { ...oldBoard.columns }
   const sourceList = { ...newColumns[fromListId] }
 
-  // 1. 목적지가 완료 리스트인 경우 생성 (방어 코드)
+  // 1. 목적지가 완료 리스트인 경우 생성
   if (toListId === DONE_LIST_ID && !newColumns[DONE_LIST_ID]) {
     newColumns[DONE_LIST_ID] = {
       id: DONE_LIST_ID,
@@ -64,7 +64,7 @@ const moveCardOptimisticUpdate = (
       (a, b) => a.order - b.order,
     )
 
-    // 2) 삽입될 위치(newIndex)의 앞(prev), 뒤(next) 카드를 찾음
+    // 2) 이동되는 위치(newIndex)의 앞(prev), 뒤(next) 카드를 찾음
     const prevCard = sortedDestTasks[newIndex - 1]
     const nextCard = sortedDestTasks[newIndex]
 
@@ -80,7 +80,7 @@ const moveCardOptimisticUpdate = (
       newOrder = (prevCard.order + nextCard.order) / 2 // 중간
     }
 
-    // 4) 계산된 order 적용 후 삽입
+    // 4) 계산된 order 적용
     updatedCard.order = newOrder
     destList.tasks.splice(newIndex, 0, updatedCard)
   }
