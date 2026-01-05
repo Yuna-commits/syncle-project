@@ -167,6 +167,7 @@ export const useCommentMutations = (boardId) => {
 
         return newBoard
       })
+      queryClient.invalidateQueries({ queryKey })
     },
     onError: (error) => console.error('댓글 생성 실패:', error),
   })
@@ -229,6 +230,7 @@ export const useCommentMutations = (boardId) => {
         newColumns[listId] = targetList
         return { ...oldBoard, columns: newColumns }
       }, vars),
+    onSuccess: () => queryClient.invalidateQueries({ queryKey }),
     onError: (err, vars, ctx) => handleError(ctx, '댓글 삭제 실패'),
   })
 

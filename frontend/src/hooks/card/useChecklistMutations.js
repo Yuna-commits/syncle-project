@@ -94,6 +94,7 @@ export const useChecklistMutations = (boardId) => {
 
         return newBoard
       })
+      queryClient.invalidateQueries({ queryKey })
     },
     onError: (error) => console.error('체크리스트 생성 실패:', error),
   })
@@ -149,6 +150,7 @@ export const useChecklistMutations = (boardId) => {
         newColumns[listId] = targetList
         return { ...oldBoard, columns: newColumns }
       }, vars),
+    onSuccess: () => queryClient.invalidateQueries({ queryKey }),
     onError: (err, vars, ctx) => handleError(ctx, '체크리스트 삭제 실패'),
   })
 
