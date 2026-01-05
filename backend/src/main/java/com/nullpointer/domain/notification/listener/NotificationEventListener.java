@@ -5,11 +5,13 @@ import com.nullpointer.domain.card.event.CardEvent;
 import com.nullpointer.domain.invitation.event.InvitationEvent;
 import com.nullpointer.domain.member.event.MemberEvent;
 import com.nullpointer.domain.member.mapper.BoardMemberMapper;
+import com.nullpointer.domain.member.mapper.TeamMemberMapper;
 import com.nullpointer.domain.notification.dto.NotificationDto;
 import com.nullpointer.domain.notification.mapper.NotificationSettingMapper;
 import com.nullpointer.domain.notification.vo.NotificationSettingVo;
 import com.nullpointer.domain.notification.vo.enums.NotificationType;
 import com.nullpointer.domain.team.event.TeamEvent;
+import com.nullpointer.domain.team.event.TeamNoticeEvent;
 import com.nullpointer.domain.user.mapper.UserMapper;
 import com.nullpointer.domain.user.vo.UserVo;
 import com.nullpointer.global.common.SocketSender;
@@ -37,6 +39,7 @@ public class NotificationEventListener {
     private final UserMapper userMapper;
     private final SocketSender socketSender;
     private final NotificationSettingMapper settingMapper;
+    private final TeamMemberMapper teamMemberMapper;
     private final EmailService emailService;
 
     @Value("${app.domain.frontend.url}")
@@ -338,6 +341,9 @@ public class NotificationEventListener {
         }
     }
 
+    /**
+     * 멤버 권한 변경 이벤트 알림
+     */
     @Async
     @EventListener
     public void handleMemberEvent(MemberEvent event) {
@@ -372,6 +378,59 @@ public class NotificationEventListener {
 
         // redis 저장, 소켓 전송
         saveAndSendNotification(noti);
+    }
+
+    /**
+     * 팀 공지사항 등록 이벤트 알림
+     */
+    @Async
+    @EventListener
+    public void handleTeamNoticeEvent(TeamNoticeEvent event) {
+        // CREATE가 아니면 알림 전송 중단
+        if (event.getType() != NotificationType.TEAM_NOTICE_CREATED) {
+            return;
+        }
+
+        // 1. 알림을 받을 팀 멤버 전체 ID 조회
+        List<Long> memberIds = teamMemberMapper.findAllMemberIdsByTeamId(event.getTeamId());
+
+        if (memberIds == null || memberIds.isEmpty()) return;
+
+        // 2. 알림 메시지 및 링크 생성
+        String message = String.format("'%s' 팀에 새 공지가 등록되었습니다: %s",
+                event.getTeamName(), event.getNoticeTitle());
+
+        // 클릭 시 이동할 URL (프론트엔드 라우트 경로)
+        String targetUrl = "/teams/" + event.getTeamId() + "/notices/" + event.getNoticeId();
+
+        // 3. 반복문을 돌며 한 명씩 전송
+        for (Long receiverId : memberIds) {
+
+            // (선택사항) 작성자 본인에게는 알림을 안 보내려면 이 줄 추가
+            if (receiverId.equals(event.getWriterId())) continue;
+
+            try {
+                // 4. 알림 객체 생성
+                NotificationDto noti = NotificationDto.builder()
+                        .id(System.currentTimeMillis())
+                        .receiverId(receiverId)
+                        .senderId(event.getWriterId())
+                        .senderNickname(event.getWriterNickname())
+                        .senderProfileImg(event.getWriterProfileImg())
+                        .type(event.getType()) // TEAM_NOTICE_CREATED
+                        .message(message)
+                        .targetUrl(targetUrl)
+                        .isRead(false)
+                        .createdAt(LocalDateTime.now())
+                        .build();
+
+                // 5. 저장 및 전송 (Redis, 소켓, 이메일 처리)
+                saveAndSendNotification(noti);
+            } catch (Exception e) {
+                log.error("알림 전송 실패 (memberId: {}): {}", receiverId, e.getMessage());
+                // 한 명 실패해도 나머지는 계속 보내야 하므로 loop 중단하지 않음
+            }
+        }
     }
 
     /**
@@ -486,7 +545,8 @@ public class NotificationEventListener {
             // 팀/보드 설정은 기본적으로 전송
             case TEAM_INVITE, INVITE_ACCEPTED, INVITE_REJECTED, TEAM_MEMBER_KICKED, TEAM_MEMBER_LEFT, TEAM_DELETED,
                  BOARD_INVITE, BOARD_MEMBER_KICKED, BOARD_MEMBER_LEFT, BOARD_DELETED, PERMISSION_CHANGED -> true;
-
+            // 팀 공지도 기본적으로 전송
+            case TEAM_NOTICE_CREATED -> true;
             default -> true;
         };
     }

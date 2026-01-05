@@ -9,6 +9,7 @@ import com.nullpointer.domain.invitation.event.InvitationEvent;
 import com.nullpointer.domain.member.event.MemberEvent;
 import com.nullpointer.domain.notification.vo.enums.NotificationType;
 import com.nullpointer.domain.team.event.TeamEvent;
+import com.nullpointer.domain.team.event.TeamNoticeEvent;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.context.event.EventListener;
@@ -261,6 +262,51 @@ public class ActivityEventListener {
 
         } catch (Exception e) {
             log.error("멤버 권한 변경 로그 저장 실패: error={}", e.getMessage());
+        }
+    }
+
+    /**
+     * 공지사항 이벤트 활동 기록
+     */
+    @EventListener
+    public void handleTeamNoticeEvent(TeamNoticeEvent event) {
+        try {
+            ActivityType type = null;
+            String description = "";
+            String title = event.getNoticeTitle();
+
+            // EventType에 따라 분기 처리
+            switch (event.getEventType()) {
+                case CREATE -> {
+                    type = ActivityType.CREATE_NOTICE;
+                    description = String.format("공지사항 '%s'을(를) 등록했습니다.", title);
+                }
+                case UPDATE -> {
+                    type = ActivityType.UPDATE_NOTICE;
+                    description = String.format("공지사항 '%s'을(를) 수정했습니다.", title);
+                }
+                case DELETE -> {
+                    type = ActivityType.DELETE_NOTICE;
+                    description = String.format("공지사항 '%s'을(를) 삭제했습니다.", title);
+                }
+            }
+
+            if (type == null) return;
+
+            ActivitySaveRequest req = ActivitySaveRequest.builder()
+                    .userId(event.getWriterId())
+                    .teamId(event.getTeamId())
+                    .boardId(null)
+                    .type(type)
+                    .targetId(event.getNoticeId())
+                    .targetName(title)
+                    .description(description)
+                    .build();
+
+            activityService.saveLog(req);
+
+        } catch (Exception e) {
+            log.error("팀 공지 활동 로그 저장 실패: noticeId={}, error={}", event.getNoticeId(), e.getMessage());
         }
     }
 

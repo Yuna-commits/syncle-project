@@ -48,3 +48,41 @@ export const useTeamMutations = () => {
     deleteTeam: deleteTeamMutation.mutate,
   }
 }
+
+// 공지사항 생성 Hook
+export const useCreateTeamNotice = (teamId) => {
+  const queryClient = useQueryClient()
+
+  return useMutation({
+    mutationFn: (data) => teamApi.createTeamNotice(teamId, data),
+    onSuccess: () => {
+      // v5 권장: invalidateQueries도 객체 형태로 전달
+      queryClient.invalidateQueries({ queryKey: ['teamNotices', teamId] })
+    },
+  })
+}
+
+// 공지사항 수정 Hook
+export const useUpdateTeamNotice = (teamId) => {
+  const queryClient = useQueryClient()
+
+  return useMutation({
+    mutationFn: ({ noticeId, data }) =>
+      teamApi.updateTeamNotice(teamId, noticeId, data),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['teamNotices', teamId] })
+    },
+  })
+}
+
+// 공지사항 삭제 Hook
+export const useDeleteTeamNotice = (teamId) => {
+  const queryClient = useQueryClient()
+
+  return useMutation({
+    mutationFn: (noticeId) => teamApi.deleteTeamNotice(teamId, noticeId),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['teamNotices', teamId] })
+    },
+  })
+}

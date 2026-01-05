@@ -3,6 +3,7 @@ import useResetPasswordStore from '../../../stores/auth/useResetPasswordStore'
 import FormInput from '../../../components/common/FormInput'
 import FormButton from '../../../components/common/FormButton'
 import { useAuthMutations } from '../../../hooks/auth/useAuthMutations'
+import { formatTimer } from '../../../utils/dateUtils'
 
 function Step2Verify() {
   const { authCode, setAuthCode, timeLeft, decreaseTime, setStep } =
@@ -28,13 +29,6 @@ function Step2Verify() {
     }
   }, [timeLeft, decreaseTime, setStep])
 
-  // 시간 포맷팅 (300 -> "05:00")
-  const formatTime = (time) => {
-    const minutes = Math.floor(time / 60)
-    const seconds = time % 60
-    return `${String(minutes).padStart(2, '0')}:${String(seconds).padStart(2, '0')}`
-  }
-
   const handleSubmit = async (e) => {
     e.preventDefault()
     verifyResetCode({ email, authCode })
@@ -54,7 +48,7 @@ function Step2Verify() {
         >
           {/* 타이머 */}
           <div className="absolute top-1/2 right-4 -translate-y-1/2 text-sm font-medium text-red-500 tabular-nums">
-            {formatTime(timeLeft)}
+            {formatTimer(timeLeft)}
           </div>
         </FormInput>
 

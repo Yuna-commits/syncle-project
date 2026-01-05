@@ -4,6 +4,7 @@ import FormInput from '../../../components/common/FormInput'
 import FormButton from '../../../components/common/FormButton'
 import { useAuthMutations } from '../../../hooks/auth/useAuthMutations'
 import { useForm } from 'react-hook-form'
+import { formatTimer } from '../../../utils/dateUtils'
 
 export default function Step2Form() {
   const {
@@ -46,13 +47,6 @@ export default function Step2Form() {
 
     return () => clearInterval(timerId)
   }, [timeLeft, decreaseTime, setStep])
-
-  // 시간 포맷팅 (300 -> "05:00")
-  const formatTime = (time) => {
-    const minutes = Math.floor(time / 60)
-    const seconds = time % 60
-    return `${String(minutes).padStart(2, '0')}:${String(seconds).padStart(2, '0')}`
-  }
 
   // 재전송 핸들러
   const handleResend = () => {
@@ -113,7 +107,7 @@ export default function Step2Form() {
         >
           {/* 타이머 */}
           <span className="absolute top-1/2 right-4 -translate-y-1/2 font-mono text-sm font-semibold text-red-500 tabular-nums">
-            {formatTime(timeLeft)}
+            {formatTimer(timeLeft)}
           </span>
         </FormInput>
       </div>

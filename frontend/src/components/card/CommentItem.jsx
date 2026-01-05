@@ -4,6 +4,7 @@ import defaultProfile from '../../assets/images/default.png'
 import MentionRenderer from '../mention/MentionRenderer'
 import { CornerDownRight } from 'lucide-react'
 import MentionEditor from '../mention/MentionEditor'
+import { formatRelativeTime } from '../../utils/dateUtils'
 
 export default function CommentItem({
   comment,
@@ -48,32 +49,6 @@ export default function CommentItem({
     }
   }
 
-  // 날짜 포맷팅 (ex: 5분 전)
-  const formatTime = (dateData) => {
-    if (!dateData) return ''
-
-    let date
-    if (Array.isArray(dateData)) {
-      const [year, month, day, hour = 0, minute = 0, second = 0] = dateData
-      // Date 객체의 Month는 0부터 시작
-      date = new Date(year, month - 1, day, hour, minute, second)
-    } else {
-      date = new Date(dateData)
-    }
-
-    const now = new Date()
-    // (현재 시간 - 알림 시간)(ms) / 1분(ms)
-    const diffMin = Math.floor((now - date) / (1000 * 60))
-
-    if (diffMin < 1) return '방금 전'
-    if (diffMin < 60) return `${diffMin}분 전`
-
-    const diffHour = Math.floor(diffMin / 60)
-    if (diffHour < 24) return `${diffHour}시간 전`
-
-    return `${date.getMonth() + 1}월 ${date.getDate()}일`
-  }
-
   const isWriterLeft = comment.isWriterLeft
 
   return (
@@ -107,7 +82,7 @@ export default function CommentItem({
               )}
 
               <span className="text-xs text-gray-400">
-                {formatTime(comment.createdAt)}
+                {formatRelativeTime(comment.createdAt)}
               </span>
             </div>
 

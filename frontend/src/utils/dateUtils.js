@@ -1,3 +1,47 @@
+// 1. 단순 날짜 포맷 (YYYY. MM. DD) -> 게시글 날짜, 공지 날짜 등
+export const formatDate = (dateString) => {
+  if (!dateString) return ''
+  const date = new Date(dateString)
+  const year = date.getFullYear()
+  const month = String(date.getMonth() + 1).padStart(2, '0')
+  const day = String(date.getDate()).padStart(2, '0')
+  return `${year}.${month}.${day}`
+}
+
+// 2. 상대 시간 포맷 ("방금 전", "5분 전") -> 알림, 댓글 등
+export const formatRelativeTime = (dateData) => {
+  if (!dateData) return ''
+
+  let date
+  // 백엔드에서 [2024, 1, 1, 12, 0] 배열로 올 경우 대응
+  if (Array.isArray(dateData)) {
+    const [year, month, day, hour = 0, minute = 0, second = 0] = dateData
+    date = new Date(year, month - 1, day, hour, minute, second)
+  } else {
+    date = new Date(dateData)
+  }
+
+  const now = new Date()
+  const diffMin = Math.floor((now - date) / (1000 * 60))
+
+  if (diffMin < 1) return '방금 전'
+  if (diffMin < 60) return `${diffMin}분 전`
+
+  const diffHour = Math.floor(diffMin / 60)
+  if (diffHour < 24) return `${diffHour}시간 전`
+
+  // 24시간 지나면 날짜로 표시
+  return formatDate(date) // 위의 formatDate 함수 재활용
+}
+
+// 3. 타이머 포맷 (초 -> "MM:SS") -> 인증 타이머, 스톱워치 등
+export const formatTimer = (timeInSeconds) => {
+  if (timeInSeconds < 0) return '00:00'
+  const minutes = Math.floor(timeInSeconds / 60)
+  const seconds = timeInSeconds % 60
+  return `${String(minutes).padStart(2, '0')}:${String(seconds).padStart(2, '0')}`
+}
+
 // 날짜 상태에 따른 스타일 및 텍스트 반환
 export const getDateStatusStyle = (dueDate) => {
   // 기본 스타일 (날짜 없음)

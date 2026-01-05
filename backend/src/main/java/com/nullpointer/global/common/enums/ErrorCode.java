@@ -42,6 +42,7 @@ public enum ErrorCode {
     TEAM_UPDATE_FORBIDDEN(HttpStatus.FORBIDDEN, "T003", "팀 수정 권한이 없습니다."),
     TEAM_DELETE_FORBIDDEN(HttpStatus.FORBIDDEN, "T004", "팀 삭제 권한이 없습니다."),
     TEAM_ACCESS_DENIED(HttpStatus.FORBIDDEN, "T005", "해당 팀에 대한 접근 권한이 없습니다."),
+    NOTICE_NOT_FOUND(HttpStatus.BAD_REQUEST, "T006", "공지사항을 찾을 수 없습니다."),
 
     // 보드
     BOARD_NOT_FOUND(HttpStatus.NOT_FOUND, "B001", "존재하지 않는 보드입니다."),

@@ -25,6 +25,7 @@ import { useState } from 'react'
 import { useInvitationMutations } from '../../hooks/team/useInvitationMutations'
 import { useNavigate } from 'react-router-dom'
 import { useNotificationMutations } from '../../hooks/notification/useNotificationMutations'
+import { formatRelativeTime } from '../../utils/dateUtils'
 
 // 개별 알림 아이템 컴포넌트
 export default function NotificationItem({
@@ -45,32 +46,6 @@ export default function NotificationItem({
     }
     // 일반 사용자 이미지 || 기본 이미지
     return notification.senderProfileImg || defaultProfile
-  }
-
-  // 날짜 포맷팅 (ex: 5분 전)
-  const formatTime = (dateData) => {
-    if (!dateData) return ''
-
-    let date
-    if (Array.isArray(dateData)) {
-      const [year, month, day, hour = 0, minute = 0, second = 0] = dateData
-      // Date 객체의 Month는 0부터 시작
-      date = new Date(year, month - 1, day, hour, minute, second)
-    } else {
-      date = new Date(dateData)
-    }
-
-    const now = new Date()
-    // (현재 시간 - 알림 시간)(ms) / 1분(ms)
-    const diffMin = Math.floor((now - date) / (1000 * 60))
-
-    if (diffMin < 1) return '방금 전'
-    if (diffMin < 60) return `${diffMin}분 전`
-
-    const diffHour = Math.floor(diffMin / 60)
-    if (diffHour < 24) return `${diffHour}시간 전`
-
-    return `${date.getMonth() + 1}월 ${date.getDate()}일`
   }
 
   // 알림 타입에 따른 아이콘/스타일
@@ -287,7 +262,7 @@ export default function NotificationItem({
             )}
           </div>
           <span className="shrink-0 text-[12px] whitespace-nowrap text-gray-400">
-            {formatTime(notification.createdAt)}
+            {formatRelativeTime(notification.createdAt)}
           </span>
         </div>
 

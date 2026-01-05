@@ -7,6 +7,7 @@ import { useTeamDetailQuery } from '../../hooks/team/useTeamQuery'
 import { Plus } from 'lucide-react'
 import { getTeamColorClass } from '../../constants/themeConstants'
 import useTeamPermission from '../../hooks/team/useTeamPermission'
+import ImportantNoticeWidget from '../../components/team/ImportantNoticeWidget'
 
 function TeamBoardPage() {
   // URL에서 teamId 추출
@@ -29,7 +30,7 @@ function TeamBoardPage() {
     <main className="flex-1 overflow-y-auto bg-white p-8">
       <div className="mx-auto max-w-5xl">
         {/* --- 1. 팀 헤더 --- */}
-        <section className="flex items-center gap-6">
+        <section className="flex items-center justify-between gap-6">
           <div className="flex items-start justify-between">
             <div className="flex items-center gap-3">
               <div
@@ -47,6 +48,11 @@ function TeamBoardPage() {
                 </p>
               </div>
             </div>
+          </div>
+
+          {/* 중요 공지 위젯 */}
+          <div className="shrink-0">
+            <ImportantNoticeWidget teamId={teamId} />
           </div>
         </section>
 

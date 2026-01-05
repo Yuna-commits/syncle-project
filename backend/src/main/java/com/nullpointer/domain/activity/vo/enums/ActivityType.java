@@ -36,10 +36,12 @@ public enum ActivityType {
     CREATE_TEAM("팀을 생성했습니다."),
     UPDATE_TEAM("팀 정보를 수정했습니다."),
     DELETE_TEAM("팀을 삭제했습니다."),
-
-
     LEAVE_TEAM("팀에서 탈퇴했습니다."),
-    ;
+
+    // 공지사항
+    CREATE_NOTICE("공지사항 생성"),
+    UPDATE_NOTICE("공지사항 수정"),
+    DELETE_NOTICE("공지사항 삭제");
 
     private final String description;
 

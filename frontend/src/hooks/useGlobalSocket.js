@@ -61,6 +61,9 @@ export const useGlobalSocket = () => {
           case 'DEADLINE_NEAR': // 마감 임박
             shouldShow = currentSettings.push.dueDates
             break
+          case 'TEAM_NOTICE_CREATED': // 팀 공지사항
+            shouldShow = true
+            break
           // 그 외(초대 등)는 기본적으로 보여주거나 별도 설정 추가
           case 'TEAM_INVITE':
           case 'BOARD_INVITE':

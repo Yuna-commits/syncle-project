@@ -61,6 +61,12 @@ function SidebarTeamItem({ team, isSelected, onToggle }) {
             - 보드
           </Link>
           <Link
+            to={`/teams/${tId}/notices`}
+            className={`block rounded-md px-2 py-1.5 text-sm ${isActive('/teams/' + tId + '/notices')}`}
+          >
+            - 공지사항
+          </Link>
+          <Link
             to={`/teams/${tId}/members`}
             className={`block rounded-md px-2 py-1.5 text-sm ${isActive('/teams/' + tId + '/members')}`}
           >

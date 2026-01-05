@@ -24,6 +24,7 @@ public enum NotificationType {
     TEAM_MEMBER_LEFT("팀 멤버 탈퇴"),
     TEAM_DELETED("팀 삭제"),
     INVITE_CANCELED("초대 취소"),
+    TEAM_NOTICE_CREATED("공지사항 등록"),
 
     BOARD_INVITE("보드 초대"),
     BOARD_MEMBER_KICKED("보드 멤버 추방"),
