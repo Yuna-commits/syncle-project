@@ -75,8 +75,8 @@ function CreateBoardMenu({ teamId, onClose, onSuccess }) {
             onChange={(e) => setVisibility(e.target.value)}
             className="mt-1 w-full rounded-md border border-gray-300 bg-white px-3 py-2 text-sm shadow-sm hover:cursor-pointer focus:ring-2 focus:ring-blue-500 focus:outline-none"
           >
-            <option value="PRIVATE">Private</option>
-            <option value="PUBLIC">Public</option>
+            <option value="PRIVATE">비공개</option>
+            <option value="PUBLIC">전체 공개</option>
           </select>
         </div>
 

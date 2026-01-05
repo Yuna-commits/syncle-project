@@ -96,11 +96,11 @@ function BoardListPopover({ memberId, teamId, initialBoards }) {
                   <div className="flex gap-2 text-[10px]">
                     <div className="flex items-center gap-1">
                       <span className="h-2 w-2 rounded-full bg-green-500"></span>
-                      <span className="text-gray-500">Public</span>
+                      <span className="text-gray-500">전체 공개</span>
                     </div>
                     <div className="flex items-center gap-1">
                       <span className="h-2 w-2 rounded-full bg-orange-500"></span>
-                      <span className="text-gray-500">Private</span>
+                      <span className="text-gray-500">비공개</span>
                     </div>
                   </div>
                 </div>

@@ -33,7 +33,7 @@ createRoot(document.getElementById('root')).render(
       <QueryClientProvider client={queryClient}>
         <App />
         {/* 개발 도구 버튼 (배포 시에는 자동으로 사라짐) */}
-        <ReactQueryDevtools initialIsOpen={false} />
+        {/* <ReactQueryDevtools initialIsOpen={false} /> */}
       </QueryClientProvider>
     </BrowserRouter>
   </GoogleOAuthProvider>,

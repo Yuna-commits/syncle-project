@@ -66,7 +66,7 @@ function CardAttachment({ files = [] }) {
                 </div>
 
                 {/* 정보 및 오버레이 */}
-                <div className="absolute inset-0 flex flex-col justify-end bg-linear-to-t from-black/60 via-transparent to-transparent opacity-0 transition-opacity duration-200 group-hover:opacity-100">
+                <div className="pointer-events-none absolute inset-0 flex flex-col justify-end bg-linear-to-t from-black/30 via-transparent to-transparent">
                   <div className="p-3 text-white">
                     <p
                       className="truncate text-sm font-medium"
@@ -75,32 +75,31 @@ function CardAttachment({ files = [] }) {
                       {file.fileName}
                     </p>
                     <p className="text-xs text-gray-200">
-                      {/* 파일 사이즈 포맷팅 로직이 있다면 적용 (예: formatBytes(file.fileSize)) */}
                       {(file.fileSize / 1024).toFixed(1)} KB
                     </p>
                   </div>
+                </div>
 
-                  {/* 액션 버튼들 */}
-                  <div className="absolute top-2 right-2 flex gap-2">
-                    <a
-                      href={file.fileUrl}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="rounded bg-black/50 p-1.5 text-white backdrop-blur-sm hover:bg-black/70"
-                      title="다운로드"
+                {/* 액션 버튼들 */}
+                <div className="absolute top-2 right-2 flex gap-2 opacity-0 transition-opacity duration-200 group-hover:opacity-100">
+                  <a
+                    href={file.fileUrl}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="rounded bg-black/50 p-1.5 text-white backdrop-blur-sm hover:bg-black/70"
+                    title="다운로드"
+                  >
+                    <Download size={14} />
+                  </a>
+                  {canEdit && (
+                    <button
+                      onClick={() => handleDelete(file.id)}
+                      className="rounded bg-red-500/80 p-1.5 text-white backdrop-blur-sm hover:bg-red-600"
+                      title="삭제"
                     >
-                      <Download size={14} />
-                    </a>
-                    {canEdit && (
-                      <button
-                        onClick={() => handleDelete(file.id)}
-                        className="rounded bg-red-500/80 p-1.5 text-white backdrop-blur-sm hover:bg-red-600"
-                        title="삭제"
-                      >
-                        <X size={14} />
-                      </button>
-                    )}
-                  </div>
+                      <X size={14} />
+                    </button>
+                  )}
                 </div>
               </div>
             )
