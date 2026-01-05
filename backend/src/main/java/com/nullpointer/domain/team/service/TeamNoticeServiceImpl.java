@@ -53,9 +53,6 @@ public class TeamNoticeServiceImpl implements TeamNoticeService {
         // 팀의 멤버인지 검증
         memberVal.validateTeamMember(notice.getTeamId(), userId);
 
-        // 조회수 증가
-        noticeMapper.increaseViewCount(noticeId);
-
         // 작성자 정보 조회
         UserVo writer = userMapper.findById(notice.getWriterId())
                 .orElseThrow(() -> new BusinessException(ErrorCode.USER_NOT_FOUND));
@@ -151,6 +148,18 @@ public class TeamNoticeServiceImpl implements TeamNoticeService {
 
         // 화면 갱신용 소켓 전송
         socketSender.sendTeamSocketMessage(teamId, "TEAM_NOTICE_UPDATE", userId, null);
+    }
+
+    @Override
+    public void increaseViewCount(Long noticeId, Long userId) {
+        // 공지사항 존재 여부 확인
+        TeamNoticeVo notice = noticeMapper.findById(noticeId)
+                .orElseThrow(() -> new BusinessException(ErrorCode.NOTICE_NOT_FOUND));
+
+        // 팀의 멤버인지 검증
+        memberVal.validateTeamMember(notice.getTeamId(), userId);
+
+        noticeMapper.increaseViewCount(noticeId);
     }
 
     /**

@@ -142,19 +142,19 @@ public class NotificationEventListener {
                 yield String.format("%s님이 담당 카드 '%s'의 내용을 수정했습니다.", actor, cardTitle);
             }
 
-            case COMMENT -> String.format("담당 카드 '%s'에 새 댓글이 달렸습니다: %s",
+            case COMMENT -> String.format("담당 카드 '%s'에 새 댓글이 달렸습니다.: %s",
                     cardTitle, getSafeSubstring(event.getContent(), 20));
 
-            case REPLY -> String.format("회원님의 댓글에 답글이 달렸습니다: %s",
+            case REPLY -> String.format("회원님의 댓글에 답글이 달렸습니다.: %s",
                     getSafeSubstring(event.getContent(), 20));
 
-            case MENTION -> String.format("'%s'님이 회원님을 언급했습니다: %s",
+            case MENTION -> String.format("'%s'님이 회원님을 언급했습니다.: %s",
                     actor, getSafeSubstring(event.getContent(), 20));
 
             case CHECKLIST -> {
                 // [변경] isChecked 필드 활용
                 if (Boolean.TRUE.equals(event.getIsChecked())) {
-                    yield String.format("'%s'님이 담당 카드 '%s'의 체크리스트 항목을 완료했습니다: %s",
+                    yield String.format("'%s'님이 담당 카드 '%s'의 체크리스트 항목을 완료했습니다.: %s",
                             actor, cardTitle, getSafeSubstring(event.getContent(), 20));
                 }
                 yield ""; // 완료 해제는 알림 안 보냄
@@ -162,7 +162,7 @@ public class NotificationEventListener {
 
             case DEADLINE_NEAR -> String.format("담당 카드 '%s'의 마감이 임박했습니다.", cardTitle);
 
-            case ATTACHMENT -> String.format("'%s'님이 담당 카드 '%s'에 파일을 첨부했습니다: %s",
+            case ATTACHMENT -> String.format("'%s'님이 담당 카드 '%s'에 파일을 첨부했습니다.: %s",
                     actor, cardTitle, event.getContent()); // content에 파일명 저장됨
 
             case LABEL -> {
@@ -397,7 +397,7 @@ public class NotificationEventListener {
         if (memberIds == null || memberIds.isEmpty()) return;
 
         // 2. 알림 메시지 및 링크 생성
-        String message = String.format("'%s' 팀에 새 공지가 등록되었습니다: %s",
+        String message = String.format("'%s' 팀에 새 공지가 등록되었습니다.: %s",
                 event.getTeamName(), event.getNoticeTitle());
 
         // 클릭 시 이동할 URL (프론트엔드 라우트 경로)

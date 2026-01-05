@@ -86,3 +86,15 @@ export const useDeleteTeamNotice = (teamId) => {
     },
   })
 }
+
+// 조회수 증가
+export const useIncreaseTeamNoticeView = (teamId) => {
+  const queryClient = useQueryClient()
+
+  return useMutation({
+    mutationFn: (noticeId) => teamApi.increaseViewCount(teamId, noticeId),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['teamNotices', teamId] })
+    },
+  })
+}

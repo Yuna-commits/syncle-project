@@ -48,4 +48,8 @@ export const teamApi = {
   // 공지사항 삭제
   deleteTeamNotice: (teamId, noticeId) =>
     api.delete(`/teams/${teamId}/notices/${noticeId}`),
+
+  // 조회수 증가
+  increaseViewCount: (teamId, noticeId) =>
+    api.post(`/teams/${teamId}/notices/${noticeId}/view`),
 }

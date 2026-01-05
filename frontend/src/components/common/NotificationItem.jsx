@@ -10,6 +10,7 @@ import {
   KanbanSquare,
   ListChecks,
   LogOut,
+  Megaphone,
   MessageSquareCode,
   MessageSquareText,
   ShieldAlert,
@@ -113,6 +114,13 @@ export default function NotificationItem({
           color: 'text-gray-500 bg-gray-100 border-gray-200',
         }
 
+      // 8. [공지] 팀 공지사항
+      case 'TEAM_NOTICE_CREATED':
+        return {
+          icon: <Megaphone size={15} />,
+          color: 'text-orange-600 bg-orange-50 border-orange-100',
+        }
+
       // 기본값
       default:
         return {
@@ -131,7 +139,8 @@ export default function NotificationItem({
       type.includes('COMMENT') ||
       type === 'MENTION' ||
       type === 'CHECKLIST_COMPLETED' ||
-      type === 'FILE_UPLOAD'
+      type === 'FILE_UPLOAD' ||
+      type === 'TEAM_NOTICE_CREATED'
     ) {
       const separatorIndex = message.indexOf(':') // 첫 번째 ':' 위치 찾음
 

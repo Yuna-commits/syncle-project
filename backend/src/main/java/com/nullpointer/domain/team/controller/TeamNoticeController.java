@@ -70,4 +70,17 @@ public class TeamNoticeController {
         return ApiResponse.success("공지사항이 삭제되었습니다.");
     }
 
+    // 조회수 증가
+    @Operation(summary = "팀 공지사항 조회수 증가", description = "공지사항의 조회수를 1 증가시킵니다. (상세 조회 모달 오픈 시 호출, 팀 멤버 권한 필요)")
+    @PostMapping("/{noticeId}/view")
+    public ApiResponse<String> increaseViewCount(
+            @PathVariable Long teamId,
+            @PathVariable Long noticeId,
+            @LoginUser Long userId
+    ) {
+        noticeService.increaseViewCount(noticeId, userId);
+
+        return ApiResponse.success("조회수가 증가되었습니다.");
+    }
+
 }

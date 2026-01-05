@@ -23,4 +23,7 @@ public interface TeamNoticeService {
     // 공지사항 삭제
     void deleteNotice(Long noticeId, Long teamId, Long userId);
 
+    // 조회수 증가
+    void increaseViewCount(Long noticeId, Long userId);
+
 }

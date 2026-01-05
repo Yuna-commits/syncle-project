@@ -1,7 +1,8 @@
-import React, { useState, useEffect } from 'react'
+import React, { useState, useEffect, useRef } from 'react'
 import {
   useCreateTeamNotice,
   useUpdateTeamNotice,
+  useIncreaseTeamNoticeView,
 } from '../../hooks/team/useTeamMutations'
 import { X, Loader2, Megaphone, AlertCircle, Eye, Clock } from 'lucide-react'
 import { formatDate } from '../../utils/dateUtils'
@@ -24,6 +25,7 @@ const NoticeWriteModal = ({
     useCreateTeamNotice(teamId)
   const { mutate: updateNotice, isPending: isUpdating } =
     useUpdateTeamNotice(teamId)
+  const { mutate: increaseView } = useIncreaseTeamNoticeView(teamId)
 
   // 로딩 상태 통합
   const isSubmitting = isCreating || isUpdating
@@ -33,6 +35,26 @@ const NoticeWriteModal = ({
   const [content, setContent] = useState('')
   const [isImportant, setIsImportant] = useState(false)
   const [error, setError] = useState('')
+
+  // 조회수 증가 Mutation
+  const viewCountedRef = useRef(false)
+
+  // 조회 모드일 때 조회수 증가 트리거
+  useEffect(() => {
+    // 모달이 열려있고 + 조회 모드이며 + 공지사항 ID가 존재할 때
+    if (isOpen && isViewMode && noticeToEdit?.id) {
+      // 아직 조회수를 올리지 않았다면 요청 전송
+      if (!viewCountedRef.current) {
+        increaseView(noticeToEdit.id)
+        viewCountedRef.current = true // 호출 완료 표시
+      }
+    }
+
+    // 모달이 닫히면 플래그 초기화 (다음에 다시 열면 또 카운트 가능하게 할지 여부는 정책에 따라 결정)
+    if (!isOpen) {
+      viewCountedRef.current = false
+    }
+  }, [isOpen, isViewMode, noticeToEdit, increaseView])
 
   // 수정 모드일 경우 기존 데이터 채워넣기
   useEffect(() => {
@@ -103,7 +125,7 @@ const NoticeWriteModal = ({
           onClick={(e) => e.stopPropagation()}
         >
           {/* Header */}
-          <div className="flex items-center justify-between border-b border-gray-100 px-6 py-4">
+          <div className="flex items-center justify-between border-b border-gray-200 px-6 py-4">
             <h2 className="flex items-center gap-2 text-xl font-bold text-gray-800">
               공지사항 상세
             </h2>
@@ -116,7 +138,7 @@ const NoticeWriteModal = ({
           </div>
 
           {/* Body */}
-          <div className="p-8">
+          <div className="p-6">
             {/* 제목 & 중요 배지 */}
             <div className="mb-4">
               <div className="mb-2 flex items-center gap-2">

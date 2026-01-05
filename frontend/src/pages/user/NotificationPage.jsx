@@ -58,6 +58,8 @@ function NotificationPage() {
 
           'TEAM_DELETED',
           'BOARD_DELETED',
+
+          'TEAM_NOTICE_CREATED',
         ]
       default:
         return [] // ALL인 경우
