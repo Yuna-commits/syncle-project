@@ -125,6 +125,7 @@ export const useFileMutations = (boardId) => {
           return newBoard
         })
       }
+      queryClient.invalidateQueries({ queryKey })
     },
     onError: (error) => {
       console.error('파일 업로드 실패:', error)

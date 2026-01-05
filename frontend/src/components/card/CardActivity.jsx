@@ -16,7 +16,7 @@ function CardActivity() {
   const { data: activeBoard } = useBoardQuery(Number(boardId))
 
   const { selectedCard } = useBoardStore()
-  const { user: currentUser } = useAuthQuery()
+  const { data: currentUser } = useAuthQuery()
   const { canEdit } = useBoardPermission(activeBoard)
 
   // activeBoard가 로딩되기 전 방어

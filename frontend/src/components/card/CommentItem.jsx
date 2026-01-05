@@ -2,9 +2,9 @@ import { useState } from 'react'
 import { useCommentMutations } from '../../hooks/card/useCommentMutations'
 import defaultProfile from '../../assets/images/default.png'
 import MentionRenderer from '../mention/MentionRenderer'
-import { CornerDownRight } from 'lucide-react'
 import MentionEditor from '../mention/MentionEditor'
 import { formatRelativeTime } from '../../utils/dateUtils'
+import { CornerDownRight, Edit2, Trash2 } from 'lucide-react'
 
 export default function CommentItem({
   comment,
@@ -18,7 +18,11 @@ export default function CommentItem({
 
   const [isEditing, setIsEditing] = useState(false)
   const [isReplying, setIsReplying] = useState(false)
-
+  console.log('--- 댓글 권한 확인 ---')
+  console.log('내 정보(currentUser):', currentUser)
+  console.log('내 ID:', currentUser?.id, typeof currentUser?.id)
+  console.log('댓글 작성자 ID:', comment.writerId, typeof comment.writerId)
+  console.log('-----------------------')
   const isMyComment = currentUser?.id === comment.writerId
 
   // 수정 (Update)
@@ -91,13 +95,13 @@ export default function CommentItem({
               <div className="flex gap-2 opacity-0 transition-opacity group-hover:opacity-100">
                 <button
                   onClick={() => setIsEditing(true)}
-                  className="text-gray-400 hover:text-blue-600"
+                  className="text-gray-400 hover:cursor-pointer hover:text-blue-600"
                 >
                   <Edit2 size={12} />
                 </button>
                 <button
                   onClick={onDelete}
-                  className="text-gray-400 hover:text-red-600"
+                  className="text-gray-400 hover:cursor-pointer hover:text-red-600"
                 >
                   <Trash2 size={12} />
                 </button>
