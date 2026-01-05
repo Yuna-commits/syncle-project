@@ -111,7 +111,7 @@ public class S3FileStorageServiceImpl implements S3FileStorageService {
             GetObjectRequest getObjectRequest = GetObjectRequest.builder()
                     .bucket(bucketName)
                     .key(filePath)
-                    .responseContentDisposition("filename=\"" + encodedFileName + "\"")
+                    .responseContentDisposition("attachment; filename=\"" + encodedFileName + "\"") // 👈 핵심
                     .build();
 
             // 3. Presign 요청 생성 (유효기간 설정)
