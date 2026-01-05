@@ -24,4 +24,7 @@ public interface TeamNoticeMapper {
     // 조회수 증가
     void increaseViewCount(Long noticeId);
 
+    // 공지사항 필독 설정 해제
+    void resetImportantNotices(Long teamId);
+
 }

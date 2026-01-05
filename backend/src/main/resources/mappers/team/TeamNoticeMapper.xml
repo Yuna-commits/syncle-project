@@ -79,4 +79,13 @@
           AND deleted_at IS NULL
     </update>
 
+    <!-- 공지사항 필독 설정 해제 -->
+    <update id="resetImportantNotices">
+        UPDATE team_notice
+        SET is_important = 0
+        WHERE team_id = #{teamId}
+          AND is_important = 1
+          AND deleted_at IS NULL
+    </update>
+
 </mapper>

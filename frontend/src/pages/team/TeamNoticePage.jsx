@@ -114,45 +114,49 @@ const TeamNoticePage = () => {
                       className="flex-1 cursor-pointer"
                       onClick={() => handleEdit(notice)}
                     >
-                      <div className="mb-2 flex items-center gap-2">
-                        {notice.isImportant && (
-                          <span className="inline-flex items-center gap-1 rounded border border-red-100 bg-red-50 px-2 py-0.5 text-xs font-bold text-red-600">
-                            <Megaphone className="h-3 w-3" />
-                            필독
-                          </span>
-                        )}
-                        <h3 className="text-lg font-semibold text-gray-900 transition-colors group-hover:text-blue-600">
-                          {notice.title}
-                        </h3>
+                      <div className="mb-3 flex items-center justify-between gap-4">
+                        {/* 왼쪽: 중요 태그 + 제목 */}
+                        <div className="flex items-center gap-2 overflow-hidden">
+                          {notice.isImportant && (
+                            <span className="inline-flex shrink-0 items-center gap-1 rounded border border-red-100 bg-red-50 px-2 py-0.5 text-xs font-bold text-red-600">
+                              <Megaphone className="h-3 w-3" />
+                              필독
+                            </span>
+                          )}
+                          <h3 className="truncate text-lg font-semibold text-gray-900 transition-colors group-hover:text-blue-600">
+                            {notice.title}
+                          </h3>
+                        </div>
+
+                        {/* 오른쪽: 메타 정보 (여기로 이동됨) */}
+                        <div className="flex shrink-0 items-center gap-3 text-xs text-gray-400">
+                          <div className="flex items-center gap-1.5">
+                            <img
+                              src={notice.writerProfileImg || defaultProfile}
+                              alt={notice.writerNickname}
+                              className="h-5 w-5 rounded-full border border-gray-300 object-cover"
+                            />
+                            <span className="hidden font-medium text-gray-600 sm:inline">
+                              {notice.writerNickname}
+                            </span>
+                          </div>
+
+                          <div className="flex items-center gap-1">
+                            <Clock className="h-3 w-3" />
+                            <span>{formatDate(notice.createdAt)}</span>
+                          </div>
+
+                          <div className="flex items-center gap-1">
+                            <Eye className="h-3 w-3" />
+                            <span>{notice.viewCount}</span>
+                          </div>
+                        </div>
                       </div>
 
-                      <p className="mb-3 line-clamp-2 text-sm leading-relaxed text-gray-600">
+                      {/* 본문 내용 */}
+                      <p className="mt-1.5 ml-1 line-clamp-2 border-l-4 border-gray-300 py-1 pl-4 text-sm leading-relaxed text-gray-600 transition-colors hover:border-gray-400 hover:bg-gray-100 hover:text-gray-800">
                         {notice.content}
                       </p>
-
-                      {/* 메타 정보 (작성자, 날짜, 조회수) */}
-                      <div className="flex items-center gap-3 text-xs text-gray-400">
-                        <div className="flex items-center gap-1.5">
-                          <img
-                            src={notice.writerProfile || defaultProfile}
-                            alt={notice.writerName}
-                            className="h-5 w-5 rounded-full border border-gray-300 object-cover"
-                          />
-                          <span className="font-medium text-gray-600">
-                            {notice.writerName}
-                          </span>
-                        </div>
-
-                        <div className="flex items-center gap-1">
-                          <Clock className="h-3 w-3" />
-                          <span>{formatDate(notice.createdAt)}</span>
-                        </div>
-
-                        <div className="flex items-center gap-1">
-                          <Eye className="h-3 w-3" />
-                          <span>조회 {notice.viewCount}</span>
-                        </div>
-                      </div>
                     </div>
 
                     {/* 관리 버튼 (팀장만 노출) */}
@@ -213,6 +217,7 @@ const TeamNoticePage = () => {
           onClose={() => setIsModalOpen(false)}
           teamId={teamId}
           noticeToEdit={selectedNotice}
+          isOwner={isOwner}
         />
       )}
     </main>

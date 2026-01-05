@@ -81,6 +81,11 @@ public class TeamNoticeServiceImpl implements TeamNoticeService {
         // 팀의 관리자인지 검증
         memberVal.validateTeamOwner(teamId, userId, ErrorCode.PERMISSION_FORBIDDEN);
 
+        // 이번 공지사항을 필독으로 설정한 경우, 기존 필독 해제
+        if (Boolean.TRUE.equals(request.getIsImportant())) {
+            noticeMapper.resetImportantNotices(teamId);
+        }
+
         TeamNoticeVo notice = TeamNoticeVo.builder()
                 .teamId(teamId)
                 .writerId(userId)
@@ -90,7 +95,7 @@ public class TeamNoticeServiceImpl implements TeamNoticeService {
                 .build();
 
         noticeMapper.insertNotice(notice);
-        
+
         // [이벤트] 공지사항 알림 이벤트 발행
         publishNoticeEvent(notice, userId, TeamNoticeEvent.EventType.CREATE, NotificationType.TEAM_NOTICE_CREATED);
 
@@ -104,8 +109,14 @@ public class TeamNoticeServiceImpl implements TeamNoticeService {
         // 팀의 관리자인지 검증
         memberVal.validateTeamOwner(teamId, userId, ErrorCode.PERMISSION_FORBIDDEN);
 
+        // 수정하려는 상태가 필독인 경우, 기존 필독들 해제
+        if (Boolean.TRUE.equals(request.getIsImportant())) {
+            noticeMapper.resetImportantNotices(teamId);
+        }
+
         TeamNoticeVo notice = TeamNoticeVo.builder()
                 .id(noticeId)
+                .teamId(teamId)
                 .title(request.getTitle())
                 .content(request.getContent())
                 .isImportant(request.getIsImportant())
