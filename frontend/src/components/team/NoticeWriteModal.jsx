@@ -3,11 +3,21 @@ import {
   useCreateTeamNotice,
   useUpdateTeamNotice,
 } from '../../hooks/team/useTeamMutations'
-import { X, Loader2, Megaphone, AlertCircle } from 'lucide-react'
+import { X, Loader2, Megaphone, AlertCircle, Eye, Clock } from 'lucide-react'
+import { formatDate } from '../../utils/dateUtils'
+import defaultProfile from '../../assets/images/default.png'
 
-const NoticeWriteModal = ({ isOpen, onClose, teamId, noticeToEdit }) => {
-  // 모드 확인 (수정 vs 생성)
-  const isEditMode = !!noticeToEdit
+const NoticeWriteModal = ({
+  isOpen,
+  onClose,
+  teamId,
+  noticeToEdit,
+  isOwner,
+}) => {
+  // 모드 확인
+  const hasNotice = !!noticeToEdit
+  const isViewMode = hasNotice && !isOwner // 공지가 있고, 오너가 아니면 '조회 모드'
+  const isEditMode = hasNotice && isOwner // 공지가 있고, 오너면 '수정 모드'
 
   // React Query Hooks
   const { mutate: createNotice, isPending: isCreating } =
@@ -84,6 +94,79 @@ const NoticeWriteModal = ({ isOpen, onClose, teamId, noticeToEdit }) => {
 
   if (!isOpen) return null
 
+  // [조회 모드] 일반 멤버에게 보여줄 읽기 전용 UI
+  if (isViewMode) {
+    return (
+      <div className="animate-in fade-in fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4 backdrop-blur-sm duration-200">
+        <div
+          className="animate-in zoom-in-95 w-full max-w-2xl overflow-hidden rounded-xl bg-white shadow-2xl duration-200"
+          onClick={(e) => e.stopPropagation()}
+        >
+          {/* Header */}
+          <div className="flex items-center justify-between border-b border-gray-200 px-6 py-4">
+            <h2 className="flex items-center gap-2 text-xl font-bold text-gray-800">
+              공지사항 상세
+            </h2>
+            <button
+              onClick={onClose}
+              className="rounded-full p-2 text-gray-400 transition-colors hover:bg-gray-200 hover:text-gray-600"
+            >
+              <X className="h-5 w-5" />
+            </button>
+          </div>
+
+          {/* Body */}
+          <div className="p-8">
+            {/* 제목 & 중요 배지 */}
+            <div className="mb-4">
+              <div className="mb-2 flex items-center gap-2">
+                {noticeToEdit.isImportant && (
+                  <span className="inline-flex items-center gap-1 rounded border border-red-100 bg-red-50 px-2 py-0.5 text-xs font-bold text-red-600">
+                    <Megaphone className="h-3 w-3" />
+                    필독
+                  </span>
+                )}
+                <h3 className="text-xl font-bold text-gray-900">
+                  {noticeToEdit.title}
+                </h3>
+              </div>
+
+              {/* 메타 정보 (작성자, 날짜, 조회수) */}
+              <div className="flex items-center gap-3 border-b border-gray-200 pb-4 text-sm text-gray-400">
+                <div className="flex items-center gap-1.5">
+                  <img
+                    src={noticeToEdit.writerProfileImg || defaultProfile}
+                    alt={noticeToEdit.writerNickname}
+                    className="h-5 w-5 rounded-full border border-gray-200 object-cover"
+                  />
+                  <span className="font-medium text-gray-700">
+                    {noticeToEdit.writerNickname}
+                  </span>
+                </div>
+                <span className="text-gray-300">|</span>
+                <div className="flex items-center gap-1">
+                  <Clock className="h-3.5 w-3.5" />
+                  <span>{formatDate(noticeToEdit.createdAt)}</span>
+                </div>
+                <span className="text-gray-300">|</span>
+                <div className="flex items-center gap-1">
+                  <Eye className="h-3.5 w-3.5" />
+                  <span>조회 {noticeToEdit.viewCount}</span>
+                </div>
+              </div>
+            </div>
+
+            {/* 본문 내용 */}
+            <div className="min-h-[200px] text-base leading-relaxed whitespace-pre-wrap text-gray-700">
+              {noticeToEdit.content}
+            </div>
+          </div>
+        </div>
+      </div>
+    )
+  }
+
+  // [수정/생성 모드] 관리자(Owner)에게 보여줄 폼 UI
   return (
     <div className="animate-in fade-in fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4 backdrop-blur-sm duration-200">
       <div
@@ -91,13 +174,13 @@ const NoticeWriteModal = ({ isOpen, onClose, teamId, noticeToEdit }) => {
         onClick={(e) => e.stopPropagation()}
       >
         {/* Header */}
-        <div className="flex items-center justify-between border-b border-gray-100 px-6 py-4">
+        <div className="flex items-center justify-between border-b border-gray-200 px-6 py-4">
           <h2 className="flex items-center gap-2 text-xl font-bold text-gray-800">
             {isEditMode ? '공지사항 수정' : '새 공지사항 작성'}
           </h2>
           <button
             onClick={onClose}
-            className="rounded-full p-2 text-gray-400 transition-colors hover:bg-gray-100 hover:text-gray-600"
+            className="rounded-full p-2 text-gray-400 transition-colors hover:bg-gray-200 hover:text-gray-600"
           >
             <X className="h-5 w-5" />
           </button>
@@ -170,11 +253,11 @@ const NoticeWriteModal = ({ isOpen, onClose, teamId, noticeToEdit }) => {
         </form>
 
         {/* Footer */}
-        <div className="flex justify-end gap-3 border-t border-gray-100 bg-gray-50 px-6 py-4">
+        <div className="flex justify-end gap-3 border-t border-gray-200 bg-gray-50 px-6 py-4">
           <button
             type="button"
             onClick={onClose}
-            className="rounded-lg border border-gray-300 bg-white px-4 py-2 text-sm font-medium text-gray-700 transition-colors hover:bg-gray-50 focus:ring-2 focus:ring-gray-200 focus:outline-none"
+            className="rounded-lg border border-gray-300 bg-white px-4 py-2 text-sm font-medium text-gray-700 transition-colors hover:bg-gray-200 focus:ring-2 focus:ring-gray-200 focus:outline-none"
             disabled={isSubmitting}
           >
             취소

@@ -134,12 +134,12 @@ const TeamNoticePage = () => {
                       <div className="flex items-center gap-3 text-xs text-gray-400">
                         <div className="flex items-center gap-1.5">
                           <img
-                            src={notice.writerProfile || defaultProfile}
-                            alt={notice.writerName}
+                            src={notice.writerProfileImg || defaultProfile}
+                            alt={notice.writerNickname}
                             className="h-5 w-5 rounded-full border border-gray-300 object-cover"
                           />
                           <span className="font-medium text-gray-600">
-                            {notice.writerName}
+                            {notice.writerNickname}
                           </span>
                         </div>
 
@@ -213,6 +213,7 @@ const TeamNoticePage = () => {
           onClose={() => setIsModalOpen(false)}
           teamId={teamId}
           noticeToEdit={selectedNotice}
+          isOwner={isOwner}
         />
       )}
     </main>
