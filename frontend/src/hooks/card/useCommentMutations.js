@@ -203,6 +203,7 @@ export const useCommentMutations = (boardId) => {
         },
         vars,
       ),
+    onSuccess: () => queryClient.invalidateQueries({ queryKey }),
     onError: (err, vars, ctx) => handleError(ctx, '댓글 수정 실패'),
   })
 
