@@ -38,3 +38,6 @@ build/
 
 ### application-secret.yml
 **/application-secret.yml
+
+# 프론트엔드 빌드 파일 무시
+src/main/resources/static/*

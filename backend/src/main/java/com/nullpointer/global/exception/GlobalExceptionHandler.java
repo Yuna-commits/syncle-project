@@ -12,6 +12,9 @@ import org.springframework.validation.BindException;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
+import jakarta.servlet.http.HttpServletRequest;
+import org.springframework.web.servlet.resource.NoResourceFoundException; // 정적 자원 없음 예외
+import org.springframework.web.servlet.ModelAndView; // 화면 전달용
 
 import java.util.List;
 import java.util.Map;
@@ -100,6 +103,24 @@ public class GlobalExceptionHandler {
         return ResponseEntity
                 .status(HttpStatus.FORBIDDEN)
                 .body(ApiResponse.error(ErrorCode.UNAUTHORIZED_ACCESS));
+    }
+
+     /**
+     * React 라우팅 문제 해결:
+     * static 리소스를 찾지 못했을 때(NoResourceFoundException),
+     * API 요청이 아니라면 index.html로 돌려보낸다.
+     */
+    @ExceptionHandler(NoResourceFoundException.class)
+    public Object handleNoResourceFound(NoResourceFoundException e, HttpServletRequest request) {
+        // 1. 만약 /api 로 시작하는 요청이 404가 뜬 거라면 -> 진짜 에러 (JSON 리턴)
+        if (request.getRequestURI().startsWith("/api")) {
+            return ResponseEntity
+                    .status(HttpStatus.NOT_FOUND)
+                    .body(ApiResponse.error(ErrorCode.RESOURCE_NOT_FOUND));
+        }
+
+        // 2. 그 외의 경로(/board/6, /dashboard 등)는 리액트 화면 요청 -> index.html 보여줌
+        return new ModelAndView("forward:/index.html");
     }
 
     /**

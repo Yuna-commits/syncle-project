@@ -12,6 +12,7 @@ public enum ErrorCode {
     METHOD_NOT_ALLOWED(HttpStatus.METHOD_NOT_ALLOWED, "C003", "허용되지 않은 HTTP 메서드입니다."),
     INVALID_TYPE_VALUE(HttpStatus.BAD_REQUEST, "C004", "올바르지 않은 JSON 형식입니다."),
     UNAUTHORIZED_ACCESS(HttpStatus.UNAUTHORIZED, "C005", "올바르지 않은 접근입니다."),
+    RESOURCE_NOT_FOUND(HttpStatus.NOT_FOUND, "C006", "요청한 리소스를 찾을 수 없습니다."),
 
     // 인증/인가
     // - 토큰
