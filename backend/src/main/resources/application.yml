@@ -15,6 +15,9 @@ spring:
     serialization:
       write-dates-as-timestamps: false
     time-zone: Asia/Seoul
+  mvc:
+    pathmatch:
+      matching-strategy: ant_path_matcher
 
   # SMTP
   mail:
