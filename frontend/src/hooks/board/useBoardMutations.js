@@ -1,6 +1,7 @@
 import { useMutation, useQueryClient } from '@tanstack/react-query'
 import { boardApi } from '../../api/board.api'
 import { useToast } from '../useToast'
+import { copyToClipboard } from '../../utils/clipboard';
 
 export const useBoardMutations = (boardId) => {
   const queryClient = useQueryClient()
@@ -116,7 +117,7 @@ export const useBoardMutations = (boardId) => {
     mutationFn: () => boardApi.createShareToken(boardId),
     onSuccess: async (response) => {
       const fullUrl = `${window.location.origin}/board/join?token=${response.data.data}`
-      await navigator.clipboard.writeText(fullUrl)
+      await copyToClipboard(fullUrl);
       alert('회원 전용 초대 링크가 복사되었습니다.')
     },
     onError: (error) => {
