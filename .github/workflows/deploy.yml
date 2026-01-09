@@ -54,17 +54,35 @@ jobs:
         run: |
           echo "${{ secrets.APP_SECRET_YML }}" > ./application-secret.yml
 
-      # 8. EC2로 파일 전송 (SCP)
-      # jar 파일과 secret 파일을 EC2로 복사합니다.
-      - name: Copy files to EC2
+      # 8-1. EC2에 배포용 폴더 미리 만들기
+      - name: Make Directory on EC2
+        uses: appleboy/ssh-action@master
+        with:
+          host: ${{ secrets.EC2_HOST }}
+          username: ${{ secrets.EC2_USERNAME }}
+          key: ${{ secrets.EC2_SSH_KEY }}
+          script: mkdir -p /home/ec2-user/app
+
+      # 8-2. Secret 파일 전송 (strip 옵션 없이!)
+      - name: Copy Secret file
         uses: appleboy/scp-action@master
         with:
           host: ${{ secrets.EC2_HOST }}
           username: ${{ secrets.EC2_USERNAME }}
           key: ${{ secrets.EC2_SSH_KEY }}
-          source: "./backend/target/*.jar, ./application-secret.yml"
+          source: "./application-secret.yml"
           target: "/home/ec2-user/app"
-          strip_components: 2 # backend/target/ 2단계를 떼고 파일만 보냄
+
+      # 8-3. JAR 파일 전송 (경로 자르기 옵션 사용)
+      - name: Copy JAR file
+        uses: appleboy/scp-action@master
+        with:
+          host: ${{ secrets.EC2_HOST }}
+          username: ${{ secrets.EC2_USERNAME }}
+          key: ${{ secrets.EC2_SSH_KEY }}
+          source: "./backend/target/*.jar"
+          target: "/home/ec2-user/app"
+          strip_components: 2
 
       # 9. EC2에서 서버 재시작 (SSH)
       - name: Restart Server
@@ -80,6 +98,9 @@ jobs:
             # 파일 이동 정리 (scp로 넘어온 파일 위치 정리)
             mv /home/ec2-user/app/application-secret.yml /home/ec2-user/application-secret.yml
             mv /home/ec2-user/app/*.jar /home/ec2-user/app.jar
+
+            # 임시 폴더 청소 (다음 배포를 위해 삭제)
+            rm -rf /home/ec2-user/app
 
             # 서버 실행 (외부 설정 파일 참조)
             sudo systemctl restart syncle
