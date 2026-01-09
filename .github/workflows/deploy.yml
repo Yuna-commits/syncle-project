@@ -82,4 +82,4 @@ jobs:
             mv /home/ubuntu/app/*.jar /home/ubuntu/app.jar
 
             # 서버 실행 (외부 설정 파일 참조)
-            sudo systemctl restart syncle-project
+            sudo systemctl restart syncle
