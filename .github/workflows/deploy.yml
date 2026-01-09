@@ -63,7 +63,7 @@ jobs:
           username: ${{ secrets.EC2_USERNAME }}
           key: ${{ secrets.EC2_SSH_KEY }}
           source: "./backend/target/*.jar, ./application-secret.yml"
-          target: "/home/ubuntu/app"
+          target: "/home/ec2-user/app"
           strip_components: 2 # backend/target/ 2단계를 떼고 파일만 보냄
 
       # 9. EC2에서 서버 재시작 (SSH)
@@ -78,8 +78,8 @@ jobs:
             fuser -k 8080/tcp || true
 
             # 파일 이동 정리 (scp로 넘어온 파일 위치 정리)
-            mv /home/ubuntu/app/application-secret.yml /home/ubuntu/application-secret.yml
-            mv /home/ubuntu/app/*.jar /home/ubuntu/app.jar
+            mv /home/ec2-user/app/application-secret.yml /home/ec2-user/application-secret.yml
+            mv /home/ec2-user/app/*.jar /home/ec2-user/app.jar
 
             # 서버 실행 (외부 설정 파일 참조)
             sudo systemctl restart syncle
